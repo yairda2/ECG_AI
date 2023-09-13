@@ -1,3 +1,5 @@
+#1223
+#5656
 import os
 from flask import Flask, request, render_template, redirect, url_for, flash
 from flask_wtf import FlaskForm
@@ -22,7 +24,7 @@ class ImageForm(FlaskForm):
     comment = StringField('Comment')
     submit = SubmitField('Upload')
 
-
+#stop 
 # Define the upload route
 @app.route('/', methods=['GET', 'POST'])
 def upload_image():
