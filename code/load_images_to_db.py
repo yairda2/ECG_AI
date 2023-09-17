@@ -1,28 +1,15 @@
 # Build upload image to mongodb.
 # each image has valid/invalid label.
 # and to invalid images we add the reason for the invalidity up to ten labels.
-# Authors: Yair Davidof,  Elyasaf Sinvani.
+# Authors: Yair Davidof, Elyasaf Sinvani.
 
 # region imports
-import os
-import sys
-import argparse
-import logging
-import json
-import pymongo
 import datetime
-
-from pymongo.errors import ConnectionFailure
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 import os
+import webbrowser
 from flask import Flask, request, render_template, redirect, url_for, flash
-from flask_wtf import FlaskForm
-from wtforms import FileField, SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired, InputRequired
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
-
 # endregion imports
 
 # region global variables
@@ -32,78 +19,49 @@ log_file = os.path.join(current_dir, 'log.txt')
 # endregion global variables
 
 # region functions
-def connect_db():
-    """
-    connect to mongodb.
-    :return:
-    """
-    uri = "mongodb+srv://yairda:yairda2@eeg.tfghyuo.mongodb.net/?retryWrites=true&w=majority"
 
-    # Create a new client and connect to the server
-    client = MongoClient(uri, server_api=ServerApi('1'))
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'
 
-    # Send a ping to confirm a successful connection
-    try:
-        client.admin.command('ping')
-        print("Pinged your deployment. You successfully connected to MongoDB!")
-    except Exception as e:
-        print(e)
+# MongoDB connection
+# Replace the connection string with your MongoDB Atlas connection string
+mongo_uri = "mongodb+srv://yairda:yairda2@eeg.tfghyuo.mongodb.net/?retryWrites=true&w=majority"
+client = MongoClient(mongo_uri)
+db = client.your_database  # Replace 'your-database' with your actual database name
+collection = db.images  # Replace 'images' with your collection name
 
+# Define the upload route
+@app.route('/', methods=['GET', 'POST'])
+def upload_image():
+    if request.method == 'POST':
+        image = request.files['image']
+        validity = request.form['validity']
 
-def report_to_log(message):
-    """
-    report to txt file.
-    :param message:
-    :return:
-    """
-    with open(log_file, 'a') as f:
-        f.write(f"{datetime.time} {message}")
+        reasons = []
+        for i in range(1, 11):
+            reason = request.form.get(f'reason{i}')
+            if reason:
+                reasons.append(reason)
 
-def upload_images_to_db():
-    app = Flask(_name_)
-    app.secret_key = 'your_secret_key'
+        if image:
+            filename = secure_filename(image.filename)
+            image.save(os.path.join('uploads', filename))
 
-    # MongoDB connection
-    client = MongoClient('mongodb://localhost:27017/')  # Update with your MongoDB connection string
-    db = client['image_labels']
-    collection = db['images']
+            # Store the data in MongoDB
+            data = {
+                'filename': filename,
+                'validity': validity,
+                'reasons': reasons
+            }
+            collection.insert_one(data)
 
-    # Define a form for image upload
-    class ImageForm(FlaskForm):
-        image = FileField('Image', validators=[InputRequired()])
-        label = SelectField('Label', choices=[('legal', 'Legal'), ('invalid', 'Invalid')], validators=[DataRequired()])
-        comment = StringField('Comment')
-        submit = SubmitField('Upload')
+            flash('Image uploaded successfully!', 'success')
+            return redirect(url_for('upload_image'))
 
-    # Define the upload route
-    @app.route('/', methods=['GET', 'POST'])
-    def upload_image():
-        form = ImageForm()
+    images = collection.find()
+    return render_template('upload.html', images=images)
 
-        if form.validate_on_submit():
-            image = form.image.data
-            label = form.label.data
-            comment = form.comment.data
-
-            if image:
-                filename = secure_filename(image.filename)
-                image.save(os.path.join('uploads', filename))
-
-                # Store the data in MongoDB
-                data = {
-                    'filename': filename,
-                    'label': label,
-                    'comment': comment,
-                }
-                collection.insert_one(data)
-
-                flash('Image uploaded successfully!', 'success')
-                return redirect(url_for('upload_image'))
-
-        return render_template('upload.html', form=form)
-
-    if _name_ == '_main_':
-        app.run(debug=True)
-
-# endregion functions
-
+if __name__ == '__main__':
+    os.makedirs("uploads", exist_ok=True)
+    webbrowser.open('http://127.0.0.1:5000')  # Open the default web browser
+    app.run(debug=True)
