@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import shutil
 from datetime import datetime
-
+current_dir = os.path.dirname(os.path.abspath(__file__))
 class ImageValidator:
     def __init__(self, root):
         self.root = root
@@ -75,7 +75,7 @@ class ImageValidator:
             return
 
         image_name = os.path.basename(self.image_path)
-        destination = os.path.join("photos", image_name)
+        destination = os.path.join(f'{current_dir}/photos', image_name)
         os.makedirs("photos", exist_ok=True)
         Image.open(self.image_path).save(destination)
 
@@ -92,7 +92,7 @@ class ImageValidator:
 
         excel_filename = "validation_data.xlsx"
 
-        if os.path.exists(excel_filename):
+        if os.path.exists(f'{current_dir}/{excel_filename}'):
             existing_data = pd.read_excel(excel_filename)
 
             existing_image_names = existing_data["Image Path"].tolist()
@@ -101,16 +101,17 @@ class ImageValidator:
                 return
 
             existing_data = pd.concat([existing_data, df], ignore_index=True)
-            existing_data.to_excel(excel_filename, index=False)
+            existing_data.to_excel(f'{current_dir}/{excel_filename}', index=False)
         else:
-            df.to_excel(excel_filename, index=False)
-
+            df.to_excel(f'{current_dir}/{excel_filename}', index=False)
+            # Copy the image to the 'photos' directory
+        shutil.copy(self.image_path, destination)
         messagebox.showinfo("Success", f"Data saved to {excel_filename} and image copied to 'photos' folder.")
 
     def on_close(self):
         excel_filename = "validation_data.xlsx"
         if os.path.exists(excel_filename):
-            backup_dir = "backups"
+            backup_dir = f'{current_dir}/"backups'
             os.makedirs(backup_dir, exist_ok=True)
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             backup_filename = os.path.join(backup_dir, f"backup_validation_data_{timestamp}.xlsx")
