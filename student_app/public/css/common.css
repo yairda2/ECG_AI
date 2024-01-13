@@ -1,0 +1,13 @@
+/* Common styles for all pages */
+body {
+    background-image: url('../img/background.png'); /* Adjust the path as needed */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Add more general styles here */
+
