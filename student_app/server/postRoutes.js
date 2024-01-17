@@ -7,9 +7,17 @@ const XLSX = require('xlsx');
 
 const router = express.Router();
 
+router.post('/', (req, res) => {
+    // Handle POST request
+    res.send('Response for POST');
+
+});
 // Registration Endpoint
 router.post('/register', async (req, res) => {
   // Handle POST request for registration
+    console.log(req.body);
+    console.log("req.body.email");
+    res.send('Response for POST register elyasaf light');
   // ...
 });
 
@@ -37,5 +45,6 @@ router.post('/login', async (req, res) => {
         res.send('Incorrect password');
     }
 });
+
 
 module.exports = router;
