@@ -80,6 +80,7 @@ app.post('/register', async (req, res) => {
     // If user does not exist, proceed with registration
     const hashedPassword = await bcrypt.hash(password, 10);
     saveToXLSX({name, email, password: hashedPassword});
+    req.session.userId = email; // Set user email in session
     res.status(200).json({redirect: '/welcome'});
 });
 

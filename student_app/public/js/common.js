@@ -1,3 +1,5 @@
+
+
 function handleFormSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -86,6 +88,7 @@ function handleFormSubmit(event) {
             alert(`Error: ${error.message}`);
         });
 }
+
 
 // Attach the event listener to all forms with the class 'ajax-form'
 window.addEventListener('DOMContentLoaded', () => {
