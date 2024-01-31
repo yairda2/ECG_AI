@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        /* Specific styles for this page */
+        h2 {
+            text-align: center;
+            /* Add more specific styles for headings here */
+        }
+
+        /* Style the forms, inputs, buttons specifically for this page */
+        form {
+            margin: 20px auto;
+            width: 300px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+            /* Add more styles for form here */
+        }
+
+        input[type="email"], input[type="password"], input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            /* Add more styles for input fields here */
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            /* Add more styles for button here */
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Login</h2>
+<form id="loginForm" class="ajax-form" action="/login" method="post">
+    Email: <input type="email" name="email" required><br>
+    Password: <input type="password" name="password" required><br>
+    <button type="submit">Login</button>
+</form>
+
+<h2>Register</h2>
+<form id="registerForm" class="ajax-form" action="/register" method="post">
+    Name: <input type="text" name="name" required><br>
+    Email: <input type="email" name="email" required><br>
+    Password: <input type="password" name="password" required><br>
+    <button type="submit">Register</button>
+</form>
+
+<script src="js/common.js"></script>
+</body>
+</html>
