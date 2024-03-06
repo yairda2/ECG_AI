@@ -5,67 +5,81 @@
     <title>Home Page</title>
     <link rel="stylesheet" href="css/common.css">
     <style>
-        /* Specific styles for this page */
-        h2 {
-            text-align: center;
-            /* Add more specific styles for headings here */
+        body, html {
+            height: 100%;
+            margin: 0;
         }
 
-        /* Style the forms, inputs, buttons specifically for this page */
+        .header {
+            width: 100%;
+            padding: 1%;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .header button {
+            margin-left: 10px; /* Adjust spacing between buttons */
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 90%; /* Adjust based on header size to fill the page */
+        }
+
+        h2 {
+            margin-bottom: 2%;
+        }
+
         form {
-            margin: 20px auto;
-            width: 300px;
-            padding: 15px;
+            width: 80%;
+            max-width: 300px; /* Ensures form doesn't get too wide on large screens */
+            padding: 3%;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             background-color: #f9f9f9;
-            /* Add more styles for form here */
+            margin: 2% 0;
         }
 
         input[type="email"], input[type="password"], input[type="text"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin: 10px 0;
+            width: 94%; /* Account for padding and border */
+            padding: 3%;
+            margin: 2% 0;
             border-radius: 4px;
             border: 1px solid #ccc;
-            /* Add more styles for input fields here */
         }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
+        button, .header-btn {
+            padding: 2% 4%;
             border: none;
             border-radius: 4px;
             background-color: #007bff;
             color: white;
             cursor: pointer;
-            /* Add more styles for button here */
         }
 
-        button:hover {
+        button:hover, .header-btn:hover {
             background-color: #0056b3;
         }
+
     </style>
 </head>
 <body>
 
-<h2>Login</h2>
-<form id="loginForm" class="ajax-form" action="/login" method="post">
-    Email: <input type="email" name="email" required><br>
-    Password: <input type="password" name="password" required><br>
-    <button type="submit">Login</button>
-</form>
+<div class="header">
+    <a href="/login"><button class="header-btn">Login</button></a>
+    <a href="/register"><button class="header-btn">Register</button></a>
+</div>
 
-<h2>Register</h2>
-<form id="registerForm" class="ajax-form" action="/register" method="post">
-    Name: <input type="text" name="name" required><br>
-    Email: <input type="email" name="email" required><br>
-    Password: <input type="password" name="password" required><br>
-    <button type="submit">Register</button>
-</form>
+<div class="main-content">
+    <h2>ECG Training</h2>
+    <p>Welcome to the ECG training module. Get started below!</p>
+    <!-- You can add more content related to ECG training here -->
+</div>
 
-<script src="js/common.js"></script>
 </body>
 </html>

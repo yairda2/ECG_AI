@@ -3,163 +3,187 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const path = require('path');
-const fs = require('fs');
-const XLSX = require('xlsx');
-const {json} = require("body-parser");
+const cors = require('cors');
+const sqlite3 = require('sqlite3').verbose();
+
 const app = express();
 
-// Configure session middleware
+// Middleware configuration
+app.use(cors());
 app.use(session({
-    secret: 'your_secret_key', // change this to a secret phrase
+    secret: 'your_secret_key',
     resave: false,
     saveUninitialized: true,
-    cookie: {secure: false, httpOnly: true} // set secure to true if using https
+    cookie: { secure: false, httpOnly: true }
 }));
-
-app.use(express.json()); // for parsing application/json
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Function to save user data to XLSX
-function saveToXLSX(userData) {
-    const filePath = path.join(__dirname, 'users.xlsx');
-    let workbook;
-    let worksheet;
-
-    if (fs.existsSync(filePath)) {
-        // Read the existing workbook
-        workbook = XLSX.readFile(filePath);
-        worksheet = workbook.Sheets['users'];
-        if (!worksheet) {
-            // Create a new worksheet with headers if it does not exist
-            worksheet = XLSX.utils.json_to_sheet([], {header: ['name', 'email', 'password']});
-            workbook.Sheets['users'] = worksheet;
-        }
+// Database connection
+const db = new sqlite3.Database(path.join(__dirname, '/ECG.db'), sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+    if (err) {
+        console.error('Error opening database', err);
     } else {
-        // Create a new workbook and worksheet with headers
-        workbook = XLSX.utils.book_new();
-        worksheet = XLSX.utils.json_to_sheet([], {header: ['name', 'email', 'password']});
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'users');
+        console.log('Connected to the ECG.db database.');
     }
+});
 
-    // Append new user data
-    XLSX.utils.sheet_add_json(worksheet, [userData], {
-        skipHeader: true,
-        origin: -1 // Append to the end of the sheet
-    });
+// Function to create database tables
+const createTables = () => {
+    const userTable = `CREATE TABLE IF NOT EXISTS users (
+        id TEXT UNIQUE PRIMARY KEY,
+        userName TEXT,
+        password TEXT NOT NULL,
+        age INTEGER,
+        AVG REAL,
+        email TEXT UNIQUE,
+        gender TEXT
+    )`;
 
-    // Write the workbook to file
-    XLSX.writeFile(workbook, filePath);
-}
+    const mainTable = `CREATE TABLE IF NOT EXISTS main (
+        id TEXT,
+        totalTrainTime INTEGER,
+        totalEntries INTEGER,
+        avg REAL,
+        PRIMARY KEY (id),
+        FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE
+    )`;
+    const answersTable = `CREATE TABLE IF NOT EXISTS answers (
+            id INTEGER,
+            date TEXT,
+            photoName TEXT,
+            classification TEXT,
+            successAnswer INTEGER CHECK (successAnswer IN (0, 1, 2)),
+            answerTime INTEGER,
+            answerChange INTEGER,
+            PRIMARY KEY (id, date),
+            FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE
+            )`;
+
+    const examTable = `CREATE TABLE IF NOT EXISTS exam (
+            id TEXT,
+            date TEXT,
+            title TEXT,
+            score INTEGER,
+            totalExamTime INTEGER,
+            PRIMARY KEY (id, date),
+            FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE
+        )`
+
+    // Add other table creation queries as needed
+
+    db.run(userTable);
+    db.run(mainTable);
+    db.run(answersTable);
+    db.run(examTable);
+    // Execute other table creations here
+};
+
+// Call the function to ensure tables are created
+createTables();
+
+const checkAuthenticated = (req, res, next) => {
+    if (req.session && req.session.userId) {
+        // User is logged in, proceed to the next middleware
+        next();
+    } else {
+        // User is not logged in, redirect to login page or send an error
+        res.status(401).send('Unauthorized: No session available');
+        // Or redirect: res.redirect('/login');
+    }
+};
 
 
-// Registration Endpoint
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/views/login.html'));
+});
+
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/views/register.html'));
+});
+app.get('/welcome',checkAuthenticated, (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/views/welcome.html'));
+});
+app.get('/chooseModel',checkAuthenticated, (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/views/chooseModel.html'));
+});
+
+
+
+// Registration endpoint
 app.post('/register', async (req, res) => {
-    const {name, email, password} = req.body;
+    const { userName, id, password, email, AVG, age,gender } = req.body;
 
-    const filePath = path.join(__dirname, 'users.xlsx');
-    let userExists = false;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const query = `INSERT INTO users (id, userName, password, email, AVG, age, gender) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
-    // Check if the XLSX file exists and read it
-    if (fs.existsSync(filePath)) {
-        const workbook = XLSX.readFile(filePath);
-        const worksheet = workbook.Sheets['users'];
-        if (worksheet) {
-            const users = XLSX.utils.sheet_to_json(worksheet);
-            userExists = users.some(u => u.email === email);
-        }
+        db.run(query, [id, userName, hashedPassword, email, AVG, age, gender], function(err) {
+            if (err) {
+                res.status(500).json({ msg: 'Error registering new user', error: err });
+            } else {
+                req.session.userId = email; // Adjust according to your session management
+                res.status(200).redirect('/welcome');
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ msg: 'Server error', error });
     }
-
-    // If user already exists, send an appropriate response
-    if (userExists) {
-        return res.status(400).json({msg:'User already exists with this email'});
-    }
-
-    // If user does not exist, proceed with registration
-    const hashedPassword = await bcrypt.hash(password, 10);
-    saveToXLSX({name, email, password: hashedPassword});
-    req.session.userId = email; // Set user email in session
-    res.status(200).json({redirect: '/welcome'});
 });
 
-
-// Login Endpoint
+// Login endpoint
 app.post('/login', async (req, res) => {
-    console.log("Login request received:", req.body); // Debug print for incoming request
-    //message from formdata is received here and is stored in req.body as an object chenged to json
-    const {email, password} = req.body;
-    const filePath = path.join(__dirname, 'users.xlsx');
+    const { id, password } = req.body;
+    db.get(`SELECT * FROM users WHERE id = ?`, [id], async (err, user) => {
+        if (err) {
+            return res.status(500).json({ msg: 'Error logging in', error: err });
+        }
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        const match = await bcrypt.compare(password, user.password);
+        if (match) {
+            req.session.userId = user.email; // Adjust according to your session management
+            res.status(200).redirect('/welcome');
 
-    // Check if the XLSX file exists
-    if (!fs.existsSync(filePath)) {
-        console.error('XLSX file not found:', filePath); // Debug print
-        return res.status(400).send('No users registered');
-    }
-
-    // Read the workbook
-    const workbook = XLSX.readFile(filePath);
-    console.log('Workbook Sheet Names:', workbook.SheetNames); // Debug print
-
-    // Specify the sheet name
-    const sheetName = 'users';
-    const worksheet = workbook.Sheets[sheetName];
-
-    if (!worksheet) {
-        console.error(`No worksheet named '${sheetName}' found.`);
-        return res.status(500).send('Server error');
-    }
-
-    // Convert sheet to JSON
-    const users = XLSX.utils.sheet_to_json(worksheet);
-    console.log('Converted Users:', users);
-
-    // Find user by email
-    const user = users.find(u => u.email === email);
-    if (!user) {
-        console.error('User not found:', email); // Debug print
-        return res.status(400).send('User not found');
-    }
-
-    // Compare password
-    const match = await bcrypt.compare(password, user.password);
-    if (match) {
-        req.session.userId = email; // Set user email in session
-        res.json({redirect: '/welcome'});
-
-    } else {
-        console.log('Incorrect password for:', email); // Debug print
-        res.send('Incorrect password');
-    }
-
+        } else {
+            res.status(400).json({ msg: 'Incorrect password' });
+        }
+    });
 });
 
-app.get('/welcome', (req, res) => {
-    if (req.session.userId) {
-        res.sendFile(path.join(__dirname, '../public/views/welcome.html'));
-    } else {
-        res.status(401).send('Unauthorized');
+app.post('/welcome', (req, res) => {
+    res.redirect('/chooseModel');
+});
+
+app.post('/chooseModel', (req, res) => {
+    chooseModel = req.body.chooseModel;
+    if (chooseModel === "train") {
+        res.redirect('/train');
+    } else if (chooseModel === "firstExam") {
+        res.redirect('/firstExam');
+    } else if (chooseModel === "lastExam") {
+        res.redirect('/lastExam');
     }
 });
 
-app.post('/personal-information', (req, res) => {
-    if (req.session.userId) {
-        res.json({redirect: '/personal-information'});
-    } else {
-        res.status(401).send('Unauthorized');
-    }
-});
-// Protected Page Endpoint
-app.get('/personal-information', (req, res) => {
-    if (req.session.userId) {
-        res.sendFile(path.join(__dirname, '../public/views/personalInformation.html'));
-    } else {
-        res.status(401).send('Unauthorized');
-    }
-});
+// Other endpoints as needed...
 
 const PORT = 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
+});
+
+
+// Optional: Clean up the database connection on server close
+process.on('SIGINT', () => {
+    db.close((err) => {
+        if (err) {
+            console.error(err.message);
+        }
+        console.log('Database connection closed.');
+        process.exit(0);
+    });
 });
