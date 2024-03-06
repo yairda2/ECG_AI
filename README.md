@@ -1,4 +1,4 @@
-# EEG_AI
+# ECG_AI
 An application that classifies, learns and teaches about EEG
 YD ES
 
