@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Classified Images Admin</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        /* Container to hold everything without scrolling */
+        .container {
+            max-width: 800px; /* Limit the width to keep everything tight */
+            margin: auto;
+            padding: 20px;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        img {
+            width: 100%; /* Responsive width */
+            height: auto; /* Maintain aspect ratio */
+            max-height: 300px; /* Limit the height of the image */
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .category-section {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Allows items to wrap onto the next line */
+        }
+
+        .category-label {
+            flex: 1 1 180px; /* Allows the label to grow and shrink with a basis of 180px */
+            padding: 10px;
+            background-color: #e7e7e7;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+            text-align: center; /* Center text in the label */
+            user-select: none; /* Prevent user from selecting text */
+        }
+
+        .category-label.active {
+            background-color: #c8e6c9; /* Light green background for active state */
+        }
+
+        .category-label:hover {
+            background-color: #505050;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Image Classification Dashboard</h1>
+    <img id="imageToClassify" src="" alt="Random Image">
+    <div id="classificationForm">
+        <h2>STEMI:</h2>
+        <div class="category-section">
+            <div class="category-label" onclick="toggleCategory(this, 'Septal')">Septal (V1-2)</div>
+            <div class="category-label" onclick="toggleCategory(this, 'Anterior')">Anterior (V3-4)</div>
+            <div class="category-label" onclick="toggleCategory(this, 'Lateral')">Lateral (I + aVL, V5-6)</div>
+            <div class="category-label" onclick="toggleCategory(this, 'Inferior')">Inferior (II, III, aVF)</div>
+        </div>
+
+        <h2>HIGH RISK:</h2>
+        <div class="category-section">
+            <div class="category-label" onclick="toggleCategory(this, 'Hyperacute')">Hyperacute T waves</div>
+            <div class="category-label" onclick="toggleCategory(this, 'DeWinters')">De winters T waves</div>
+            <div class="category-label" onclick="toggleCategory(this, 'LossOfBalance')">Loss of precordial T wave balance</div>
+            <div class="category-label" onclick="toggleCategory(this, 'TInversion')">T wave inversion</div>
+            <div class="category-label" onclick="toggleCategory(this, 'Wellens')">Wellens</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const selectedCategories = new Set();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchRandomImage(); // Load an image when the page loads
+    });
+
+    function fetchRandomImage() {
+        fetch('/random-image', { method: 'GET' })
+            .then(response => {
+                if (response.status !== 200) {
+                    throw new Error('Failed to fetch image');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('imageToClassify').src = data.imagePath;
+            })
+            .catch(error => console.error('Error fetching image:', error));
+    }
+
+    function toggleCategory(element, category) {
+        if (selectedCategories.has(category)) {
+            selectedCategories.delete(category);
+            element.classList.remove('active');
+        } else {
+            selectedCategories.add(category);
+            element.classList.add('active');
+        }
+        autoSubmitClassification(); // Trigger classification automatically
+    }
+
+    function autoSubmitClassification() {
+        const categoryArray = Array.from(selectedCategories);
+        const imageSrc = document.getElementById('imageToClassify').src;
+
+        fetch('/classify-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName: imageSrc.split('/').pop(), category: categoryArray.join(', ') })
+        })
+            .then(response => response.text())
+            .then(message => {
+                alert(message);
+                fetchRandomImage(); // Fetch next image after classification
+            })
+            .catch(error => console.error('Error classifying image:', error));
+    }
+</script>
+</body>
+</html>
