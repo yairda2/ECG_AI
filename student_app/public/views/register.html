@@ -2,200 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
-    <link rel="stylesheet" href="../css/common.css">
-    <!-- Include the same CSS as your login page or adjust as needed -->
-
-    <style>
-        /* General Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0 auto;
-        }
-
-        .login-container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-        }
-
-        input{
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .error {
-            color: #ff0000;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .checkbox-container {
-            display: flex;
-            overflow-x: auto;
-            white-space: nowrap;
-        }
-
-        .checkbox-container input[type="checkbox"],
-        .checkbox-container label {
-            margin-right: 10px; /* Adjust spacing between checkboxes and labels */
-        }
-
-        /* Optional: Add custom scrollbar styles for better aesthetics */
-        .checkbox-container::-webkit-scrollbar {
-            height: 10px; /* Adjust height of the scrollbar */
-        }
-
-        .checkbox-container::-webkit-scrollbar-thumb {
-            background: #888; /* Color of the scrollbar thumb */
-        }
-
-        .checkbox-container::-webkit-scrollbar-thumb:hover {
-            background: #555; /* Color of the scrollbar thumb on hover */
-        }
-
-    </style>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css"> <!-- Assuming you have some CSS for styling -->
 </head>
 <body>
-
 <div class="login-container">
-    <h2>Register</h2>
-    <form action="/register" method="POST" onsubmit="return validateForm()">
+    <h1>Login</h1>
+    <form id="loginForm">
         <div class="form-group">
-            <label for="userName">User name:</label>
-            <input type="text" id="userName" name="userName" required>
-        </div>
-        <div class="form-group">
-            <label for="id">ID:</label>
-            <input type="text" id="id" name="id" required>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
         </div>
         <div class="form-group">
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
         </div>
-        <div class="form-group">
-            <label for="password2">Confirm Password:</label>
-            <input type="password" id="password2" name="password2" required>
-        </div>
-        <div class="form-group">
-            <label for="age">Age:</label>
-            <input type="text" id="age" name="age" required>
-        </div>
-        <div class="form-group">
-            <label for="AVG">Currently AVG:</label>
-            <input type="text" id="AVG" name="AVG" required>
-
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-            <div class="form-group">
-                <label>Gender:</label><br>
-                <div class="checkbox-container">
-                    <input type="checkbox" id="male" name="gender" value="male" onclick="handleCheckboxClick(this)">
-                    <label for="male">Male</label>
-                    <input type="checkbox" id="female" name="gender" value="female" onclick="handleCheckboxClick(this)">
-                    <label for="female">Female</label>
-                </div>
-            </div>
-
-
-            <div class="error">
-            <!-- Display error message here -->
-            <?php if (isset($error)): ?>
-            <p><?php echo $error; ?></p>
-            <?php endif; ?>
-            </div>
-
-            <div class="form-group">
-                <button type="submit">Register</button>
-            </div>
-        </div>
+        <button type="submit">Login</button>
     </form>
+    <div id="message"></div>
 </div>
 
-</body>
-
 <script>
-    function handleCheckboxClick(clickedCheckbox) {
-        const checkboxes = document.querySelectorAll('input[type="checkbox"][name="gender"]');
-        checkboxes.forEach((checkbox) => {
-            if (checkbox !== clickedCheckbox) {
-                checkbox.checked = false;
-            }
-        });
-    }
-        function handleCheckboxClick(clickedCheckbox) {
-        const checkboxes = document.querySelectorAll('input[type="checkbox"][name="gender"]');
-        checkboxes.forEach((checkbox) => {
-        if (checkbox !== clickedCheckbox) checkbox.checked = false;
-    });
-    }
-
-        function validateForm() {
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const password2 = document.getElementById('password2').value;
-
-        // Check if passwords match
-        if (password !== password2) {
-        alert('Passwords do not match. Please try again.');
-        return false; // Prevent form submission
-    }
-        return true; // Allow form submission
-    }
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Login successful') {
+                    // Redirect to dashboard or wherever appropriate
+                    window.location.href = '/chooseModel';
+                } else {
+                    document.getElementById('message').innerText = 'Login failed: ' + data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').innerText = 'Login failed with error.';
+            });
+    });
 </script>
-<script src="../js/common.js"></script>
+</body>
 </html>
