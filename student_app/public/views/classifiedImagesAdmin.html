@@ -58,7 +58,7 @@
         }
 
         .category-label:hover {
-            background-color: #505050;
+            background-color: #568c3a;
         }
     </style>
 </head>
@@ -69,32 +69,32 @@
     <div id="classificationForm">
         <h2>STEMI:</h2>
         <div class="category-section">
-            <div class="category-label" onclick="toggleCategory(this, 'Septal')">Septal (V1-2)</div>
-            <div class="category-label" onclick="toggleCategory(this, 'Anterior')">Anterior (V3-4)</div>
-            <div class="category-label" onclick="toggleCategory(this, 'Lateral')">Lateral (I + aVL, V5-6)</div>
-            <div class="category-label" onclick="toggleCategory(this, 'Inferior')">Inferior (II, III, aVF)</div>
+            <div class="category-label" onclick="autoSubmitClassification('Septal')">Septal (V1-2)</div>
+            <div class="category-label" onclick="autoSubmitClassification('Anterior')">Anterior (V3-4)</div>
+            <div class="category-label" onclick="autoSubmitClassification('Lateral')">Lateral (I + aVL, V5-6)</div>
+            <div class="category-label" onclick="autoSubmitClassification('Inferior')">Inferior (II, III, aVF)</div>
         </div>
 
         <h2>HIGH RISK:</h2>
         <div class="category-section">
-            <div class="category-label" onclick="toggleCategory(this, 'Hyperacute')">Hyperacute T waves</div>
-            <div class="category-label" onclick="toggleCategory(this, 'DeWinters')">De winters T waves</div>
-            <div class="category-label" onclick="toggleCategory(this, 'LossOfBalance')">Loss of precordial T wave balance</div>
-            <div class="category-label" onclick="toggleCategory(this, 'TInversion')">T wave inversion</div>
-            <div class="category-label" onclick="toggleCategory(this, 'Wellens')">Wellens</div>
+            <div class="category-label" onclick="autoSubmitClassification('Hyperacute')">Hyperacute T waves</div>
+            <div class="category-label" onclick="autoSubmitClassification('DeWinters')">De winters T waves</div>
+            <div class="category-label" onclick="autoSubmitClassification('LossOfBalance')">Loss of precordial T wave balance</div>
+            <div class="category-label" onclick="autoSubmitClassification('TInversion')">T wave inversion</div>
+            <div class="category-label" onclick="autoSubmitClassification('Wellens')">Wellens</div>
+            <div class="category-label" onclick="autoSubmitClassification('Avrste')">AVR STE</div>
+
         </div>
     </div>
 </div>
 
 <script>
-    const selectedCategories = new Set();
-
     document.addEventListener('DOMContentLoaded', function() {
         fetchRandomImage(); // Load an image when the page loads
     });
 
     function fetchRandomImage() {
-        fetch('/random-image', { method: 'GET' })
+        fetch('/random-image-classification', { method: 'GET' })
             .then(response => {
                 if (response.status !== 200) {
                     throw new Error('Failed to fetch image');
@@ -107,25 +107,13 @@
             .catch(error => console.error('Error fetching image:', error));
     }
 
-    function toggleCategory(element, category) {
-        if (selectedCategories.has(category)) {
-            selectedCategories.delete(category);
-            element.classList.remove('active');
-        } else {
-            selectedCategories.add(category);
-            element.classList.add('active');
-        }
-        autoSubmitClassification(); // Trigger classification automatically
-    }
-
-    function autoSubmitClassification() {
-        const categoryArray = Array.from(selectedCategories);
+    function autoSubmitClassification(category) {
         const imageSrc = document.getElementById('imageToClassify').src;
 
         fetch('/classify-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: imageSrc.split('/').pop(), category: categoryArray.join(', ') })
+            body: JSON.stringify({ fileName: imageSrc.split('/').pop(), category: category })
         })
             .then(response => response.text())
             .then(message => {

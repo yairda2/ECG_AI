@@ -5,3 +5,16 @@
 /httpRequests/
 # GitHub Copilot persisted chat sessions
 /copilot/chatSessions
+
+
+# Ignore all jpg files
+*.jpg
+
+# Ignore all png files
+*.png
+
+# Other patterns
+node_modules/
+.DS_Store
+.env
+*.log

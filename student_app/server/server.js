@@ -179,6 +179,17 @@ app.get('/classifiedImages', (req, res) => {
     }
 });
 
+// Serve the training page
+app.get('/train', (req, res) => {
+    // Validate the user's role
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+
+    //const decoded = jwt.verify(token, SECRET_KEY);
+    // All users can access the training page
+
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'train.html'));
+});
 
 // Handling form submission from chooseModel or chooseModelAdmin
 app.post('/chooseModel', (req, res) => {
@@ -189,7 +200,7 @@ app.post('/chooseModel', (req, res) => {
             res.redirect('/classifiedImagesAdmin');
             break;
         case 'Train':
-            res.send('Train functionality to be implemented');
+            res.redirect('/train');
             break;
         case 'FirstTest':
             res.send('First Test functionality to be implemented');
@@ -212,11 +223,28 @@ app.post('/classify-image', (req, res) => {
     const { fileName, category } = req.body;
     // Implement image classification and file handling logic
     console.log(`Classifying image ${fileName} as ${category}`);
+
+    // Move the image to the appropriate folder based on the category, if needed,create the folder
+    const sourcePath = path.join(__dirname, '..', 'public', 'img', 'bankPhotos', fileName);
+    const destPath = path.join(__dirname, '..', 'public', 'img',"graded", category, fileName);
+    // Create the folder if it doesn't exist
+    const folderPath = path.join(__dirname, '..', 'public', 'img',"graded", category);
+    if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath, { recursive: true });
+    }
+
+    fs.rename(sourcePath, destPath, (err) => {
+        if (err) {
+            console.error('Error moving file:', err.message);
+            return res.status(500).send('Failed to classify image');
+        }
+    });
+
     res.send(`Image ${fileName} classified as ${category}`);
 });
 
-// Assuming your images are stored in 'public/img/bankPhotos'
-app.get('/random-image', (req, res) => {
+// Endpoint to handle image classification for admins only, classification only.
+app.get('/random-image-classification', (req, res) => {
     const imagesDir = path.join(__dirname, '..', 'public', 'img', 'bankPhotos');
     fs.readdir(imagesDir, (err, files) => {
         if (err) {
@@ -228,6 +256,26 @@ app.get('/random-image', (req, res) => {
         const randomIndex = Math.floor(Math.random() * files.length);
         const imagePath = files[randomIndex];
         res.json({ imagePath: `../img/bankPhotos/${imagePath}` });
+    });
+});
+
+// Endpoint to handle training page, choose a random image for training
+app.get('/random-image', (req, res) => {
+    // Get a random image from one of the folders
+    const folders = [ 'Valid', 'Septal',' Anterior', 'Lateral', 'Inferior', 'Hyperacute', 'DeWinters', 'LossOfBalance', 'TInversion', 'Wellens', 'Avrste'];
+    const randomFolder = folders[Math.floor(Math.random() * folders.length)];
+    const imagesDir = path.join(__dirname, '..', 'public', 'img', 'graded', randomFolder);
+    fs.readdir(imagesDir, (err, files) => {
+        if (err) {
+            return res.status(500).send('Failed to load images');
+        }
+        if (files.length === 0) {
+            return res.status(404).send('No images found');
+        }
+        const randomIndex = Math.floor(Math.random() * files.length);
+        const imagePath = files[randomIndex];
+        // need to fix the path the imagesDir is with ful path, need to cut
+        res.json({ imagePath: `../img/graded/${randomFolder}/${imagePath}` });
     });
 });
 
