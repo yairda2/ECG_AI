@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Register</title>
     <link rel="stylesheet" type="text/css" href="/css/style.css"> <!-- Assuming you have some CSS for styling -->
 </head>
 <body>
-<div class="login-container">
-    <h1>Login</h1>
-    <form id="loginForm">
+<div class="register-container">
+    <h1>Register</h1>
+    <form id="registerForm">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
         <div class="form-group">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
@@ -17,35 +21,55 @@
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
         </div>
-        <button type="submit">Login</button>
+        <div class="form-group">
+            <label>Gender:</label>
+            <input type="radio" id="male" name="gender" value="male" required>
+            <label for="male">Male</label>
+            <input type="radio" id="female" name="gender" value="female" required>
+            <label for="female">Female</label>
+        </div>
+        <div class="form-group">
+            <label for="avgDegree">Average Degree:</label>
+            <input type="number" step="0.01" id="avgDegree" name="avgDegree" required>
+        </div>
+        <div class="form-group">
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" required>
+        </div>
+        <button type="submit">Register</button>
     </form>
     <div id="message"></div>
 </div>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
         event.preventDefault();
+        const userName = document.getElementById('name').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        fetch('/login', {
+        const gender = document.querySelector('input[name="gender"]:checked').value;
+        const avgDegree = parseFloat(document.getElementById('avgDegree').value);
+        const age = parseInt(document.getElementById('age').value);
+
+        fetch('/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ userName, email, password, gender, avgDegree, age })
         })
             .then(response => response.json())
             .then(data => {
-                if (data.message === 'Login successful') {
-                    // Redirect to dashboard or wherever appropriate
-                    window.location.href = '/chooseModel';
+                if (data.message === 'Registration successful') {
+                    // Redirect to a welcome page or login page
+                    window.location.href = '/welcome';
                 } else {
-                    document.getElementById('message').innerText = 'Login failed: ' + data.message;
+                    document.getElementById('message').innerText = 'Registration failed: ' + data.message;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                document.getElementById('message').innerText = 'Login failed with error.';
+                document.getElementById('message').innerText = 'Registration failed with error.';
             });
     });
 </script>
