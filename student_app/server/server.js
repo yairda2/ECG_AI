@@ -41,6 +41,7 @@ function createTables() {
             userName TEXT UNIQUE,
             age INTEGER,
             gender TEXT,
+            avgDegree INTEGER,
             totalTrainTime INTEGER,
             totalEntries INTEGER,
             avgAnswers INTEGER
@@ -63,8 +64,8 @@ function createTables() {
             userId TEXT,
             date TEXT,
             photoName TEXT,
-            classification TEXT,
-            successAnswer INTEGER CHECK(successAnswer IN (0, 1, 2)),
+            classificationSrc TEXT,
+            successAnswerDes INTEGER CHECK(successAnswer IN (0, 1, 2)),
             answerTime INTEGER,
             answerChange INTEGER,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
@@ -85,14 +86,14 @@ function createTables() {
 
 // Registration endpoint
 app.post('/register', async (req, res) => {
-    const {userName, password, email, age, gender} = req.body;
-    if (!userName || !password || !email || !age || !gender) {
+    const {userName, password, email, age, gender, avgDegree} = req.body;
+    if (!userName || !password || !email || !age || !gender || !avgDegree) {
         return res.status(400).send('All fields are required');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = uuidv4();
 
-    db.run('INSERT INTO users (id, userName, age, gender) VALUES (?, ?, ?, ?)', [userId, userName, age, gender], (err) => {
+    db.run('INSERT INTO users (id, userName, age, gender, avgDegree) VALUES (?, ?, ?, ?, ?)', [userId, userName, age, gender, avgDegree], (err) => {
         if (err) {
             return res.status(500).send('Error registering new user in Users table: ' + err.message);
         }
@@ -153,7 +154,6 @@ app.get('/chooseModel', (req, res) =>
             return res.redirect('/chooseModelAdmin');
         }
     }
-
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModel.html'))
 });
 app.get('/chooseModelAdmin', (req, res) => {
