@@ -50,10 +50,18 @@
     </style>
 </head>
 <body>
-    <h2>Welcome to EEG project.</h2>
-    <form id="loginForm" action="/welcome" method="POST">
-        <button type="submit">Click to continue.</button>
-    </form>
+<!-- Main Page and Info Buttons -->
+<button id="mainpageButton" class="icon-button">Home</button>
+<button id="infoButton" class="icon-button">User Info</button>
+<button id="loginButton" class="icon-button" onclick="window.location.href='/login'">Login</button>
+
+<!-- Tooltip Container -->
+<div id="tooltip" class="tooltip"></div>
+
+<h2>Welcome to EEG project.</h2>
+<form id="loginForm" action="/welcome" method="POST">
+    <button type="submit">Click to continue.</button>
+</form>
 
 </body>
 </html>

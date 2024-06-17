@@ -4,38 +4,93 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="" />
+    <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/css/common.css" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/css/common.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0106_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0249_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0341_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0365_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/public.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/classifiedImagesAdmin.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/classifiedImagesAdmin.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/info.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/info.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/preTraining.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/preTraining.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/training.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/training.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/welcome.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/welcome.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 1
+  &quot;associatedIndex&quot;: 6
 }</component>
   <component name="ProjectId" id="2eoZiqUeHs2aHTJ1PwkH8ub9JWh" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/yair/Documents/GitHub/gmar_project&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "JavaScript Debug.chooseModel.html.executor": "Run",
+    "JavaScript Debug.classifiedImagesAdmin.html.executor": "Run",
+    "JavaScript Debug.preTraining.html.executor": "Run",
+    "JavaScript Debug.train.html.executor": "Run",
+    "Node.js.authMiddleware.js.executor": "Debug",
+    "Node.js.common.js.executor": "Debug",
+    "Node.js.server.js.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "yair__dev",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/yair/Documents/GitHub/EEG_AI_firsst_collect/student_app/public/views",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "reference.settings.ide.settings.new.ui",
+    "ts.external.directory.path": "C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\yair\Documents\GitHub\EEG_AI_firsst_collect\student_app\public\views" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Node.js.server.js">
+    <configuration name="authMiddleware.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/authMiddleware.js" working-dir="$PROJECT_DIR$/student_app/server">
+      <method v="2" />
+    </configuration>
+    <configuration name="common.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/public/js/common.js" working-dir="$PROJECT_DIR$/student_app/public/js">
+      <method v="2" />
+    </configuration>
+    <configuration name="server.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/server.js" working-dir="$PROJECT_DIR$/student_app/server">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Node.js.server.js" />
+        <item itemvalue="Node.js.common.js" />
+        <item itemvalue="Node.js.authMiddleware.js" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-1d06a55b98c1-74d2a5396914-JavaScript-WS-241.14494.235" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-WS-241.17011.90" />
       </set>
     </attachedChunks>
   </component>
@@ -49,10 +104,55 @@
       <updated>1712573021682</updated>
       <workItem from="1712573022537" duration="632000" />
       <workItem from="1712580448184" duration="202000" />
+      <workItem from="1717887569708" duration="27000" />
+      <workItem from="1717887677872" duration="435000" />
+      <workItem from="1718041926064" duration="27686000" />
+      <workItem from="1718556419969" duration="62000" />
+      <workItem from="1718556501212" duration="9845000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
+          <line>6</line>
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
+          <line>38</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="21" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
+          <line>218</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="22" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
+          <line>293</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

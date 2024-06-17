@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <style>
+        /* Style for buttons */
+        button {
+            width: 40%; /* Smaller width */
+            padding: 5px; /* Less padding */
+            border: none;
+            border-radius: 4px;
+            background-color: #b10000;
+            color: white;
+            cursor: pointer;
+            font-size: 16px; /* Slightly smaller font size */
+            display: block;
+            margin: 10px auto;
+            text-align: center; /* Center the text inside the button */
+            font-family: 'Iceberg', cursive; /* Stylish font, ensure this font is loaded */
+        }
+
+        button:hover {
+            background-color: #b10000;
+        }
+
+        form {
+            text-align: center; /* Center the form content */
+        }
+
+        body {
+            font-family: 'Arial', sans-serif; /* Default body font */
+        }
+    </style>
+</head>
+
+<body>
+<h2>Welcome to our learning model</h2>
+<h3>Choose your method</h3>
+<form id="model-choose" action="/chooseModel" method="POST">
+    <button type="submit" name="action" value="Single Training">Training</button>
+    <button type="submit" name="action" value="Test">Test</button>
+</form>
+</body>
+</html>
