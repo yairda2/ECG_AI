@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Personal Information Form</title>
     <link rel="stylesheet" href="../css/common.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
+    <script src="../js/common.js"></script> <!-- Include common.js -->
     <style>
         /* Style for buttons */
         button {
@@ -36,12 +38,18 @@
 </head>
 
 <body>
+<!-- Main Page and Info Buttons -->
+<button id="mainpageButton" class="icon-button">Home</button>
+<button id="infoButton" class="icon-button">User Info</button>
+
+<!-- Tooltip Container -->
+<div id="tooltip" class="tooltip"></div>
+
 <h2>Welcome to our learning model</h2>
 <h3>Choose your method</h3>
 <form id="model-choose" action="/chooseModel" method="POST">
-    <button type="submit" name="action" value="Train">Train</button>
-    <button type="submit" name="action" value="FirstTest">First Test</button>
-    <button type="submit" name="action" value="LastTest">Last Test</button>
+    <button type="submit" name="action" value="Single Training">Training</button>
+    <button type="submit" name="action" value="Test">Test</button>
 </form>
 </body>
 </html>

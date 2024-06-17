@@ -1,20 +1,26 @@
+// Description: Server-side code for the ECG student app.
+// Author: Yair Davidof 06/13/24 & Elyasaf sinuani
+// --------------------------------------------------------
+
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sqlite3 = require('sqlite3').verbose();
 const cookieParser = require('cookie-parser');
-const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
+const {v4: uuidv4} = require('uuid');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 const cors = require('cors');
+const verifyToken = require('./authMiddleware'); // Import middleware
+
 
 // Middleware to parse JSON and handle cookies
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));  // For parsing application/x-www-form-urlencoded
+app.use(express.urlencoded({extended: true}));  // For parsing application/x-www-form-urlencoded
 app.use(cors());
 
 console.log(__dirname);
@@ -23,6 +29,11 @@ console.log(__dirname);
 const SECRET_KEY = 'your_secret_jwt_key';
 
 // Database setup
+// DB explanation:
+// users table
+// id: TEXT PRIMARY KEY uses for the user id
+// age: INTEGER user age
+// gender: TEXT use
 const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
@@ -38,13 +49,17 @@ function createTables() {
         db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY,
-            userName TEXT UNIQUE,
             age INTEGER,
             gender TEXT,
             avgDegree INTEGER,
-            totalTrainTime INTEGER,
+            academicInstitution TEXT,
             totalEntries INTEGER,
+            totalAnswers INTEGER,
+            totalExams INTEGER,
+            avgExamTime INTEGER,
+            totalTrainTime INTEGER,
             avgAnswers INTEGER
+
         )`);
 
         db.run(`
@@ -65,9 +80,10 @@ function createTables() {
             date TEXT,
             photoName TEXT,
             classificationSrc TEXT,
-            successAnswerDes INTEGER CHECK(successAnswer IN (0, 1, 2)),
+            classificationDes TEXT,
             answerTime INTEGER,
-            answerChange INTEGER,
+            answerChange TEXT,
+            alertActivated INTEGER,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
         )`);
 
@@ -84,27 +100,42 @@ function createTables() {
     });
 }
 
-// Registration endpoint
 app.post('/register', async (req, res) => {
-    const {userName, password, email, age, gender, avgDegree} = req.body;
-    if (!userName || !password || !email || !age || !gender || !avgDegree) {
+    const {email, password, age, gender, avgDegree, academicInstitution} = req.body;
+    if (!email || !password || !age || !gender || !avgDegree || !academicInstitution) {
         return res.status(400).send('All fields are required');
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const userId = uuidv4();
 
-    db.run('INSERT INTO users (id, userName, age, gender, avgDegree) VALUES (?, ?, ?, ?, ?)', [userId, userName, age, gender, avgDegree], (err) => {
+    // Check if the user already exists
+    db.get('SELECT email FROM authentication WHERE email = ?', [email], async (err, row) => {
         if (err) {
-            return res.status(500).send('Error registering new user in Users table: ' + err.message);
+            console.error('Error querying the database:', err.message);
+            return res.status(500).send('Server error');
         }
-        db.run('INSERT INTO authentication (userId, email, password, role) VALUES (?, ?, ?, "user")', [userId, email, hashedPassword], (authErr) => {
-            if (authErr) {
-                return res.status(500).send('Error registering new user in Authentication table: ' + authErr.message);
+
+        if (row) {
+            // User already exists, redirect to login
+            return res.status(409).json({message: 'User already exists. Please log in.'}); // Status 409 Conflict
+        }
+
+        // User does not exist, proceed with registration
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const userId = uuidv4();
+
+        db.run('INSERT INTO users (id, age, gender, avgDegree, academicInstitution) VALUES (?, ?, ?, ?, ?)', [userId, age, gender, avgDegree, academicInstitution], (err) => {
+            if (err) {
+                return res.status(500).send('Error registering new user in Users table: ' + err.message);
             }
-            res.status(200).send('User registered successfully');
+            db.run('INSERT INTO authentication (userId, email, password, role) VALUES (?, ?, ?, "user")', [userId, email, hashedPassword], (authErr) => {
+                if (authErr) {
+                    return res.status(500).send('Error registering new user in Authentication table: ' + authErr.message);
+                }
+                res.status(200).send('User registered successfully');
+            });
         });
     });
 });
+
 
 // Login endpoint
 app.post('/login', (req, res) => {
@@ -122,32 +153,26 @@ app.post('/login', (req, res) => {
         if (await bcrypt.compare(password, user.password)) {
             const token = jwt.sign({id: user.userId, role: user.role}, SECRET_KEY, {expiresIn: '1h'});
             res.cookie('token', token, {httpOnly: true, secure: true});
+            res.cookie('userId', user.userId, {httpOnly: true, secure: true}); // Add this line
             res.send({message: 'Login successful', role: user.role});
+            //add to totalEntries in users +1
+            db.run('UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?', [user.userId], (err) => {
+                if (err) {
+                    console.error('Error updating totalEntries:', err.message);
+                }
+            });
         } else {
             res.status(401).send('Password incorrect');
         }
     });
 });
 
-// Endpoint for serving the dashboard based on user role
-app.get('/dashboard', (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        const filePath = decoded.role === 'manager' ? 'managerDashboard.html' : 'userDashboard.html';
-        res.sendFile(path.join(__dirname, 'public', filePath));
-    } catch (err) {
-        res.status(400).send('Invalid Token');
-    }
-});
 
 // Static pages routing
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'register.html')));
-app.get('/chooseModel', (req, res) =>
-{
+app.get('/chooseModel',verifyToken, (req, res) => {
     if (req.cookies.token) {
         const decoded = jwt.verify(req.cookies.token, SECRET_KEY);
         if (decoded.role === 'admin') {
@@ -156,7 +181,7 @@ app.get('/chooseModel', (req, res) =>
     }
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModel.html'))
 });
-app.get('/chooseModelAdmin', (req, res) => {
+app.get('/chooseModelAdmin',verifyToken, (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).send('Access Denied');
     const decoded = jwt.verify(token, SECRET_KEY);
@@ -179,8 +204,69 @@ app.get('/classifiedImages', (req, res) => {
     }
 });
 
+// Serve the pre-train page
+app.get('/pre-training', (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+    // all users can access the pre-train page
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTraining.html'));
+});
+
+
+// Middleware to check token validity and refresh if needed
+function checkToken(req, res, next) {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+        const expirationTime = decoded.exp; // Token expiration time
+        const timeLeft = expirationTime - currentTime;
+
+        if (timeLeft < 5 * 60) { // Less than 5 minutes
+            const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
+            res.cookie('token', newToken, {httpOnly: true, secure: true});
+        }
+
+        req.user = decoded; // Attach decoded token to request object
+        next(); // Proceed to the next middleware or route handler
+    } catch (err) {
+        return res.status(401).send('Invalid Token');
+    }
+}
+
+
+// Apply this middleware to protected routes
+app.use('/training', checkToken);
+app.use('/pre-training', checkToken);
+
+//
+app.post('/refresh-token', (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
+        res.cookie('token', newToken, {httpOnly: true, secure: true});
+        res.status(200).send('Token refreshed');
+    } catch (err) {
+        res.status(400).send('Invalid Token');
+    }
+});
+
+
+// Serve the pre-test page
+app.post('/pre-training', checkToken, (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+    // all users can access the pre-train page
+    res.redirect('/training');
+});
+
 // Serve the training page
-app.get('/train', (req, res) => {
+app.get('/training', checkToken, (req, res) => {
     // Validate the user's role
     const token = req.cookies.token;
     if (!token) return res.status(401).send('Access Denied');
@@ -188,25 +274,75 @@ app.get('/train', (req, res) => {
     //const decoded = jwt.verify(token, SECRET_KEY);
     // All users can access the training page
 
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'train.html'));
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
+});
+
+// Serve the training post page
+app.post('/training', (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+
+    const {
+        photoName,
+        classificationSrc,
+        classificationDes,
+        answerTime,
+        answerChange,
+        alertActivated,
+        submissionType
+    } = req.body;
+    const userId = req.cookies.userId;
+    const date = new Date().toISOString();
+
+    db.run('INSERT INTO answers (userId, date, photoName, classificationSrc, classificationDes, answerTime, answerChange, alertActivated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [userId, date, photoName, classificationSrc, classificationDes, answerTime, answerChange, alertActivated], (err) => {
+            if (err) {
+                console.error('Error inserting answer:', err.message);
+                return res.status(500).send('Failed to save answer');
+            }
+
+            // Update user metrics
+            db.get('SELECT totalTrainTime, totalAnswers, avgAnswers FROM users WHERE id = ?', [userId], (err, row) => {
+                if (err) {
+                    console.error('Error retrieving user data:', err.message);
+                    return res.status(500).send('Failed to retrieve user data');
+                }
+
+                if (row) {
+                    const totalTrainTime = (row.totalTrainTime || 0) + answerTime;
+                    const totalAnswers = (row.totalAnswers || 0) + 1;
+                    const avgAnswers =
+                        // Calculate the new average, is all the answers connect to this user where the answer src like the answer des
+                        (row.avgAnswers || 0) + (classificationSrc === classificationDes ? 1 : 0);
+
+                    db.run('UPDATE users SET totalTrainTime = ?, totalAnswers = ?, avgAnswers = ? WHERE id = ?',
+                        [totalTrainTime, totalAnswers, avgAnswers, userId], (err) => {
+                            if (err) {
+                                console.error('Error updating user data:', err.message);
+                                return res.status(500).send('Failed to update user data');
+                            }
+                            res.status(200).send('Answer saved and user metrics updated successfully');
+                        });
+                } else {
+                    res.status(404).send('User not found');
+                }
+            });
+        });
 });
 
 // Handling form submission from chooseModel or chooseModelAdmin
 app.post('/chooseModel', (req, res) => {
     const action = req.body.action;
     // Redirect or handle each action accordingly
-    switch(action) {
+    switch (action) {
         case 'classifiedImages':
             res.redirect('/classifiedImagesAdmin');
             break;
-        case 'Train':
-            res.redirect('/train');
+        case 'Single Training':
+            res.redirect('/pre-training');
             break;
-        case 'FirstTest':
-            res.send('First Test functionality to be implemented');
-            break;
-        case 'LastTest':
-            res.send('Last Test functionality to be implemented');
+        case 'Test':
+            res.redirect('/pre-test');
             break;
         default:
             res.status(404).send('Action not found');
@@ -215,22 +351,22 @@ app.post('/chooseModel', (req, res) => {
 
 // Serve the classifiedImagesAdmin.html
 app.get('/classifiedImagesAdmin', (req, res) => {
-    res.sendFile(path.join(__dirname,'..', 'public', 'views', 'classifiedImagesAdmin.html'));
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'classifiedImagesAdmin.html'));
 });
 
 // API to handle image classification from classifiedImagesAdmin.html
 app.post('/classify-image', (req, res) => {
-    const { fileName, category } = req.body;
+    const {fileName, category} = req.body;
     // Implement image classification and file handling logic
     console.log(`Classifying image ${fileName} as ${category}`);
 
     // Move the image to the appropriate folder based on the category, if needed,create the folder
     const sourcePath = path.join(__dirname, '..', 'public', 'img', 'bankPhotos', fileName);
-    const destPath = path.join(__dirname, '..', 'public', 'img',"graded", category, fileName);
+    const destPath = path.join(__dirname, '..', 'public', 'img', "graded", category, fileName);
     // Create the folder if it doesn't exist
-    const folderPath = path.join(__dirname, '..', 'public', 'img',"graded", category);
+    const folderPath = path.join(__dirname, '..', 'public', 'img', "graded", category);
     if (!fs.existsSync(folderPath)) {
-        fs.mkdirSync(folderPath, { recursive: true });
+        fs.mkdirSync(folderPath, {recursive: true});
     }
 
     fs.rename(sourcePath, destPath, (err) => {
@@ -255,29 +391,68 @@ app.get('/random-image-classification', (req, res) => {
         }
         const randomIndex = Math.floor(Math.random() * files.length);
         const imagePath = files[randomIndex];
-        res.json({ imagePath: `../img/bankPhotos/${imagePath}` });
+        res.json({imagePath: `../img/bankPhotos/${imagePath}`});
     });
 });
 
 // Endpoint to handle training page, choose a random image for training
 app.get('/random-image', (req, res) => {
-    // Get a random image from one of the folders
-    const folders = [ 'Valid', 'Septal',' Anterior', 'Lateral', 'Inferior', 'Hyperacute', 'DeWinters', 'LossOfBalance', 'TInversion', 'Wellens', 'Avrste'];
-    const randomFolder = folders[Math.floor(Math.random() * folders.length)];
-    const imagesDir = path.join(__dirname, '..', 'public', 'img', 'graded', randomFolder);
-    fs.readdir(imagesDir, (err, files) => {
+    const foldersDir = path.join(__dirname, '..', 'public', 'img', 'graded');
+
+    // Read all folder names
+    fs.readdir(foldersDir, {withFileTypes: true}, (err, dirents) => {
         if (err) {
-            return res.status(500).send('Failed to load images');
+            console.error('Error reading folders:', err);
+            return res.status(500).send('Failed to load image folders');
         }
-        if (files.length === 0) {
-            return res.status(404).send('No images found');
+
+        const validFolders = [];
+        for (const dirent of dirents) {
+            if (dirent.isDirectory()) {
+                validFolders.push(dirent.name);
+            }
         }
-        const randomIndex = Math.floor(Math.random() * files.length);
-        const imagePath = files[randomIndex];
-        // need to fix the path the imagesDir is with ful path, need to cut
-        res.json({ imagePath: `../img/graded/${randomFolder}/${imagePath}` });
+
+        if (validFolders.length === 0) {
+            return res.status(404).send('No image folders found');
+        }
+
+        let randomImagePath = '';
+        let foundImage = false;
+
+        const checkFolders = (index) => {
+            if (index >= validFolders.length) {
+                if (!foundImage) {
+                    return res.status(404).send('No images found in any folder');
+                }
+                return;
+            }
+
+            const randomFolder = validFolders[Math.floor(Math.random() * validFolders.length)];
+            const imagesDir = path.join(foldersDir, randomFolder);
+
+            fs.readdir(imagesDir, (err, files) => {
+                if (err) {
+                    console.error('Error reading files:', err);
+                    return res.status(500).send('Failed to load images');
+                }
+
+                if (files.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * files.length);
+                    randomImagePath = path.join('..', 'img', 'graded', randomFolder, files[randomIndex]);
+                    foundImage = true;
+                    return res.json({imagePath: randomImagePath});
+                }
+
+                checkFolders(index + 1);
+            });
+        };
+
+        checkFolders(0);
     });
 });
+
+// Endpoint to handle INFO page, data from the database on the user performance
 
 
 const PORT = process.env.PORT || 3000;

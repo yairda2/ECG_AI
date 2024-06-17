@@ -9,5 +9,153 @@ body {
     font-family: Arial, sans-serif;
 }
 
-/* Add more general styles here */
+/* Icon button styles */
+.icon-button {
+    position: fixed;
+    top: 10px;
+    width: 90px;
+    height: 40px;
+    background-color: red;
+    color: white;
+    border: 2px solid black;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+    margin-right: 10px;
+    padding: 0 10px;
+}
 
+#mainpageButton {
+    right: 0px; /* Adjust distance from the right as needed */
+}
+
+#mainpageButton:hover {
+    transform: scale(1.1);
+    transition: transform 0.5s;
+    /* add reverse transform on mouseout if needed */
+
+}
+
+#infoButton {
+    right: 100px; /* Adjust distance from the right as needed */
+}
+
+#infoButton:hover {
+    transform: scale(1.1);
+    transition: transform 0.5s;
+    /* add reverse transform on mouseout if needed */
+}
+
+#registerButton {
+    right: 200px; /* Adjust distance from the right as needed */
+}
+#registerButton:hover {
+    transform: scale(1.1);
+    transition: transform 0.5s;
+    /* add reverse transform on mouseout if needed */
+}
+
+#loginButton {
+    right: 200px; /* Adjust distance from the right as needed */
+}
+#loginButton:hover {
+    transform: scale(1.1);
+    transition: transform 0.5s;
+    /* add reverse transform on mouseout if needed */
+}
+/* Tooltip styles */
+.tooltip {
+    display: none;
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.tooltip h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.tooltip p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.tooltip.show {
+    display: block;
+}
+
+/* Form Container Styles */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 500px;
+    background-color: #f9f9f9;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: auto;
+    margin-top: 50px;
+}
+
+/* Form Field Styles */
+.form-container input{
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+.form-container button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.form-container button[type="submit"]:hover {
+    background-color: darkred;
+}
+
+/* Radio Group Styling */
+.radio-group {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Adjust spacing between radio buttons */
+    margin-bottom: 10px;
+}
+
+.radio-group input[type="radio"] {
+    margin-right: 5px;
+    accent-color: red; /* Adds a red color to the radio button */
+}
+
+.radio-group label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer; /* Changes cursor to pointer when hovering over label */
+}

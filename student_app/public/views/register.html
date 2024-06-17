@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Register</title>
-    <link rel="stylesheet" type="text/css" href="/css/style.css"> <!-- Assuming you have some CSS for styling -->
+    <link rel="stylesheet" type="text/css" href="/css/common.css"> <!-- Assuming you have some CSS for styling -->
 </head>
 <body>
-<div class="register-container">
+
+<!-- Main Page and Info Buttons -->
+<button id="mainpageButton" class="icon-button">Home</button>
+<button id="infoButton" class="icon-button">User Info</button>
+<button id="loginButton" class="icon-button" onclick="window.location.href='/login'">Login</button>
+
+<div class="form-container">
     <h1>Register</h1>
     <form id="registerForm">
-        <div class="form-group">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
-        </div>
         <div class="form-group">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
@@ -23,10 +25,19 @@
         </div>
         <div class="form-group">
             <label>Gender:</label>
-            <input type="radio" id="male" name="gender" value="male" required>
-            <label for="male">Male</label>
-            <input type="radio" id="female" name="gender" value="female" required>
-            <label for="female">Female</label>
+            <div class="radio-group">
+                <label for="male">Male</label>
+                <input type="radio" id="male" name="gender" value="male" required>
+
+                <label for="female">Female</label>
+                <input type="radio" id="female" name="gender" value="female" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="academicInstitution">Academic Institution:</label>
+            <input type="text" id="academicInstitution" name="academicInstitution" required>
+
         </div>
         <div class="form-group">
             <label for="avgDegree">Average Degree:</label>
@@ -42,35 +53,35 @@
 </div>
 
 <script>
-    document.getElementById('registerForm').addEventListener('submit', function(event) {
+    document.getElementById('registerForm').addEventListener('submit', function (event) {
         event.preventDefault();
-        const userName = document.getElementById('name').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const gender = document.querySelector('input[name="gender"]:checked').value;
         const avgDegree = parseFloat(document.getElementById('avgDegree').value);
         const age = parseInt(document.getElementById('age').value);
+        const academicInstitution = document.getElementById('academicInstitution').value;
 
         fetch('/register', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ userName, email, password, gender, avgDegree, age })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email, password, age, gender, avgDegree, academicInstitution})
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message === 'Registration successful') {
-                    // Redirect to a welcome page or login page
-                    window.location.href = '/welcome';
+            .then(response => {
+                if (response.status === 409) {
+                    // Redirect to login page
+                    window.location.href = '/login';
+                } else if (response.status === 200) {
+                    // Handle successful registration
+                    alert('Registration successful!');
+                    window.location.href = '/login';
                 } else {
-                    document.getElementById('message').innerText = 'Registration failed: ' + data.message;
+                    return response.text().then(text => {
+                        throw new Error(text)
+                    });
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('message').innerText = 'Registration failed with error.';
-            });
+            .catch(error => alert('Error: ' + error.message));
     });
 </script>
 </body>

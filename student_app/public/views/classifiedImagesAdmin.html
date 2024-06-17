@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Classified Images Admin</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
+    <script src="../js/common.js"></script> <!-- Include common.js -->
     <style>
         /* Base styles */
         body {
@@ -46,46 +48,136 @@
             background-color: #e7e7e7;
             border-radius: 5px;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-            cursor: pointer;
-            transition: background-color 0.3s ease;
             margin: 5px;
             text-align: center; /* Center text in the label */
             user-select: none; /* Prevent user from selecting text */
+            border: 2px solid transparent; /* Add transparent border to handle border change */
+            transition: background-color 0.3s ease, border-color 0.3s ease; /* Transition for border color */
         }
 
-        .category-label.active {
+        input[type="radio"] {
+            display: none; /* Hide the radio button itself */
+        }
+
+        .category-label input[type="radio"]:checked + span {
             background-color: #c8e6c9; /* Light green background for active state */
+            border: 2px solid #4caf50; /* Green border for active state */
         }
 
-        .category-label:hover {
+        .category-label span {
+            display: block;
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .category-label:hover span {
             background-color: #568c3a;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50; /* Green background for submit button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+
+        #backButton {
+            position: absolute;
+            top: 20px;
+            left: 360px;
+            padding: 10px 20px;
+            background-color: #b10000; /* Red color */
+            margin-top: 10px;
+
+        }
+
+        #backButton:hover {
+            background-color: #a00000; /* Slightly darker red on hover */
+        }
+        #message {
+            margin-top: 10px;
+            font-size: 16px;
+            color: red;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>Image Classification Dashboard</h1>
+
+    <h1>Image Classification</h1>
     <img id="imageToClassify" src="" alt="Random Image">
     <div id="classificationForm">
         <h2>STEMI:</h2>
         <div class="category-section">
-            <div class="category-label" onclick="autoSubmitClassification('Septal')">Septal (V1-2)</div>
-            <div class="category-label" onclick="autoSubmitClassification('Anterior')">Anterior (V3-4)</div>
-            <div class="category-label" onclick="autoSubmitClassification('Lateral')">Lateral (I + aVL, V5-6)</div>
-            <div class="category-label" onclick="autoSubmitClassification('Inferior')">Inferior (II, III, aVF)</div>
+            <label class="category-label">
+                <input type="radio" name="category" value="Septal">
+                <span>Septal (V1-2)</span>
+            </label>
+            <label class="category-label">
+                <input type="radio" name="category" value="Anterior">
+                <span>Anterior (V3-4)</span>
+            </label>
+            <label class="category-label">
+                <input type="radio" name="category" value="Lateral">
+                <span>Lateral (I + aVL, V5-6)</span>
+            </label>
+            <label class="category-label">
+                <input type="radio" name="category" value="Inferior">
+                <span>Inferior (II, III, aVF)</span>
+            </label>
         </div>
 
         <h2>HIGH RISK:</h2>
         <div class="category-section">
-            <div class="category-label" onclick="autoSubmitClassification('Hyperacute')">Hyperacute T waves</div>
-            <div class="category-label" onclick="autoSubmitClassification('DeWinters')">De winters T waves</div>
-            <div class="category-label" onclick="autoSubmitClassification('LossOfBalance')">Loss of precordial T wave balance</div>
-            <div class="category-label" onclick="autoSubmitClassification('TInversion')">T wave inversion</div>
-            <div class="category-label" onclick="autoSubmitClassification('Wellens')">Wellens</div>
-            <div class="category-label" onclick="autoSubmitClassification('Avrste')">AVR STE</div>
-
+            <label class="category-label">
+                <input type="radio" name="category" value="Hyperacute">
+                <span>Hyperacute T waves</span>
+            </label>
+            <label class="category-label">
+                <input type="radio" name="category" value="DeWinters">
+                <span>De winters T waves</span>
+            </label>
+            <label class="category-label">
+                <input type="radio" name="category" value="LossOfBalance">
+                <span>Loss of precordial T wave balance</span>
+            </label>
+            <label class="category-label">
+                <input type="radio" name="category" value="TInversion">
+                <span>T wave inversion</span>
+            </label>
+            <label class="category-label">
+                <input type="radio" name="category" value="Wellens">
+                <span>Wellens</span>
+            </label>
+            <label class="category-label">
+                <input type="radio" name="category" value="Avrste">
+                <span>AVR STE</span>
+            </label>
         </div>
+
+        <h2>NORMAL:</h2>
+        <div class="category-section">
+            <label class="category-label">
+                <input type="radio" name="category" value="Normal">
+                <span>Normal</span>
+            </label>
+        </div>
+
+        <button type="button" onclick="submitClassification()">Submit</button>
     </div>
+    <div id="message"></div>
+    <button id="backButton" onclick="location.href='/chooseModel'">Back</button>
+
 </div>
 
 <script>
@@ -103,24 +195,41 @@
             })
             .then(data => {
                 document.getElementById('imageToClassify').src = data.imagePath;
+                clearSelection(); // Clear any previous selection
             })
             .catch(error => console.error('Error fetching image:', error));
     }
 
-    function autoSubmitClassification(category) {
+    function submitClassification() {
         const imageSrc = document.getElementById('imageToClassify').src;
+        const selectedCategory = document.querySelector('input[name="category"]:checked');
+
+        if (!selectedCategory) {
+            document.getElementById('message').innerText = 'Please select a category.';
+            return;
+        }
 
         fetch('/classify-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: imageSrc.split('/').pop(), category: category })
+            body: JSON.stringify({ fileName: imageSrc.split('/').pop(), category: selectedCategory.value })
         })
             .then(response => response.text())
             .then(message => {
                 alert(message);
+                clearSelection(); // Clear the selection after classification
                 fetchRandomImage(); // Fetch next image after classification
             })
             .catch(error => console.error('Error classifying image:', error));
+    }
+
+    function clearSelection() {
+        // Clear radio button selection
+        const radios = document.querySelectorAll('input[name="category"]');
+        radios.forEach(radio => radio.checked = false);
+
+        // Clear message
+        document.getElementById('message').innerText = '';
     }
 </script>
 </body>

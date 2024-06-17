@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Training</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .category-section {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .category-label {
+            flex: 1 1 180px;
+            margin: 5px;
+            padding: 10px;
+            background-color: #e7e7e7;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .category-label:hover {
+            background-color: #568c3a;
+        }
+
+        .category-label input[type="checkbox"] {
+            display: none;
+        }
+
+        .category-label input[type="checkbox"]:checked + span {
+            background-color: #c8e6c9;
+            border: 2px solid #4CAF50;
+        }
+
+        .category-label span {
+            display: block;
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        #timer {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 18px;
+            color: #555;
+            background: #e7e7e7;
+            border-radius: 10px;
+            padding: 5px 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            display: none; /* Hidden by default */
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #backButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #b10000; /* Red color */
+            margin-top: 10px;
+
+        }
+
+        #backButton:hover {
+            background-color: #a00000; /* Slightly darker red on hover */
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="timer">45</div>
+    <h1>Choose the right case</h1>
+    <img id="imageToClassify" src="" alt="Random Image">
+    <form id="classificationForm">
+        <h2>NORMAL:</h2>
+        <div class="category-section">
+            <label class="category-label"><input type="checkbox" name="classification" value="Normal"><span>Normal</span></label>
+        </div>
+
+        <h2>STEMI:</h2>
+        <div class="category-section">
+            <label class="category-label"><input type="checkbox" name="classification" value="Septal"><span>Septal (V1-2)</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="Anterior"><span>Anterior (V3-4)</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="Lateral"><span>Lateral (I + aVL, V5-6)</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="Inferior"><span>Inferior (II, III, aVF)</span></label>
+        </div>
+
+        <h2>HIGH RISK:</h2>
+        <div class="category-section">
+            <label class="category-label"><input type="checkbox" name="classification" value="Hyperacute"><span>Hyperacute T waves</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="DeWinters"><span>De winters T waves</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="LossOfBalance"><span>Loss of precordial T wave balance</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="TInversion"><span>T wave inversion</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="Wellens"><span>Wellens</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="Avrste"><span>AVR STE</span></label>
+        </div>
+
+        <button type="button" onclick="submitClassification('manual')">Submit</button>
+    </form>
+    <button id="backButton" onclick="location.href='/chooseModel'">Back</button>
+</div>
+
+<script>
+    let startTime;
+    let initialChoice = null;
+    let timer = null;
+    let alertShown = false;
+    let answerChanges = []; // Track answer changes
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchRandomImage();
+    });
+
+    document.querySelectorAll('input[type="checkbox"]').forEach(box => {
+        box.addEventListener('change', function() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                if (input !== this) input.checked = false;
+            });
+            if (!initialChoice) {
+                initialChoice = this.value;
+            } else if (initialChoice !== this.value) {
+                answerChanges.push(`${this.value},`);
+                initialChoice = this.value;
+            }
+        });
+    });
+
+    function startTimer() {
+        let showTimer = Math.random() < 0.5; // 50% chance to show the timer
+        const timerDisplay = document.getElementById('timer');
+        if (showTimer) {
+            let timeLeft = 45;
+            timerDisplay.textContent = timeLeft;
+            timerDisplay.style.display = 'block';
+            timerDisplay.style.color = '#555';
+            clearInterval(timer); // Clear any existing timer before starting a new one
+            alertShown = false; // Reset alert flag
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                if (timeLeft <= 15 && !alertShown) {
+                    const selectedCheckbox = document.querySelector('input[name="classification"]:checked');
+                    if (!selectedCheckbox) {
+                        alert("Please choose at least one classification option.");
+                        alertShown = true;
+                    }
+                }
+
+                if (timeLeft <= 15) {
+                    timerDisplay.style.color = 'red';
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    submitClassification('automatic');
+                }
+            }, 1000);
+        } else {
+            timerDisplay.style.display = 'none';
+        }
+    }
+
+    function fetchRandomImage() {
+        fetch('/random-image', { method: 'GET' })
+            .then(response => {
+                if (response.status !== 200) {
+                    throw new Error('Failed to fetch image');
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('imageToClassify').src = data.imagePath;
+                document.querySelectorAll('input[type="checkbox"]').forEach(input => input.checked = false);
+                initialChoice = null;
+                answerChanges = []; // Reset answer changes
+                startTime = Date.now();
+                startTimer(); // Start the timer when a new image is fetched
+            })
+            .catch(error => console.error('Error fetching image:', error));
+    }
+
+    function submitClassification(submissionType) {
+        clearInterval(timer);
+        const endTime = Date.now();
+        const duration = submissionType === 'automatic' ? 45 : (endTime - startTime) / 1000;
+        const selectedCheckbox = document.querySelector('input[name="classification"]:checked');
+        const category = selectedCheckbox ? selectedCheckbox.value : 'None';
+        const imageSrc = document.getElementById('imageToClassify').src;
+        const paths = imageSrc.split('/');
+        const photoName = paths.pop();
+        const classificationSrc = paths.pop();
+
+        const answerChangeText = answerChanges.length > 0 ? answerChanges.join('; ') : 'None';
+
+        if (!selectedCheckbox) {
+            alert("Time expired! You did not select any classification.");
+        }
+
+        // Send classification data to the server
+        fetch('/training', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                photoName,
+                classificationSrc,
+                classificationDes: category,
+                answerTime: duration,
+                answerChange: answerChangeText,
+                alertActivated: alertShown ? 1 : 0,
+                submissionType
+            })
+        })
+            .then(response => response.text())
+            .then(message => {
+                fetchRandomImage(); // Fetch next image
+            })
+            .catch(error => console.error('Error submitting classification:', error));
+    }
+</script>
+</body>
+</html>
