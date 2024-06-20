@@ -11,7 +11,7 @@ import numpy as np
 from transformers import pipeline
 
 # Connect to the SQLite database
-db_path = 'database.db'
+db_path = r"C:\Users\yair\Documents\GitHub\EEG_AI_firsst_collect\student_app\server\database.db"
 conn = sqlite3.connect(db_path)
 
 # Load data from the database
