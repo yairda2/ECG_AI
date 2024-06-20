@@ -67,10 +67,37 @@ function handleTokenExpiration(response) {
             else {
                 alert(data.message);
             }
+
         });
     }
+    else {
+        alert(response.json().then(data=> alert(data.message)));
+    }
 }
-
+function handleChooseModelSubmit(action, method) {
+    // Redirect by action, add handle for token expiration and other problems
+    try {
+        window.location.href = action;
+    }
+    catch (err) {
+        fetch(action, {
+            method: method,
+            credentials: 'include'
+        }).then(response => {
+            if (!response.ok) {
+                handleTokenExpiration(response);
+            } else {
+                response.json().then(data => {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert(data.message);
+                    }
+                });
+            }
+        }).catch(err => console.error('Error:', err));
+    }
+}
 // Function to handle form submission
 function handleFormSubmit(action, method, form = null) {
     const options = {

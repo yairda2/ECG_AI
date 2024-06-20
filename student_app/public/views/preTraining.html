@@ -56,8 +56,15 @@
         The data will be stored and used to improve your and others' performance on ECG scans.<br>
         In submit you will allow us to use this data.<br>
     </div>
-    <button type="submit" onclick=handleFormSubmit(action,method)>Start Training</button>
+    <button type="submit">Start Training</button>
 </form>
+
+<script>
+    document.getElementById('preTrainForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleFormSubmit('/pre-training', 'POST', e.target); // Use the form element
+    });
+</script>
 
 </body>
 </html>
