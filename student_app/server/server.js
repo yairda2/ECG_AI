@@ -32,7 +32,7 @@ app.use('/classifiedImagesAdmin', verifyToken);
 // Middleware to check token validity and refresh if needed
 function checkToken(req, res, next) {
     const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: 'NoToken' });
+    if (!token) return res.status(401).json({message: 'NoToken'});
 
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
@@ -41,28 +41,28 @@ function checkToken(req, res, next) {
         const timeLeft = expirationTime - currentTime;
 
         if (timeLeft < 5 * 60) {
-            const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, SECRET_KEY, { expiresIn: '1h' });
-            res.cookie('token', newToken, { httpOnly: true, secure: true });
+            const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
+            res.cookie('token', newToken, {httpOnly: true, secure: true});
         }
 
         req.user = decoded;
         next();
     } catch (err) {
-        return res.status(401).json({ message: 'InvalidToken' });
+        return res.status(401).json({message: 'InvalidToken'});
     }
 }
 
 app.post('/refresh-token', (req, res) => {
     const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: 'NoToken' });
+    if (!token) return res.status(401).json({message: 'NoToken'});
 
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
-        const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, SECRET_KEY, { expiresIn: '1h' });
-        res.cookie('token', newToken, { httpOnly: true, secure: true });
-        res.status(200).json({ message: 'Token refreshed' });
+        const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
+        res.cookie('token', newToken, {httpOnly: true, secure: true});
+        res.status(200).json({message: 'Token refreshed'});
     } catch (err) {
-        res.status(401).json({ message: 'InvalidToken' });
+        res.status(401).json({message: 'InvalidToken'});
     }
 });
 
@@ -154,8 +154,6 @@ function createTables() {
 }
 
 
-
-
 // Terms of use endpoint
 app.get('/terms', (req, res) => {
     const terms = fs.readFileSync(path.join(__dirname, 'Terms.txt'), 'utf8');
@@ -235,7 +233,7 @@ app.post('/login', (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'register.html')));
-app.get('/chooseModel',verifyToken, (req, res) => {
+app.get('/chooseModel', verifyToken, (req, res) => {
     if (req.cookies.token) {
         const decoded = jwt.verify(req.cookies.token, SECRET_KEY);
         if (decoded.role === 'admin') {
@@ -244,7 +242,7 @@ app.get('/chooseModel',verifyToken, (req, res) => {
     }
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModel.html'))
 });
-app.get('/chooseModelAdmin',verifyToken, (req, res) => {
+app.get('/chooseModelAdmin', verifyToken, (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).send('Access Denied');
     const decoded = jwt.verify(token, SECRET_KEY);
@@ -278,7 +276,7 @@ app.get('/pre-training', (req, res) => {
 
 // Serve the pre-test page
 app.post('/pre-training', checkToken, (req, res) => {
-    res.json({ redirect: '/training', message: 'Redirecting to training page' });
+    res.json({redirect: '/training', message: 'Redirecting to training page'});
 
 });
 
@@ -303,16 +301,17 @@ app.post('/training', (req, res) => {
         photoName,
         classificationSrc,
         classificationDes,
-        answerTime,
+        answerSubmitTime, // Should match `answerTime` from the form
         answerChange,
         alertActivated,
         submissionType
     } = req.body;
+
     const userId = req.cookies.userId;
     const date = new Date().toISOString();
 
-    db.run('INSERT INTO answers (userId, date, photoName, classificationSrc, classificationDes, answerTime, answerChange, alertActivated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [userId, date, photoName, classificationSrc, classificationDes, answerTime, answerChange, alertActivated], (err) => {
+    db.run('INSERT INTO answers (userId, date, photoName, classificationSrc, classificationDes, answerSubmitTime, answerChange, alertActivated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [userId, date, photoName, classificationSrc, classificationDes, answerSubmitTime, answerChange, alertActivated], (err) => {
             if (err) {
                 console.error('Error inserting answer:', err.message);
                 return res.status(500).send('Failed to save answer');
@@ -326,7 +325,7 @@ app.post('/training', (req, res) => {
                 }
 
                 if (row) {
-                    const totalTrainTime = (row.totalTrainTime || 0) + answerTime;
+                    const totalTrainTime = (row.totalTrainTime || 0) + answerSubmitTime;
                     const totalAnswers = (row.totalAnswers || 0) + 1;
                     const avgAnswers =
                         // Calculate the new average, is all the answers connect to this user where the answer src like the answer des
@@ -353,16 +352,16 @@ app.post('/chooseModel', (req, res) => {
     // Redirect or handle each action accordingly
     switch (action) {
         case 'classifiedImages':
-            res.redirect('/classifiedImagesAdmin');
+            res.status(200).json({redirect: '/classifiedImages', message: 'Redirecting to classified images'});
             break;
         case 'Single Training':
-            res.redirect('/pre-training');
+            res.status(200).json({redirect: '/pre-training', message: 'Redirecting to pre-training page'});
             break;
         case 'Test':
-            res.redirect('/pre-test');
+            res.status(200).json({redirect: '/pre-training', message: 'Redirecting to pre-training page'});
             break;
         default:
-            res.status(404).send('Action not found');
+            res.status(404).json({message: 'Action not found'});
     }
 });
 
