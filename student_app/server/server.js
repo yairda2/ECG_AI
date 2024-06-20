@@ -23,7 +23,49 @@ app.use(cookieParser());
 app.use(express.urlencoded({extended: true}));  // For parsing application/x-www-form-urlencoded
 app.use(cors());
 
-console.log(__dirname);
+// Apply token verification to protected routes
+app.use('/training', verifyToken);
+app.use('/pre-training', verifyToken);
+app.use('/chooseModelAdmin', verifyToken);
+app.use('/classifiedImagesAdmin', verifyToken);
+
+// Middleware to check token validity and refresh if needed
+function checkToken(req, res, next) {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: 'NoToken' });
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const currentTime = Math.floor(Date.now() / 1000);
+        const expirationTime = decoded.exp;
+        const timeLeft = expirationTime - currentTime;
+
+        if (timeLeft < 5 * 60) {
+            const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, SECRET_KEY, { expiresIn: '1h' });
+            res.cookie('token', newToken, { httpOnly: true, secure: true });
+        }
+
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'InvalidToken' });
+    }
+}
+
+app.post('/refresh-token', (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: 'NoToken' });
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, SECRET_KEY, { expiresIn: '1h' });
+        res.cookie('token', newToken, { httpOnly: true, secure: true });
+        res.status(200).json({ message: 'Token refreshed' });
+    } catch (err) {
+        res.status(401).json({ message: 'InvalidToken' });
+    }
+});
+
 
 // Secret key for JWT (should be stored securely in a real-world scenario)
 const SECRET_KEY = 'your_secret_jwt_key';
@@ -87,8 +129,8 @@ function createTables() {
             alertActivated INTEGER,
             binaryQuestion boolean,
             helpActivated boolean,
-            timeActivated INTEGER,
-            FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+            helpTimeActivated INTEGER,
+            FOREIGN KEY (userId) REFERENCES users(id)
         )`);
 
         db.run(`
@@ -110,6 +152,10 @@ function createTables() {
             )`);
     });
 }
+
+
+
+
 // Terms of use endpoint
 app.get('/terms', (req, res) => {
     const terms = fs.readFileSync(path.join(__dirname, 'Terms.txt'), 'utf8');
@@ -171,7 +217,7 @@ app.post('/login', (req, res) => {
             const token = jwt.sign({id: user.userId, role: user.role}, SECRET_KEY, {expiresIn: '1h'});
             res.cookie('token', token, {httpOnly: true, secure: true});
             res.cookie('userId', user.userId, {httpOnly: true, secure: true}); // Add this line
-            res.send({message: 'Login successful', role: user.role});
+            res.send({message: 'Login successful', redirect: 'chooseModel', role: user.role});
             //add to totalEntries in users +1
             db.run('UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?', [user.userId], (err) => {
                 if (err) {
@@ -179,7 +225,7 @@ app.post('/login', (req, res) => {
                 }
             });
         } else {
-            res.status(401).send('Password incorrect');
+            res.status(401).json({message: 'Invalid email or password'});
         }
     });
 });
@@ -230,56 +276,10 @@ app.get('/pre-training', (req, res) => {
 });
 
 
-// Middleware to check token validity and refresh if needed
-function checkToken(req, res, next) {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-        const expirationTime = decoded.exp; // Token expiration time
-        const timeLeft = expirationTime - currentTime;
-
-        if (timeLeft < 5 * 60) { // Less than 5 minutes
-            const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
-            res.cookie('token', newToken, {httpOnly: true, secure: true});
-        }
-
-        req.user = decoded; // Attach decoded token to request object
-        next(); // Proceed to the next middleware or route handler
-    } catch (err) {
-        return res.status(401).send('Invalid Token');
-    }
-}
-
-
-// Apply this middleware to protected routes
-app.use('/training', checkToken);
-app.use('/pre-training', checkToken);
-
-//
-app.post('/refresh-token', (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
-        res.cookie('token', newToken, {httpOnly: true, secure: true});
-        res.status(200).send('Token refreshed');
-    } catch (err) {
-        res.status(400).send('Invalid Token');
-    }
-});
-
-
 // Serve the pre-test page
 app.post('/pre-training', checkToken, (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-    // all users can access the pre-train page
-    res.redirect('/training');
+    res.json({ redirect: '/training', message: 'Redirecting to training page' });
+
 });
 
 // Serve the training page
