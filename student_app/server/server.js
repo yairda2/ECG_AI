@@ -70,6 +70,7 @@ function createTables() {
             token TEXT,
             expiredTime DATE,
             role TEXT DEFAULT 'user',
+            termsAgreement BOOLEAN DEFAULT FALSE,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
         )`);
 
@@ -81,9 +82,12 @@ function createTables() {
             photoName TEXT,
             classificationSrc TEXT,
             classificationDes TEXT,
-            answerTime INTEGER,
+            answerSubmitTime INTEGER,
             answerChange TEXT,
             alertActivated INTEGER,
+            binaryQuestion boolean,
+            helpActivated boolean,
+            timeActivated INTEGER,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
         )`);
 
@@ -97,12 +101,25 @@ function createTables() {
             totalExamTime INTEGER,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
         )`);
+
+        db.run(`
+        CREATE TABLE IF NOT EXISTS imageClassification (
+            imageId INTEGER PRIMARY KEY AUTOINCREMENT,
+            photoName TEXT,
+            classification TEXT
+            )`);
     });
 }
+// Terms of use endpoint
+app.get('/terms', (req, res) => {
+    const terms = fs.readFileSync(path.join(__dirname, 'Terms.txt'), 'utf8');
+    res.send(terms);
+});
+
 
 app.post('/register', async (req, res) => {
-    const {email, password, age, gender, avgDegree, academicInstitution} = req.body;
-    if (!email || !password || !age || !gender || !avgDegree || !academicInstitution) {
+    const {email, password, age, gender, avgDegree, academicInstitution, termsAgreement} = req.body;
+    if (!email || !password || !age || !gender || !avgDegree || !academicInstitution || termsAgreement === false) {
         return res.status(400).send('All fields are required');
     }
 
@@ -126,7 +143,7 @@ app.post('/register', async (req, res) => {
             if (err) {
                 return res.status(500).send('Error registering new user in Users table: ' + err.message);
             }
-            db.run('INSERT INTO authentication (userId, email, password, role) VALUES (?, ?, ?, "user")', [userId, email, hashedPassword], (authErr) => {
+            db.run('INSERT INTO authentication (userId, email, password, termsAgreement, role) VALUES (?, ?, ?, ?, "user")', [userId, email, hashedPassword, termsAgreement], (authErr) => {
                 if (authErr) {
                     return res.status(500).send('Error registering new user in Authentication table: ' + authErr.message);
                 }
@@ -372,6 +389,14 @@ app.post('/classify-image', (req, res) => {
     fs.rename(sourcePath, destPath, (err) => {
         if (err) {
             console.error('Error moving file:', err.message);
+            return res.status(500).send('Failed to classify image');
+        }
+    });
+
+    // Save the classification in the database
+    db.run('INSERT INTO imageClassification (photoName, classification) VALUES (?, ?)', [fileName, category], (err) => {
+        if (err) {
+            console.error('Error inserting classification:', err.message);
             return res.status(500).send('Failed to classify image');
         }
     });
