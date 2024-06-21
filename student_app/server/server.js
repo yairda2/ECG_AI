@@ -23,7 +23,49 @@ app.use(cookieParser());
 app.use(express.urlencoded({extended: true}));  // For parsing application/x-www-form-urlencoded
 app.use(cors());
 
-console.log(__dirname);
+// Apply token verification to protected routes
+app.use('/training', verifyToken);
+app.use('/pre-training', verifyToken);
+app.use('/chooseModelAdmin', verifyToken);
+app.use('/classifiedImagesAdmin', verifyToken);
+
+// Middleware to check token validity and refresh if needed
+function checkToken(req, res, next) {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({message: 'NoToken'});
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const currentTime = Math.floor(Date.now() / 1000);
+        const expirationTime = decoded.exp;
+        const timeLeft = expirationTime - currentTime;
+
+        if (timeLeft < 5 * 60) {
+            const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
+            res.cookie('token', newToken, {httpOnly: true, secure: true});
+        }
+
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({message: 'InvalidToken'});
+    }
+}
+
+app.post('/refresh-token', (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({message: 'NoToken'});
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
+        res.cookie('token', newToken, {httpOnly: true, secure: true});
+        res.status(200).json({message: 'Token refreshed'});
+    } catch (err) {
+        res.status(401).json({message: 'InvalidToken'});
+    }
+});
+
 
 // Secret key for JWT (should be stored securely in a real-world scenario)
 const SECRET_KEY = 'your_secret_jwt_key';
@@ -70,6 +112,7 @@ function createTables() {
             token TEXT,
             expiredTime DATE,
             role TEXT DEFAULT 'user',
+            termsAgreement BOOLEAN DEFAULT FALSE,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
         )`);
 
@@ -81,10 +124,13 @@ function createTables() {
             photoName TEXT,
             classificationSrc TEXT,
             classificationDes TEXT,
-            answerTime INTEGER,
+            answerSubmitTime INTEGER,
             answerChange TEXT,
             alertActivated INTEGER,
-            FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+            binaryQuestion boolean,
+            helpActivated boolean,
+            helpTimeActivated INTEGER,
+            FOREIGN KEY (userId) REFERENCES users(id)
         )`);
 
         db.run(`
@@ -97,12 +143,27 @@ function createTables() {
             totalExamTime INTEGER,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
         )`);
+
+        db.run(`
+        CREATE TABLE IF NOT EXISTS imageClassification (
+            imageId INTEGER PRIMARY KEY AUTOINCREMENT,
+            photoName TEXT,
+            classification TEXT
+            )`);
     });
 }
 
+
+// Terms of use endpoint
+app.get('/terms', (req, res) => {
+    const terms = fs.readFileSync(path.join(__dirname, 'Terms.txt'), 'utf8');
+    res.send(terms);
+});
+
+
 app.post('/register', async (req, res) => {
-    const {email, password, age, gender, avgDegree, academicInstitution} = req.body;
-    if (!email || !password || !age || !gender || !avgDegree || !academicInstitution) {
+    const {email, password, age, gender, avgDegree, academicInstitution, termsAgreement} = req.body;
+    if (!email || !password || !age || !gender || !avgDegree || !academicInstitution || termsAgreement === false) {
         return res.status(400).send('All fields are required');
     }
 
@@ -126,7 +187,7 @@ app.post('/register', async (req, res) => {
             if (err) {
                 return res.status(500).send('Error registering new user in Users table: ' + err.message);
             }
-            db.run('INSERT INTO authentication (userId, email, password, role) VALUES (?, ?, ?, "user")', [userId, email, hashedPassword], (authErr) => {
+            db.run('INSERT INTO authentication (userId, email, password, termsAgreement, role) VALUES (?, ?, ?, ?, "user")', [userId, email, hashedPassword, termsAgreement], (authErr) => {
                 if (authErr) {
                     return res.status(500).send('Error registering new user in Authentication table: ' + authErr.message);
                 }
@@ -154,7 +215,7 @@ app.post('/login', (req, res) => {
             const token = jwt.sign({id: user.userId, role: user.role}, SECRET_KEY, {expiresIn: '1h'});
             res.cookie('token', token, {httpOnly: true, secure: true});
             res.cookie('userId', user.userId, {httpOnly: true, secure: true}); // Add this line
-            res.send({message: 'Login successful', role: user.role});
+            res.send({message: 'Login successful', redirect: 'chooseModel', role: user.role});
             //add to totalEntries in users +1
             db.run('UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?', [user.userId], (err) => {
                 if (err) {
@@ -162,7 +223,7 @@ app.post('/login', (req, res) => {
                 }
             });
         } else {
-            res.status(401).send('Password incorrect');
+            res.status(401).json({message: 'Invalid email or password'});
         }
     });
 });
@@ -172,7 +233,7 @@ app.post('/login', (req, res) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'register.html')));
-app.get('/chooseModel',verifyToken, (req, res) => {
+app.get('/chooseModel', verifyToken, (req, res) => {
     if (req.cookies.token) {
         const decoded = jwt.verify(req.cookies.token, SECRET_KEY);
         if (decoded.role === 'admin') {
@@ -181,7 +242,7 @@ app.get('/chooseModel',verifyToken, (req, res) => {
     }
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModel.html'))
 });
-app.get('/chooseModelAdmin',verifyToken, (req, res) => {
+app.get('/chooseModelAdmin', verifyToken, (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).send('Access Denied');
     const decoded = jwt.verify(token, SECRET_KEY);
@@ -213,56 +274,10 @@ app.get('/pre-training', (req, res) => {
 });
 
 
-// Middleware to check token validity and refresh if needed
-function checkToken(req, res, next) {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-        const expirationTime = decoded.exp; // Token expiration time
-        const timeLeft = expirationTime - currentTime;
-
-        if (timeLeft < 5 * 60) { // Less than 5 minutes
-            const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
-            res.cookie('token', newToken, {httpOnly: true, secure: true});
-        }
-
-        req.user = decoded; // Attach decoded token to request object
-        next(); // Proceed to the next middleware or route handler
-    } catch (err) {
-        return res.status(401).send('Invalid Token');
-    }
-}
-
-
-// Apply this middleware to protected routes
-app.use('/training', checkToken);
-app.use('/pre-training', checkToken);
-
-//
-app.post('/refresh-token', (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
-        res.cookie('token', newToken, {httpOnly: true, secure: true});
-        res.status(200).send('Token refreshed');
-    } catch (err) {
-        res.status(400).send('Invalid Token');
-    }
-});
-
-
 // Serve the pre-test page
 app.post('/pre-training', checkToken, (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-    // all users can access the pre-train page
-    res.redirect('/training');
+    res.json({redirect: '/training', message: 'Redirecting to training page'});
+
 });
 
 // Serve the training page
@@ -286,16 +301,17 @@ app.post('/training', (req, res) => {
         photoName,
         classificationSrc,
         classificationDes,
-        answerTime,
+        answerSubmitTime, // Should match `answerTime` from the form
         answerChange,
         alertActivated,
         submissionType
     } = req.body;
+
     const userId = req.cookies.userId;
     const date = new Date().toISOString();
 
-    db.run('INSERT INTO answers (userId, date, photoName, classificationSrc, classificationDes, answerTime, answerChange, alertActivated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [userId, date, photoName, classificationSrc, classificationDes, answerTime, answerChange, alertActivated], (err) => {
+    db.run('INSERT INTO answers (userId, date, photoName, classificationSrc, classificationDes, answerSubmitTime, answerChange, alertActivated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [userId, date, photoName, classificationSrc, classificationDes, answerSubmitTime, answerChange, alertActivated], (err) => {
             if (err) {
                 console.error('Error inserting answer:', err.message);
                 return res.status(500).send('Failed to save answer');
@@ -309,7 +325,7 @@ app.post('/training', (req, res) => {
                 }
 
                 if (row) {
-                    const totalTrainTime = (row.totalTrainTime || 0) + answerTime;
+                    const totalTrainTime = (row.totalTrainTime || 0) + answerSubmitTime;
                     const totalAnswers = (row.totalAnswers || 0) + 1;
                     const avgAnswers =
                         // Calculate the new average, is all the answers connect to this user where the answer src like the answer des
@@ -336,16 +352,16 @@ app.post('/chooseModel', (req, res) => {
     // Redirect or handle each action accordingly
     switch (action) {
         case 'classifiedImages':
-            res.redirect('/classifiedImagesAdmin');
+            res.status(200).json({redirect: '/classifiedImages', message: 'Redirecting to classified images'});
             break;
         case 'Single Training':
-            res.redirect('/pre-training');
+            res.status(200).json({redirect: '/pre-training', message: 'Redirecting to pre-training page'});
             break;
         case 'Test':
-            res.redirect('/pre-test');
+            res.status(200).json({redirect: '/pre-training', message: 'Redirecting to pre-training page'});
             break;
         default:
-            res.status(404).send('Action not found');
+            res.status(404).json({message: 'Action not found'});
     }
 });
 
@@ -372,6 +388,14 @@ app.post('/classify-image', (req, res) => {
     fs.rename(sourcePath, destPath, (err) => {
         if (err) {
             console.error('Error moving file:', err.message);
+            return res.status(500).send('Failed to classify image');
+        }
+    });
+
+    // Save the classification in the database
+    db.run('INSERT INTO imageClassification (photoName, classification) VALUES (?, ?)', [fileName, category], (err) => {
+        if (err) {
+            console.error('Error inserting classification:', err.message);
             return res.status(500).send('Failed to classify image');
         }
     });

@@ -5,7 +5,7 @@
     <title>Personal Information Form</title>
     <link rel="stylesheet" href="../css/common.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
-    <script src="../js/common.js"></script> <!-- Include common.js -->
+    <script src="../js/common.js" defer></script> <!-- Include common.js -->
     <style>
         /* Style for buttons */
         button {
@@ -24,7 +24,7 @@
         }
 
         button:hover {
-            background-color: #b10000;
+            background-color: #a00000; /* Darker red */
         }
 
         form {
@@ -47,9 +47,17 @@
 
 <h2>Welcome to our learning model</h2>
 <h3>Choose your method</h3>
-<form id="model-choose" action="/chooseModel" method="POST">
-    <button type="submit" name="action" value="Single Training">Training</button>
-    <button type="submit" name="action" value="Test">Test</button>
+<form id="modelChooseForm" method="POST">
+    <button type="submit"  value="Single Training">Training</button>
+    <button type="submit"   value="Test">Test</button>
 </form>
+
+<script>
+    document.getElementById('modelChooseForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Pass the value of submit button as a parameter
+        handleChooseModelSubmit(e.target, e.submitter.value);
+    });
+</script>
 </body>
 </html>

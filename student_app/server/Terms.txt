@@ -1,0 +1,28 @@
+Terms of Use
+
+By participating in this project and clicking "Agree," you consent to provide us with
+certain data which will exclusively be used to enhance and develop our website.
+This project forms part of a final degree requirement at Sami Shamoon College of Engineering and utilizes AI models for data processing and enhancement. By agreeing to these terms, you adhere to the following conditions:
+
+Data Provision:
+
+You will provide data necessary for achieving the project’s objectives.
+This data will be used solely to enhance the functionality and user experience of our site, which includes improvements made through AI models.
+No Objection:
+
+You agree not to pursue any claims against us related to the use of the data provided in accordance with these terms.
+This includes any use of the data in AI models or other technological applications as part of this project.
+Limited Use:
+
+We commit to using your data only for the development of our site and for the completion of our degree project at SCE.
+The data will not be utilized for any unrelated purposes or commercial exploitation without further explicit consent.
+AI Model Transparency:
+
+The data may be processed using artificial intelligence (AI) models, which are designed to enhance site functionalities and user experience.
+Details about the AI models used and the types of processing applied to your data will be disclosed upon request.
+Educational Purpose:
+
+This project is part of an academic program and is intended for educational purposes.
+The data collected and processed will contribute to the successful completion of a degree at SCE.
+These terms are intended to ensure a clear understanding of how your data will be used and to protect both parties in the development process.
+Your participation helps further academic research and the application of new technologies in real-world scenarios.

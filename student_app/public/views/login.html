@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <title>Login</title>
     <link rel="stylesheet" type="text/css" href="/css/common.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
-    <script src="../js/common.js"></script> <!-- Include common.js -->
+    <script src="../js/common.js" defer></script> <!-- Include common.js -->
 </head>
 <body>
 <!-- Main Page and Info Buttons -->
@@ -13,43 +12,18 @@
 <button id="infoButton" class="icon-button">User Info</button>
 <button id="registerButton" class="icon-button" onclick="window.location.href='/register'">Register</button>
 
-<!-- Tooltip Container -->
-<div id="tooltip" class="tooltip"></div>
-
-<form class="form-container" id="loginForm">
+<form class="form-container" id="loginForm" method="POST">
     <h1>Login</h1>
-
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button type="submit" >Login</button>
+    <input type="email" id="email" name="email" placeholder="Email" required>
+    <input type="password" id="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
 </form>
 
 <script>
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        fetch('/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        })
-            .then(response => {
-                if (response.status === 404) {
-                    alert('User not found');
-                } else
-                if (response.status === 401) {
-                    alert('Invalid password');
-                } else
-                if (response.status === 200) {
-                    window.location.href = '/chooseModel';
-                }
-            });
+        handleFormSubmit(e.target); // Pass the form element
     });
 </script>
-
 </body>
 </html>
