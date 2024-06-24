@@ -28,6 +28,12 @@ app.use('/training', verifyToken);
 app.use('/pre-training', verifyToken);
 app.use('/chooseModelAdmin', verifyToken);
 app.use('/classifiedImagesAdmin', verifyToken);
+app.use('/random-image-classification', verifyToken);
+app.use('/random-image', verifyToken);
+app.use('/classifiedImages', verifyToken);
+app.use('/classify-image', verifyToken);
+app.use('/chooseModel', verifyToken);
+
 
 // Middleware to check token validity and refresh if needed
 function checkToken(req, res, next) {
@@ -281,21 +287,12 @@ app.post('/pre-training', checkToken, (req, res) => {
 });
 
 // Serve the training page
-app.get('/training', checkToken, (req, res) => {
-    // Validate the user's role
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-
-    //const decoded = jwt.verify(token, SECRET_KEY);
-    // All users can access the training page
-
+app.get('/training', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
 });
 
 // Serve the training post page
-app.post('/training', (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
+app.post('/training',verifyToken, (req, res) => {
 
     const {
         photoName,
@@ -347,7 +344,7 @@ app.post('/training', (req, res) => {
 });
 
 // Handling form submission from chooseModel or chooseModelAdmin
-app.post('/chooseModel', (req, res) => {
+app.post('/chooseModel',verifyToken, (req, res) => {
     const action = req.body.action;
     // Redirect or handle each action accordingly
     switch (action) {
@@ -366,12 +363,12 @@ app.post('/chooseModel', (req, res) => {
 });
 
 // Serve the classifiedImagesAdmin.html
-app.get('/classifiedImagesAdmin', (req, res) => {
+app.get('/classifiedImagesAdmin',verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'classifiedImagesAdmin.html'));
 });
 
 // API to handle image classification from classifiedImagesAdmin.html
-app.post('/classify-image', (req, res) => {
+app.post('/classify-image',verifyToken,  (req, res) => {
     const {fileName, category} = req.body;
     // Implement image classification and file handling logic
     console.log(`Classifying image ${fileName} as ${category}`);
@@ -420,7 +417,7 @@ app.get('/random-image-classification', (req, res) => {
 });
 
 // Endpoint to handle training page, choose a random image for training
-app.get('/random-image', (req, res) => {
+app.get('/random-image',verifyToken, (req, res) => {
     const foldersDir = path.join(__dirname, '..', 'public', 'img', 'graded');
 
     // Read all folder names
@@ -481,3 +478,5 @@ app.get('/random-image', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+

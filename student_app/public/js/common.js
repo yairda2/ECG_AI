@@ -149,6 +149,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Display error message on page load
+document.addEventListener("DOMContentLoaded", function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    if (error) {
+        const errorMessage = {
+            'NoToken': 'No token provided. Please log in to continue.',
+            'InvalidToken': 'Your session has expired. Please log in again.'
+        };
+        alert(errorMessage[error] || 'An unknown error occurred.');
+        window.location.href = '/login';
+    }
+});
+
 // Initialize buttons and forms on page load
     document.addEventListener('DOMContentLoaded', () => {
         const mainpageButton = document.getElementById('mainpageButton');

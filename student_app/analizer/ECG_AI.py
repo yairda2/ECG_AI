@@ -27,8 +27,28 @@ answers_df = load_data('answers')
 merged_data = pd.merge(users_df, answers_df, left_on='id', right_on='userId')
 
 # Feature selection and preprocessing as needed
-features = merged_data[['age', 'avgDegree', 'totalAnswers', 'answerTime']]
+features = merged_data[['age', 'avgDegree', 'totalAnswers', 'answerSubmitTime']]
 labels = merged_data['classificationDes']
+
+# Check the size of the dataset
+print("Number of samples in dataset:", features.shape[0])
+# Function to count records in each table
+def count_records(table_name):
+    query = f"SELECT COUNT(*) FROM {table_name}"
+    result = pd.read_sql_query(query, conn)
+    print(f"Count of records in {table_name}: {result.iloc[0, 0]}")
+
+# Use this function to check the counts in 'users' and 'answers'
+count_records('users')
+count_records('answers')
+
+
+# If the dataset is too small, you may need to verify data loading or merging logic.
+if features.shape[0] < 2:
+    print("Insufficient data for train-test split.")
+else:
+    # Proceed with train-test split
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
 
 # Split data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
