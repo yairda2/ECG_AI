@@ -3,27 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <link rel="stylesheet" type="text/css" href="/css/common.css">
-    <script src="../js/common.js" defer></script> <!-- Include common.js -->
+    <link rel="stylesheet" href="../css/common.css">
+    <script src="../js/common.js" defer></script>
 </head>
+<style>
+    /* The Modal (background) */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top - high z-index */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content/Box */
+    .modal-content {
+        position: relative;
+        background-color: #fefefe;
+        margin: 10% auto; /* 10% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%; /* 50% of window width */
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Shadow for 3D effect */
+    }
+
+    /* The Close Button */
+    .close {
+        color: #aaa;
+        position: absolute;
+        top: 10px;
+        right: 25px;
+        font-size: 35px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
 <body>
 <!-- Main Page and Info Buttons -->
 <button id="mainpageButton" class="icon-button">Home</button>
 <button id="infoButton" class="icon-button">User Info</button>
-<button id="registerButton" class="icon-button" onclick="window.location.href='/register'">Register</button>
 
 <form class="form-container" id="loginForm" method="POST">
     <h1>Login</h1>
     <input type="email" id="email" name="email" placeholder="Email" required>
     <input type="password" id="password" name="password" placeholder="Password" required>
-    <button type="submit">Login</button>
+    <button type="submit" onclick="loginUser(event)">Login</button>
 </form>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        handleFormSubmit(e.target); // Pass the form element
-    });
+    function loginUser(event) {
+        event.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const data = { email, password };
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(handleServerResponse)
+    }
 </script>
 </body>
 </html>

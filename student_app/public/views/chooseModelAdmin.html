@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Personal Information Form</title>
+    <title>Choose Model Admin</title>
     <link rel="stylesheet" href="../css/common.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
     <script src="../js/common.js"></script> <!-- Include common.js -->
@@ -47,11 +47,20 @@
 
 <h2>Welcome to our learning model</h2>
 <h3>Choose your method</h3>
-<form id="model-choose" action="/chooseModel" method="POST">
-    <button type="submit" name="action" value="classifiedImages">Classified Images</button>
-    <button type="submit" name="action" value="Single Training">Training</button>
-    <button type="submit" name="action" value="Test">Test</button>
+<form id="modelChooseForm">
+    <button type="button" name="action" value="classifiedImages">Classified Images</button>
+    <button type="button" name="action" value="Single Training">Training</button>
+    <button type="button" name="action" value="Test">Test</button>
 </form>
+
+<script>
+    document.querySelectorAll('#modelChooseForm button').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const actionValue = e.target.value;
+            handlePageAction('/chooseModel', 'POST', { action: actionValue });
+        });
+    });
+</script>
 </body>
-s
 </html>
