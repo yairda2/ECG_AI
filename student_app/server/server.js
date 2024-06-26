@@ -9,6 +9,9 @@ const fs = require('fs');
 const app = express();
 const cors = require('cors');
 const verifyToken = require('./authMiddleware');
+const {PORT} = require('../config/config');
+const {SECRET_KEY} = require('../config/config');
+
 
 // Middleware to parse JSON and handle cookies
 app.use(express.json());
@@ -16,9 +19,6 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(cookieParser());
 app.use(express.urlencoded({extended: true}));
 app.use(cors());
-
-// Secret key for JWT (should be stored securely in a real-world scenario)
-const SECRET_KEY = 'your_secret_jwt_key';
 
 // Middleware to check token validity and refresh if needed
 function checkToken(req, res, next) {
@@ -59,16 +59,16 @@ function createTables() {
         db.run(`
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY,
-            age INTEGER,
+            age INTEGER DEFAULT 0,
             gender TEXT,
-            avgDegree INTEGER,
+            avgDegree INTEGER DEFAULT 0,
             academicInstitution TEXT,
-            totalEntries INTEGER,
-            totalAnswers INTEGER,
-            totalExams INTEGER,
-            avgExamTime INTEGER,
-            totalTrainTime INTEGER,
-            avgAnswers INTEGER
+            totalEntries INTEGER DEFAULT 0,
+            totalAnswers INTEGER DEFAULT 0,
+            totalExams INTEGER DEFAULT 0,
+            avgExamTime INTEGER DEFAULT 0,
+            totalTrainTime INTEGER DEFAULT 0,
+            avgAnswers INTEGER DEFAULT 0
         )`);
 
         db.run(`
@@ -91,12 +91,12 @@ function createTables() {
             photoName TEXT,
             classificationSrc TEXT,
             classificationDes TEXT,
-            answerSubmitTime INTEGER,
+            answerSubmitTime INTEGER DEFAULT 0,
             answerChange TEXT,
-            alertActivated INTEGER,
-            binaryQuestion BOOLEAN,
-            helpActivated BOOLEAN,
-            helpTimeActivated INTEGER,
+            alertActivated INTEGER DEFAULT 0,
+            binaryQuestion BOOLEAN DEFAULT FALSE,
+            helpActivated BOOLEAN DEFAULT FALSE,
+            helpTimeActivated INTEGER DEFAULT 0,
             FOREIGN KEY (userId) REFERENCES users(id)
         )`);
 
@@ -106,8 +106,8 @@ function createTables() {
             userId TEXT,
             date TEXT,
             title TEXT,
-            score INTEGER,
-            totalExamTime INTEGER,
+            score INTEGER DEFAULT 0,
+            totalExamTime INTEGER DEFAULT 0,
             FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
         )`);
 
@@ -162,31 +162,38 @@ app.post('/register', async (req, res) => {
 
 // User login
 app.post('/login', (req, res) => {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
     const sql = `SELECT userId, password, role FROM authentication WHERE email = ?`;
+    const updateEntries = `UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?`;
+    let tempUser;
 
     db.get(sql, [email], async (err, user) => {
         if (err) {
             console.error('Database error:', err.message);
-            return res.status(500).json({message: 'Error on server side: ' + err.message});
+            return res.status(500).json({ message: 'Error on server side: ' + err.message });
         }
         if (!user) {
-            return res.status(404).json({message: 'User not found'});
+            return res.status(404).json({ message: 'User not found' });
         }
         if (await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({id: user.userId, role: user.role}, SECRET_KEY, {expiresIn: '1h'});
-            res.cookie('token', token, {httpOnly: true, secure: true});
-            res.cookie('userId', user.userId, {httpOnly: true, secure: true});
-            res.status(200).json({message: 'Login successful', redirect: '/chooseModel', role: user.role});
-            db.run('UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?', [user.userId], (err) => {
+            const token = jwt.sign({ id: user.userId, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+            res.cookie('token', token, { httpOnly: true, secure: true });
+            res.cookie('userId', user.userId, { httpOnly: true, secure: true });
+            res.status(200).json({ redirect: '/chooseModel', message: 'Login successful', role: user.role });
+            db.run(updateEntries, [user.userId],async (err) => {
                 if (err) {
                     console.error('Error updating totalEntries:', err.message);
+                } else {
+                    console.log(`totalEntries updated for userId ${user.userId}`);
                 }
             });
+
+
         } else {
-            res.status(401).json({message: 'Invalid email or password'});
+            res.status(401).json({ message: 'Invalid email or password' });
         }
     });
+
 });
 
 // Protected routes using verifyToken middleware
@@ -346,9 +353,6 @@ app.post('/training', verifyToken, (req, res) => {
 });
 
 
-
-
-
 // Endpoint to handle INFO page
 app.get('/info', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
@@ -452,6 +456,42 @@ app.get('/main', verifyToken, (req, res) => {
 
 app.get('/user-data', verifyToken, (req, res) => {
     res.json({redirect: '/info', message: 'redirect to user data'});
+});
+
+app.get('/info', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
+});
+
+app.get('/info/data', verifyToken, (req, res) => {
+    const userId = req.cookies.userId;
+    if (!userId) {
+        return res.status(400).json({message: 'No userId found in request'});
+    }
+    const sql = `
+        SELECT photoName, classificationSrc, classificationDes
+        FROM answers
+        WHERE userId = ?
+    `;
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            console.error('Database error:', err.message);
+            return res.status(500).send('Server error while fetching user data');
+        }
+        if (rows.length === 0) {
+            return res.status(404).send('No answers found for the given user');
+        }
+        res.json(rows); // Send the relevant data back to the client
+    });
+});
+
+// Serve sign-up page
+app.get('/sign-up', (req, res) => {
+    res.json({redirect: '/register', message: 'redirect to sign-up'});
+});
+
+// Serve sign-in page
+app.get('/sign-in', (req, res) => {
+    res.json({redirect: '/login', message: 'redirect to sign-in'});
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
