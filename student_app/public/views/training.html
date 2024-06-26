@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Training</title>
+    <link rel="stylesheet" href="common.css">
+    <script src="/js/common.js" defer></script> <!-- Include common.js -->
+
     <style>
+        /* Existing styles */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -72,6 +76,11 @@
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
 
+        .category-label span.highlight {
+            background-color: #ffcccc; /* Light red for incorrect options */
+            transition: background-color 0.3s ease;
+        }
+
         #timer {
             position: absolute;
             right: 20px;
@@ -107,11 +116,31 @@
             padding: 10px 20px;
             background-color: #b10000; /* Red color */
             margin-top: 10px;
-
         }
 
         #backButton:hover {
             background-color: #a00000; /* Slightly darker red on hover */
+        }
+
+        #helpButton {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #ff9800; /* Orange color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #helpButton:hover {
+            background-color: #e68a00; /* Slightly darker orange on hover */
+        }
+
+        #helpButton:disabled {
+            background-color: #ffc107; /* Disabled button color */
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -147,6 +176,7 @@
         <button type="button" onclick="submitClassification('manual')">Submit</button>
     </form>
     <button id="backButton" onclick="location.href='/chooseModel'">Back</button>
+    <button id="helpButton" onclick="provideHelp()">Help</button>
 </div>
 
 <script>
@@ -155,6 +185,8 @@
     let timer = null;
     let alertShown = false;
     let answerChanges = []; // Track answer changes
+    let helpButtonClicks = []; // Track help button clicks
+    let helpInProgress = false; // Prevent multiple simultaneous help requests
 
     document.addEventListener('DOMContentLoaded', function() {
         fetchRandomImage();
@@ -221,9 +253,15 @@
             })
             .then(data => {
                 document.getElementById('imageToClassify').src = data.imagePath;
-                document.querySelectorAll('input[type="checkbox"]').forEach(input => input.checked = false);
+                document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                    input.checked = false;
+                    input.closest('label').querySelector('span').classList.remove('highlight'); // Reset highlight
+                });
                 initialChoice = null;
                 answerChanges = []; // Reset answer changes
+                helpButtonClicks = []; // Reset help button clicks
+                document.getElementById('helpButton').disabled = false; // Enable help button
+                helpInProgress = false; // Reset help in progress
                 startTime = Date.now();
                 startTimer(); // Start the timer when a new image is fetched
             })
@@ -258,7 +296,8 @@
                 answerTime: duration,
                 answerChange: answerChangeText,
                 alertActivated: alertShown ? 1 : 0,
-                submissionType
+                submissionType,
+                helpButtonClicks: helpButtonClicks.join('; ')
             })
         })
             .then(response => response.text())
@@ -267,6 +306,39 @@
             })
             .catch(error => console.error('Error submitting classification:', error));
     }
+
+    function provideHelp() {
+        if (helpInProgress) return; // Prevent multiple simultaneous help requests
+
+        helpInProgress = true;
+        const currentTime = (Date.now() - startTime) / 1000;
+        helpButtonClicks.push(currentTime);
+
+        // Get the correct answer based on directory name
+        const correctAnswer = getCorrectAnswer();
+        const options = Array.from(document.querySelectorAll('input[name="classification"]'));
+        const incorrectOptions = options.filter(input => input.value !== correctAnswer && !input.closest('label').querySelector('span').classList.contains('highlight'));
+
+        // Highlight incorrect options one by one randomly
+        if (incorrectOptions.length > 2) {
+            const randomIndex = Math.floor(Math.random() * incorrectOptions.length);
+            const randomOption = incorrectOptions[randomIndex];
+            randomOption.closest('label').querySelector('span').classList.add('highlight');
+
+            setTimeout(() => {
+                helpInProgress = false; // Allow the next help click
+            }, 500); // Delay to avoid rapid multiple help clicks
+        } else {
+            document.getElementById('helpButton').disabled = true; // Disable button if only two options left
+        }
+    }
+
+    function getCorrectAnswer() {
+        const imageSrc = document.getElementById('imageToClassify').src;
+        const paths = imageSrc.split('/');
+        return paths[paths.length - 2]; // Assuming the correct classification is the folder name
+    }
 </script>
+<script src="../js/common.js"></script>
 </body>
 </html>

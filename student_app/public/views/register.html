@@ -5,6 +5,49 @@
     <title>Register</title>
     <link rel="stylesheet" type="text/css" href="/css/common.css"> <!-- Assuming you have some CSS for styling -->
 </head>
+<style>
+    /* The Modal (background) */
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top - high z-index */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    }
+
+    /* Modal Content/Box */
+    .modal-content {
+        position: relative;
+        background-color: #fefefe;
+        margin: 10% auto; /* 10% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%; /* 50% of window width */
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Shadow for 3D effect */
+    }
+
+    /* The Close Button */
+    .close {
+        color: #aaa;
+        position: absolute;
+        top: 10px;
+        right: 25px;
+        font-size: 35px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
 <body>
 
 <!-- Main Page and Info Buttons -->
@@ -47,12 +90,56 @@
             <label for="age">Age:</label>
             <input type="number" id="age" name="age" required>
         </div>
+
+        <div class="form-group">
+            <button type="button" id="showTermsButton">Show Terms of Use</button> <!-- Changed to type="button" -->
+            <label for="termsAgreeCheckbox">I agree to the terms and conditions</label>
+            <input type="checkbox" id="termsAgreeCheckbox" name="termsAgreement" required>
+        </div>
+
+
         <button type="submit">Register</button>
     </form>
     <div id="message"></div>
 </div>
 
+<!-- Terms Modal outside of the form -->
+<div id="termsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Terms of Use</h2>
+        <p id="termsContent">Loading terms...</p>
+    </div>
+</div>
+
 <script>
+    document.getElementById('showTermsButton').addEventListener('click', function() {
+        fetch('/terms', { method: 'GET' })
+            .then(response => response.text())
+            .then(text => {
+                document.getElementById('termsContent').innerHTML = text;
+                document.getElementById("termsModal").style.display = "block";
+            })
+            .catch(error => {
+                document.getElementById('termsContent').innerHTML = "Failed to load terms.";
+                console.error('Error fetching terms:', error);
+            });
+    });
+
+    // Close the modal when the user clicks on (x)
+    document.querySelector('.close').addEventListener('click', function() {
+        document.getElementById("termsModal").style.display = "none";
+    });
+
+    // Close the modal if the user clicks outside of it
+    window.onclick = function(event) {
+        var modal = document.getElementById("termsModal");
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+
+
     document.getElementById('registerForm').addEventListener('submit', function (event) {
         event.preventDefault();
         const email = document.getElementById('email').value;
@@ -61,11 +148,12 @@
         const avgDegree = parseFloat(document.getElementById('avgDegree').value);
         const age = parseInt(document.getElementById('age').value);
         const academicInstitution = document.getElementById('academicInstitution').value;
+        const termsAgreement = document.getElementById('termsAgreeCheckbox').checked;
 
         fetch('/register', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email, password, age, gender, avgDegree, academicInstitution})
+            body: JSON.stringify({email, password, age, gender, avgDegree, academicInstitution, termsAgreement})
         })
             .then(response => {
                 if (response.status === 409) {

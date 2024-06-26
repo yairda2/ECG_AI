@@ -1,22 +1,20 @@
 // authMiddleware.js
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = 'your_secret_jwt_key'; // Ensure this matches the one used in your server
+const config = require('../config/config');
+const SECRET_KEY = config.secret_key.key;
 
 function verifyToken(req, res, next) {
     const token = req.cookies.token;
     if (!token) {
-        return res.status(401).json({ message: 'NoToken' }); // No token found
+        return res.status(401).json({ message: 'NoToken', redirect: '/login' });
     }
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
-            if (err.name === 'TokenExpiredError') {
-                return res.status(401).json({ message: 'TokenExpired' }); // Token expired
-            } else {
-                return res.status(401).json({ message: 'InvalidToken' }); // Invalid token
-            }
+            return res.status(401).json({ message: 'InvalidToken', redirect: '/login' });
         }
-        req.user = decoded; // Store decoded token in req.user for further use
+        req.user = decoded;
+        // Add here check if the id exists in the database
         next();
     });
 }

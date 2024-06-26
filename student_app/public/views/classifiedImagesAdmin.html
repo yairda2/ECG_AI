@@ -178,9 +178,24 @@
     <div id="message"></div>
     <button id="backButton" onclick="location.href='/chooseModel'">Back</button>
 
+    <div id="customAlert" style="display:none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; padding: 20px; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.5);">
+        <p id="customAlertMsg"></p>
+    </div>
+
+
 </div>
 
 <script>
+    function customAlert(message, duration = 2000) {
+        const alertBox = document.getElementById('customAlert');
+        const alertMsg = document.getElementById('customAlertMsg');
+        alertMsg.innerText = message;
+        alertBox.style.display = 'block';
+        setTimeout(() => {
+            alertBox.style.display = 'none';
+        }, duration);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         fetchRandomImage(); // Load an image when the page loads
     });
@@ -216,7 +231,8 @@
         })
             .then(response => response.text())
             .then(message => {
-                alert(message);
+                //alert the message for 2 seconds
+                customAlert(message);
                 clearSelection(); // Clear the selection after classification
                 fetchRandomImage(); // Fetch next image after classification
             })
@@ -231,6 +247,7 @@
         // Clear message
         document.getElementById('message').innerText = '';
     }
+
 </script>
 </body>
 </html>
