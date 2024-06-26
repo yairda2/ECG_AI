@@ -9,8 +9,9 @@ const fs = require('fs');
 const app = express();
 const cors = require('cors');
 const verifyToken = require('./authMiddleware');
-const {PORT} = require('../config/config');
-const {SECRET_KEY} = require('../config/config');
+const config = require('../config/config');
+const PORT = config.server.port || 3000;
+const SECRET_KEY = config.secret_key.key;
 
 
 // Middleware to parse JSON and handle cookies

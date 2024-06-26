@@ -1,6 +1,7 @@
 // authMiddleware.js
 const jwt = require('jsonwebtoken');
-const { SECRET_KEY } = require('../config/config');
+const config = require('../config/config');
+const SECRET_KEY = config.secret_key.key;
 
 function verifyToken(req, res, next) {
     const token = req.cookies.token;
@@ -8,11 +9,12 @@ function verifyToken(req, res, next) {
         return res.status(401).json({ message: 'NoToken', redirect: '/login' });
     }
 
-    jwt.verify(token, 'your_secret_jwt_key', (err, decoded) => {
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
             return res.status(401).json({ message: 'InvalidToken', redirect: '/login' });
         }
         req.user = decoded;
+        // Add here check if the id exists in the database
         next();
     });
 }
