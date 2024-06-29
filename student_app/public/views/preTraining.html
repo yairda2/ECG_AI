@@ -2,18 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Pre-Training</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <script src="/js/common.js" defer></script>
+    <title>PreTraining</title>
+    <link rel="stylesheet" type="text/css" href="/css/common.css">
+    <script src="/js/common.js" defer></script> <!-- Include common.js -->
 </head>
+<style>
+    /* Style for buttons */
+    button {
+        width: 40%; /* Smaller width */
+        padding: 5px; /* Less padding */
+        border: none;
+        border-radius: 4px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        font-size: 16px; /* Slightly smaller font size */
+        display: block;
+        margin: 10px auto;
+        text-align: center; /* Center the text inside the button */
+        font-family: 'Iceberg', cursive; /* Stylish font, ensure this font is loaded */
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    form {
+        text-align: center; /* Center the form content */
+    }
+
+    body {
+        font-family: 'Arial', sans-serif; /* Default body font */
+    }
+
+    .text-output {
+        text-align: center;
+        font-size: 20px;
+        margin: 20px;
+    }
+</style>
 <body>
+
 <!-- Main Page and Info Buttons -->
 <button id="mainpageButton" class="icon-button">Home</button>
 <button id="infoButton" class="icon-button">User Info</button>
 
-<h1>Pre-Training</h1>
 <form id="preTrainForm" action="/pre-training" method="POST">
-    <div>
+    <div class="text-output" id="text-output">
+        <h1>Pre-Train</h1>
         Hello dear user. Let's start a training session.<br>
         Every time X you will get a picture of an ECG scan. And you will have to classify here.<br>
         Note that you will need to submit the selection.<br>
@@ -30,6 +66,8 @@
             handlePageAction('/pre-training', 'POST');
         });
     });
+
 </script>
+
 </body>
 </html>

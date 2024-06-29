@@ -116,7 +116,8 @@ function createTables() {
         CREATE TABLE IF NOT EXISTS imageClassification (
             imageId INTEGER PRIMARY KEY AUTOINCREMENT,
             photoName TEXT,
-            classification TEXT
+            classification TEXT,
+            rate INTEGER DEFAULT 0
         )`);
     });
 }

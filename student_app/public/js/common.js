@@ -64,6 +64,8 @@ function handlePageAction(url, method, data = {}) {
 document.addEventListener('DOMContentLoaded', () => {
     const mainpageButton = document.getElementById('mainpageButton');
     const infoButton = document.getElementById('infoButton');
+    const registerButton = document.getElementById('registerButton');
+    const loginButton = document.getElementById('loginButton');
     const forms = document.querySelectorAll('form');
 
     if (mainpageButton) {
@@ -71,7 +73,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (infoButton) {
-        infoButton.addEventListener('click', () => handlePageAction('/info', 'GET'));
+        infoButton.addEventListener('click', () => handlePageAction('/user-data', 'GET'));
+    }
+
+    if (registerButton) {
+        registerButton.addEventListener('click', () => handlePageAction('/sign-up', 'GET'));
+    }
+
+    if (loginButton) {
+        loginButton.addEventListener('click', () => handlePageAction('/sign-in', 'GET'));
     }
 });
 
