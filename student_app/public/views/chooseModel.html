@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Personal Information Form</title>
+    <title>Choose Model</title>
     <link rel="stylesheet" href="../css/common.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
-    <script src="../js/common.js" defer></script> <!-- Include common.js -->
+    <script src="../js/common.js"></script> <!-- Include common.js -->
     <style>
         /* Style for buttons */
         button {
@@ -13,7 +13,7 @@
             padding: 5px; /* Less padding */
             border: none;
             border-radius: 4px;
-            background-color: #b10000;
+            background-color: #007bff;
             color: white;
             cursor: pointer;
             font-size: 16px; /* Slightly smaller font size */
@@ -24,7 +24,7 @@
         }
 
         button:hover {
-            background-color: #a00000; /* Darker red */
+            background-color: #0056b3;
         }
 
         form {
@@ -47,18 +47,19 @@
 
 <h2>Welcome to our learning model</h2>
 <h3>Choose your method</h3>
-<form id="modelChooseForm" method="POST">
-    <button type="submit"  value="Single Training">Training</button>
-    <button type="submit"   value="Test">Test</button>
+<form id="modelChooseForm">
+    <button type="button" name="action" value="Single Training">Training</button>
+    <button type="button" name="action" value="Test">Test</button>
 </form>
 
 <script>
-    document.getElementById('modelChooseForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        // Pass the value of submit button as a parameter
-        handleChooseModelSubmit(e.target, e.submitter.value);
+    document.querySelectorAll('#modelChooseForm button').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const actionValue = e.target.value;
+            handlePageAction('/chooseModel', 'POST', { action: actionValue });
+        });
     });
-
 </script>
 </body>
 </html>

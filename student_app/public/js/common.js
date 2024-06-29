@@ -1,123 +1,62 @@
 // common.js
 
-
-// Function to handle the main page button click
-function handleMainpageButtonClick() {
-    if (window.location.pathname === "/test") {
-        if (confirm("Are you sure you want to leave the test?")) {
-            fetch('/chooseModel', {
-                method: 'GET',
-                credentials: 'include'
-            }).then(response => {
-                if (!response.ok) {
-                    handleTokenExpiration(response); // Check for token expiration
-                } else {
-                    window.location.href = '/chooseModel';
-                }
-            }).catch(err => console.error('Error:', err));
+// Function to get cookie value by name
+function getCookie(name) {
+    let cookieArr = document.cookie.split(";");
+    for (let i = 0; i < cookieArr.length; i++) {
+        let cookiePair = cookieArr[i].split("=");
+        if (name === cookiePair[0].trim()) {
+            return decodeURIComponent(cookiePair[1]);
         }
-    } else {
-        fetch('/chooseModel', {
-            method: 'GET',
-            credentials: 'include'
-        }).then(response => {
-            if (!response.ok) {
-                handleTokenExpiration(response); // Check for token expiration
-            } else {
-                window.location.href = '/chooseModel';
-            }
-        }).catch(err => console.error('Error:', err));
     }
+    return null;
 }
 
-// Function to handle the info button click
-function handleInfoButtonClick() {
-    fetch('/info', {
-        method: 'GET',
-        credentials: 'include'
-    }).then(response => {
+// Function to handle server responses
+function handleServerResponse(response) {
+    return response.json().then(data => {
         if (!response.ok) {
-            handleTokenExpiration(response); // Check for token expiration
-        } else {
-            window.location.href = '/info';
-        }
-    }).catch(err => console.error('Error:', err));
-}
-
-// common.js
-
-// Function to convert form data to JSON
-function formToJson(form) {
-    const formData = new FormData(form);
-    const jsonData = {};
-    formData.forEach((value, key) => {
-        jsonData[key] = value;
-    });
-    return JSON.stringify(jsonData);
-}
-
-// Function to handle redirection on token expiration
-function handleTokenExpiration(response) {
-    if (response.status === 401) {
-        response.json().then(data => {
-            if (['TokenExpired', 'NoToken', 'InvalidToken'].includes(data.message)) {
-                alert('Your session has expired or is invalid. Please log in again.');
-                window.location.href = '/login';
-            } else {
+            if (data.message) {
                 alert(data.message);
             }
-        });
-    } else {
-        response.json().then(data => alert(data.message)).catch(() => alert('An unexpected error occurred.'));
-    }
-}
-
-
-// Function to handle page redirection or form submission
-function handlePageAction(action, method, body = null) {
-    const options = {
-        method: method,
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    };
-
-    if (body) {
-        options.body = JSON.stringify(body);
-    }
-
-    fetch(action, options)
-        .then(response => {
-            if (!response.ok) {
-                handleTokenExpiration(response);
-            } else {
-                response.json().then(data => {
-                    if (data.redirect) {
-                        window.location.href = data.redirect;
-                    } else {
-                        alert(data.message);
-                    }
-                });
+            if (data.redirect) {
+                window.location.href = data.redirect;
             }
+        } else if (data.redirect) {
+            window.location.href = data.redirect;
+        }
+        return data;
+    }).catch(err => {
+        console.error('Error:', err);
+        alert('An unexpected error occurred.');
+    });
+}
+
+// Function to handle page actions
+function handlePageAction(url, method, data = {}) {
+    // If method is GET, remove body if method is GET
+    if (method === 'GET') {
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
         })
-        .catch(err => console.error('Error:', err));
-}
-
-// Function to handle form submission
-function handleChooseModelSubmit(event, value) {
-    handlePageAction('/chooseModel', event.method, { action: value });
-
-}
-// Function to handle form submission
-function handleFormSubmit(event) {
-    event.preventDefault();
-    const form = event.target;
-    const action = form.action;
-    const method = form.method.toUpperCase();
-    const body = formToJson(form);
-
-    handlePageAction(action, method, JSON.parse(body));
+            .then(response => handleServerResponse(response))
+            .catch(err => console.error('Error:', err));
+    } else if (method === 'POST') {
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(data)
+        })
+            .then(response => handleServerResponse(response))
+            .catch(err => console.error('Error:', err));
+    }
 }
 
 
@@ -125,28 +64,25 @@ function handleFormSubmit(event) {
 document.addEventListener('DOMContentLoaded', () => {
     const mainpageButton = document.getElementById('mainpageButton');
     const infoButton = document.getElementById('infoButton');
-    const modelChooseForm = document.getElementById('modelChooseForm');
+    const registerButton = document.getElementById('registerButton');
+    const loginButton = document.getElementById('loginButton');
     const forms = document.querySelectorAll('form');
 
     if (mainpageButton) {
-        mainpageButton.addEventListener('click', () => handlePageAction('/chooseModel', 'GET'));
+        mainpageButton.addEventListener('click', () => handlePageAction('/main', 'GET'));
     }
 
     if (infoButton) {
-        infoButton.addEventListener('click', () => handlePageAction('/info', 'GET'));
+        infoButton.addEventListener('click', () => handlePageAction('/user-data', 'GET'));
     }
 
-    if (modelChooseForm) {
-        modelChooseForm.addEventListener('submit', event => {
-            event.preventDefault();
-            const action = event.submitter.value; // Using submitter to get the clicked button value
-            handleChooseModelSubmit(action, 'POST');
-        });
+    if (registerButton) {
+        registerButton.addEventListener('click', () => handlePageAction('/sign-up', 'GET'));
     }
 
-    forms.forEach(form => {
-        form.addEventListener('submit', handleFormSubmit);
-    });
+    if (loginButton) {
+        loginButton.addEventListener('click', () => handlePageAction('/sign-in', 'GET'));
+    }
 });
 
 // Display error message on page load
@@ -161,13 +97,10 @@ document.addEventListener("DOMContentLoaded", function () {
         alert(errorMessage[error] || 'An unknown error occurred.');
         window.location.href = '/login';
     }
+    const success = urlParams.get('success');
+    const redirect = urlParams.get('redirect');
+    if (success) {
+        alert(success);
+        window.location.href = redirect;
+    }
 });
-
-// Initialize buttons and forms on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        const mainpageButton = document.getElementById('mainpageButton');
-        const infoButton = document.getElementById('infoButton');
-
-        if (mainpageButton) mainpageButton.addEventListener('click', () => handleFormSubmit('/chooseModel', 'GET'));
-        if (infoButton) infoButton.addEventListener('click', () => handleFormSubmit('/info', 'GET'));
-    });

@@ -2,51 +2,184 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" type="text/css" href="/css/common.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
+    <title>User Info Page</title>
     <script src="../js/common.js"></script> <!-- Include common.js -->
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            cursor: pointer;
+        }
+        .icon-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 90px;
+            height: 40px;
+            background-color: red;
+            color: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+            padding: 0 10px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+        img {
+            width: 100px;
+            height: auto;
+            cursor: pointer;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .data {
+            font-size: 32px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .sorted { /* Style for highlighting sorted column */
+            background-color: lightgreen;
+        }
+    </style>
 </head>
 <body>
-<!-- Main Page and Info Buttons -->
+<h1>User Information</h1>
 <button id="mainpageButton" class="icon-button">Home</button>
-<button id="infoButton" class="icon-button">User Info</button>
-<button id="registerButton" class="icon-button" onclick="window.location.href='/register'">Register</button>
+<table id="userInfo" class="data">
+    <thead>
+    <tr>
+        <th onclick="sortTable('photoName')">Photo</th>
+        <th onclick="sortTable('classificationDes')">Answer Given</th>
+        <th onclick="sortTable('classificationSrc')">Correct Answer</th>
+        <th onclick="sortTable('result')">Result</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Data rows will be inserted here -->
+    </tbody>
+</table>
 
-<!-- Tooltip Container -->
-<div id="tooltip" class="tooltip"></div>
-
-<h1>Login</h1>
-<form id="loginForm">
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <button type="submit" >Login</button>
-</form>
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <img id="modalImage" src="" alt="Full Size Image" style="width:100%">
+        <p id="modalInfo"></p>
+    </div>
+</div>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+    document.addEventListener('DOMContentLoaded', function() {
+        let tableData = [];
 
-        fetch('/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        })
-            .then(response => {
-                if (response.status === 404) {
-                    alert('User not found');
-                } else
-                if (response.status === 401) {
-                    alert('Invalid password');
-                } else
-                if (response.status === 200) {
-                    window.location.href = '/chooseModel';
-                }
+        fetch('/info/data')
+            .then(response => response.json())
+            .then(data => {
+                tableData = data.map(item => ({
+                    ...item,
+                    result: item.classificationSrc === item.classificationDes ? '✓' : '✗'
+                }));
+                displayData(tableData);
+            })
+            .catch(error => console.error('Error fetching user data:', error));
+
+        function displayData(data) {
+            const userInfoTable = document.getElementById('userInfo').getElementsByTagName('tbody')[0];
+            userInfoTable.innerHTML = ''; // Clear the table
+            data.forEach(item => {
+                const rowClass = item.classificationSrc === item.classificationDes ? 'correct' : 'incorrect';
+                const imagePath = `/img/graded/${item.classificationSrc}/${item.photoName}`;
+                const row = `
+                <tr>
+                    <td><img src="${imagePath}" alt="Image not found (${item.photoName})" onclick="showModal('${imagePath}', '${item.classificationDes}', '${item.classificationSrc}')"></td>
+                    <td>${item.classificationDes}</td>
+                    <td>${item.classificationSrc}</td>
+                    <td class="${rowClass}">${item.result}</td>
+                </tr>
+            `;
+                userInfoTable.innerHTML += row;
             });
+        }
+
+        window.sortTable = function(column) {
+            document.querySelectorAll('#userInfo th').forEach(th => th.classList.remove('sorted')); // Remove sorted class from all headers
+            document.querySelector(`#userInfo th:nth-child(${{
+                'photoName': 1,
+                'classificationDes': 2,
+                'classificationSrc': 3,
+                'result': 4
+            }[column]})`).classList.add('sorted'); // Add sorted class to the current header
+
+            let sortedData = [...tableData];
+            if (column === 'result') {
+                sortedData.sort((a, b) => a.result.localeCompare(b.result));
+            } else {
+                sortedData.sort((a, b) => a[column].localeCompare(b[column]));
+            }
+            displayData(sortedData);
+        };
+    });
+
+    function showModal(imagePath, givenAnswer, correctAnswer) {
+        document.getElementById('modalImage').src = imagePath;
+        const infoText = `Given Answer: <span style="${givenAnswer === correctAnswer ? 'color:green' : 'color:red'};">${givenAnswer}</span><br>
+                      Correct Answer: <span style="color:green;">${correctAnswer}</span>`;
+        document.getElementById('modalInfo').innerHTML = infoText;
+        document.getElementById('myModal').style.display = 'block';
+    }
+
+    document.addEventListener('click', function(event) {
+        var modal = document.getElementById('myModal');
+        if (event.target.className === 'close-button' || event.target === modal) {
+            modal.style.display = 'none';
+        }
     });
 </script>
 
