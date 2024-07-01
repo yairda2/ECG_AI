@@ -2,47 +2,317 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Test</title>
-    <link rel="stylesheet" href="../css/common.css">
-    <script src="/js/common.js" defer></script> <!-- Include common.js -->
-
+    <title>Training</title>
+    <link rel="stylesheet" href="common.css">
     <style>
-        /* Style for buttons */
-        button {
-            width: 40%; /* Smaller width */
-            padding: 5px; /* Less padding */
-            border: none;
-            border-radius: 4px;
-            background-color: #b10000;
-            color: white;
-            cursor: pointer;
-            font-size: 16px; /* Slightly smaller font size */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 40px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
             display: block;
-            margin: 10px auto;
-            text-align: center; /* Center the text inside the button */
-            font-family: 'Iceberg', cursive; /* Stylish font, ensure this font is loaded */
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .category-section {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         button:hover {
-            background-color: #b10000;
+            background-color: #45a049;
         }
 
-        form {
-            text-align: center; /* Center the form content */
+        .final-score {
+            font-size: 32px;
+            color: #4CAF50;
+            margin-top: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1.5px;
         }
 
-        body {
-            font-family: 'Arial', sans-serif; /* Default body font */
+        .final-score h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .final-score h2 {
+            font-size: 36px;
+            color: #333;
+        }
+
+        .continue-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+        }
+
+        .continue-button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            font-size: 18px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+
+        .result-img {
+            width: 100px;
+            height: auto;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .result-img:hover {
+            transform: scale(1.1);
+        }
+
+        .large-img-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .large-img-container img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #FF0000;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            text-align: center;
+            line-height: 40px;
+            z-index: 1001;
         }
     </style>
 </head>
-
 <body>
-<h2>Welcome to our learning model</h2>
-<h3>Choose your method</h3>
-<form id="model-choose" action="/chooseModel" method="POST">
-    <button type="submit" name="action" value="Single Training">Training</button>
-    <button type="submit" name="action" value="Test">Test</button>
-</form>
+<div class="container">
+    <h1>Choose the Right Case</h1>
+    <img id="imageToClassify" src="" alt="Random Image">
+    <div class="category-section">
+        <button onclick="submitChoice('Normal')">Normal</button>
+        <button onclick="submitChoice('Abnormal')">Abnormal</button>
+    </div>
+</div>
+
+<script>
+    let currentImageIndex = 0;
+    const totalImages = 5;
+    const images = []; // Array to store the image paths
+    const choices = []; // Array to store user choices
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadImages().then(() => {
+            displayNextImage();
+        });
+    });
+
+    async function loadImages() {
+        for (let i = 0; i < totalImages; i++) {
+            try {
+                const response = await fetch('/random-image');
+                const data = await response.json();
+                images.push(data.imagePath);
+                console.log(data.imagePath);
+            } catch (error) {
+                console.error('Failed to fetch image:', error);
+            }
+        }
+    }
+
+    function displayNextImage() {
+        if (currentImageIndex < images.length) {
+            document.getElementById('imageToClassify').src = images[currentImageIndex];
+        } else {
+            calculateFinalScore();
+        }
+    }
+
+    function submitChoice(choice) {
+        const arr = images[currentImageIndex].split('\\');
+        const photoName = arr[arr.length - 1];
+        const correct = arr[arr.length - 2]; // Extract the correct answer from the path
+        choices.push({ imagePath: images[currentImageIndex], photoName, correct, classification: choice });
+        currentImageIndex++;
+        displayNextImage();
+    }
+
+    async function calculateFinalScore() {
+        try {
+            const response = await fetch('/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ choices })
+            });
+            const { totalScore } = await response.json();
+            displayResults(totalScore);
+        } catch ( error) {
+            console.error('Error calculating final score:', error);
+        }
+    }
+
+    function displayResults(totalScore) {
+        let resultsHTML = `
+            <div class="final-score">
+                <h1>Test Completed!</h1>
+                <h2>Your Final Score: ${totalScore}</h2>
+            </div>
+            <button class="continue-button" onclick="continueToModel()">Continue</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Your Choice</th>
+                        <th>Correct Answer</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        choices.forEach(choice => {
+            const isCorrect = !(choice.classification === "Normal" && choice.correct !== "Normal" || choice.classification === "Abnormal" && choice.correct === "Normal");
+            resultsHTML += `
+                <tr>
+                    <td><img src="${choice.imagePath}" alt="${choice.photoName}" class="result-img"></td>
+                    <td>${choice.classification}</td>
+                    <td>${choice.correct}</td>
+                    <td class="${isCorrect ? 'correct' : 'incorrect'}">${isCorrect ? 'V' : 'X'}</td>
+                </tr>`;
+        });
+        resultsHTML += `
+                </tbody>
+            </table>`;
+        document.body.innerHTML = resultsHTML;
+        bindClickEventToImages();
+    }
+
+    function bindClickEventToImages() {
+        const resultImages = document.querySelector('tbody');
+        resultImages.addEventListener('click', function(event) {
+            const target = event.target;
+            if (target.className === 'result-img') {
+                showLargeImage(target.src);
+            }
+        });
+    }
+
+    function showLargeImage(imagePath) {
+        const largeImageHTML = `
+            <div class="large-img-container">
+                <img src="${imagePath}" alt="Large Image">
+                <button class="close-button" onclick="closeLargeImage()">X</button>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', largeImageHTML);
+    }
+
+    function closeLargeImage() {
+        const largeImageContainer = document.querySelector('.large-img-container');
+        if (largeImageContainer) {
+            largeImageContainer.remove();
+        }
+    }
+
+    function continueToModel() {
+        window.location.href = '/chooseModel';
+    }
+</script>
+<script src="/js/common.js" defer></script>
 </body>
 </html>

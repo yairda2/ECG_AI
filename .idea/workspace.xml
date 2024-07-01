@@ -5,25 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identifier.sqlite" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/.name" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/student_app.iml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/student_app.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analizer/ECG_AI.py" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/analizer/ECG_AI.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0001_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0057_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0068_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0195_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0320_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0415_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/js/common.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/js/common.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/classifiedImagesAdmin.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/classifiedImagesAdmin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/preTraining.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/preTraining.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/register.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/student_app/public/views/test.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/test.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/training.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/training.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/authMiddleware.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/authMiddleware.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
     </list>
@@ -35,26 +21,48 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "ElyasafSinvani"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/yairda2/ECG_AI.git",
+    "accountId": "77cb79ca-a25d-47dd-b06d-0301ad16931c"
+  }
+}]]></component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
   <component name="ProjectId" id="2eoZiqUeHs2aHTJ1PwkH8ub9JWh" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
     "JavaScript Debug.chooseModel.html.executor": "Run",
     "JavaScript Debug.classifiedImagesAdmin.html.executor": "Run",
     "JavaScript Debug.login.html.executor": "Run",
     "JavaScript Debug.preTraining.html.executor": "Run",
+    "JavaScript Debug.test.html.executor": "Run",
     "JavaScript Debug.train.html.executor": "Run",
     "Node.js.authMiddleware.js.executor": "Debug",
     "Node.js.common.js.executor": "Debug",
     "Node.js.server.js.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "yair__dev",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "Elyasaf",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/yair/Documents/GitHub/EEG_AI_firsst_collect/student_app/public/views",
     "node.js.detected.package.eslint": "true",
@@ -63,8 +71,13 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\WebStorm 2023.3.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "sqlite"
+    ]
   }
 }]]></component>
   <component name="RecentsManager">
@@ -74,6 +87,9 @@
   </component>
   <component name="RunManager" selected="Node.js.server.js">
     <configuration name="login.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63343/EEG_AI_firsst_collect/student_app/public/views/login.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="test.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/EEG_AI/student_app/public/views/test.html" useBuiltInWebServerPort="true">
       <method v="2" />
     </configuration>
     <configuration name="authMiddleware.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/authMiddleware.js" working-dir="$PROJECT_DIR$/student_app/server">
@@ -88,6 +104,7 @@
     <recent_temporary>
       <list>
         <item itemvalue="Node.js.server.js" />
+        <item itemvalue="JavaScript Debug.test.html" />
         <item itemvalue="JavaScript Debug.login.html" />
         <item itemvalue="Node.js.common.js" />
         <item itemvalue="Node.js.authMiddleware.js" />
@@ -122,6 +139,12 @@
       <workItem from="1719173962464" duration="31000" />
       <workItem from="1719174001585" duration="620000" />
       <workItem from="1719175770664" duration="2816000" />
+      <workItem from="1719689579603" duration="1797000" />
+      <workItem from="1719858669666" duration="127000" />
+      <workItem from="1719858807865" duration="31000" />
+      <workItem from="1719858851731" duration="5339000" />
+      <workItem from="1719866659001" duration="407000" />
+      <workItem from="1719867139598" duration="7187000" />
     </task>
     <servers />
   </component>
@@ -139,6 +162,9 @@
       </map>
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
@@ -148,34 +174,9 @@
           <option name="timeStamp" value="21" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>164</line>
-          <option name="timeStamp" value="24" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>176</line>
-          <option name="timeStamp" value="25" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/public/views/login.html</url>
           <line>25</line>
           <option name="timeStamp" value="36" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>211</line>
-          <option name="timeStamp" value="43" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>208</line>
-          <option name="timeStamp" value="44" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>275</line>
-          <option name="timeStamp" value="47" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>

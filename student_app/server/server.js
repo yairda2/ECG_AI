@@ -53,6 +53,34 @@ const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite
         createTables();
     }
 });
+function calculateScore(photoName,correct, classificationProvided) {
+    let score = 0; // Initialize score
+    console.log(correct,classificationProvided);
+    if(!(classificationProvided === "Normal" && correct !== "Normal" || classificationProvided === "Abnormal" && correct === "Normal")){
+        score += 20;
+    }
+    // SQL query to get the matching photo name and its classification from the database
+    /*const sql = `SELECT classification FROM imageClassification WHERE photoName = ?`;
+
+    db.get(sql, [photoName], (err, row) => {
+        if (err) {
+            console.error('Error querying the database:', err.message);
+            return;
+        }
+
+        if (row) {
+            console.log(classificationProvided);
+            console.log(row.classification);
+            if (classificationProvided === "Normal" && row.classification === "Normal") {
+                score += 0; // Add 20 to score if both classifications are "normal"
+            }
+            else {
+                score += 20;
+            }
+        }
+    });*/
+    return score;
+}
 
 // Create database tables
 function createTables() {
@@ -127,6 +155,7 @@ app.get('/terms', (req, res) => {
     const terms = fs.readFileSync(path.join(__dirname, 'Terms.txt'), 'utf8');
     res.send(terms);
 });
+
 
 // User registration
 app.post('/register', async (req, res) => {
@@ -208,7 +237,6 @@ app.use('/random-image', verifyToken);
 app.use('/classifiedImages', verifyToken);
 app.use('/classify-image', verifyToken);
 app.use('/chooseModel', verifyToken);
-
 // Choose model (POST)
 app.post('/chooseModel', verifyToken, (req, res) => {
     const action = req.body.action;
@@ -226,7 +254,7 @@ app.post('/chooseModel', verifyToken, (req, res) => {
             res.status(200).json({redirect: '/pre-training', message: 'Redirecting to pre-training page'});
             break;
         case 'Test':
-            res.status(200).json({redirect: '/test', message: 'Redirecting to test page'});
+            res.status(200).json({redirect: '/Test', message: 'Redirecting to test page'});
             break;
         default:
             res.status(404).json({message: 'Action not found'});
@@ -267,6 +295,25 @@ app.get('/pre-training', (req, res) => {
     if (!token) return res.status(401).send('Access Denied');
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTraining.html'));
 });
+
+app.get('/Test', (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
+});
+
+app.post('/Test',verifyToken, (req, res) => {
+    const { choices } = req.body;
+    let totalScore = 0;
+
+    choices.forEach(choice => {
+        // Assuming calculateScore function is synchronous or properly promisified
+        totalScore += calculateScore(choice.photoName,choice.correct, choice.classification);
+    });
+
+    res.json({ totalScore });
+});
+
 
 // Serve the pre-training page
 app.post('/pre-training', verifyToken, (req, res) => {
@@ -439,6 +486,7 @@ app.get('/random-image', verifyToken, (req, res) => {
                     randomImagePath = path.join('..', 'img', 'graded', randomFolder, files[randomIndex]);
                     foundImage = true;
                     return res.json({imagePath: randomImagePath});
+
                 }
                 checkFolders(index + 1);
             });
