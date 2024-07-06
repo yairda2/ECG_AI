@@ -534,7 +534,6 @@ app.post('/test', verifyToken, async (req, res) => {
     }
 });
 
-
 // Endpoint to handle INFO page
 app.get('/info', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));

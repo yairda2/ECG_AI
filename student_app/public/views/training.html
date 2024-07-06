@@ -176,7 +176,7 @@
     <form id="classificationForm">
         <h2>Low Risk:</h2>
         <div class="category-section">
-            <label class="category-label"><input type="checkbox" name="classification" value="Normal"><span>Low Risk</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="Low Risk"><span>Low Risk</span></label>
         </div>
 
         <h2>STEMI:</h2>
@@ -301,7 +301,18 @@
         const imageSrc = document.getElementById('imageToClassify').src;
         const paths = imageSrc.split('/');
         const photoName = paths.pop();
-        const correctAnswer = paths[paths.length - 1]; // Assuming the correct classification is the folder name
+        const correctAnswerSet = paths[paths.length - 2];
+        const correctAnswerSubSet = paths[paths.length - 1];
+
+        let correctAnswer;
+        if (correctAnswerSet === "LOW RISK") {
+            correctAnswer = "LOW RISK";
+        } else if (correctAnswerSet === "STEMI") {
+            correctAnswer = correctAnswerSubSet;
+        } else if (correctAnswerSet === "HIGH RISK") {
+            correctAnswer = correctAnswerSubSet;
+        }
+
         const answerChangeText = answerChanges.length > 0 ? answerChanges.join('; ') : 'None';
 
         if (!selectedCheckbox) {
@@ -361,7 +372,9 @@
     function getCorrectAnswer() {
         const imageSrc = document.getElementById('imageToClassify').src;
         const paths = imageSrc.split('/');
-        return paths[paths.length - 2]; // Assuming the correct classification is the folder name
+        const classificationSet = paths[paths.length - 2]; // Assuming the classification set is the second last folder name
+        const classificationSubSet = paths[paths.length - 1]; // Assuming the classification subset is the last folder name if it exists
+        return classificationSet === "Low Risk" ? "Low Risk" : classificationSubSet;
     }
 
     function showAlert(isCorrect, correctAnswer) {
