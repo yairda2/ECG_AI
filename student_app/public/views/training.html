@@ -142,17 +142,41 @@
             background-color: #ffc107; /* Disabled button color */
             cursor: not-allowed;
         }
+
+        /* New alert styles */
+        .alert {
+            display: none;
+            padding: 20px;
+            background-color: #f44336; /* Red */
+            color: white;
+            font-size: 18px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert.success {
+            background-color: #4CAF50; /* Green */
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div id="timer">45</div>
+    <div id="alertBox" class="alert"></div> <!-- Alert box -->
     <h1>Choose the right case</h1>
     <img id="imageToClassify" src="" alt="Random Image">
     <form id="classificationForm">
-        <h2>NORMAL:</h2>
+        <h2>Low Risk:</h2>
         <div class="category-section">
-            <label class="category-label"><input type="checkbox" name="classification" value="Normal"><span>Normal</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="Normal"><span>Low Risk</span></label>
         </div>
 
         <h2>STEMI:</h2>
@@ -277,8 +301,7 @@
         const imageSrc = document.getElementById('imageToClassify').src;
         const paths = imageSrc.split('/');
         const photoName = paths.pop();
-        const classificationSrc = paths.pop();
-
+        const correctAnswer = paths[paths.length - 1]; // Assuming the correct classification is the folder name
         const answerChangeText = answerChanges.length > 0 ? answerChanges.join('; ') : 'None';
 
         if (!selectedCheckbox) {
@@ -291,7 +314,6 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 photoName,
-                classificationSrc,
                 classificationDes: category,
                 answerTime: duration,
                 answerChange: answerChangeText,
@@ -302,7 +324,10 @@
         })
             .then(response => response.text())
             .then(message => {
-                fetchRandomImage(); // Fetch next image
+                showAlert(category === correctAnswer, correctAnswer);
+                setTimeout(() => {
+                    fetchRandomImage(); // Fetch next image and data after alert
+                }, 3000); // Fetch next image and data after 3 seconds
             })
             .catch(error => console.error('Error submitting classification:', error));
     }
@@ -338,7 +363,25 @@
         const paths = imageSrc.split('/');
         return paths[paths.length - 2]; // Assuming the correct classification is the folder name
     }
+
+    function showAlert(isCorrect, correctAnswer) {
+        const alertBox = document.getElementById('alertBox');
+        if (isCorrect) {
+            alertBox.textContent = `Correct! The answer is ${correctAnswer}.`;
+            alertBox.classList.add('success');
+            alertBox.classList.remove('alert');
+        } else {
+            alertBox.textContent = `Incorrect! The correct answer is ${correctAnswer}.`;
+            alertBox.classList.add('alert');
+            alertBox.classList.remove('success');
+        }
+        alertBox.style.display = 'block';
+
+        setTimeout(() => {
+            alertBox.style.display = 'none';
+            fetchRandomImage(); // Fetch next image and data after hiding alert
+        }, 3000); // Hide after 3 seconds and then fetch next image and data
+    }
 </script>
-<script src="../js/common.js"></script>
 </body>
 </html>
