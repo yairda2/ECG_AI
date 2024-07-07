@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sqlite3 = require('sqlite3').verbose();
 const cookieParser = require('cookie-parser');
-const {v4: uuidv4} = require('uuid');
+const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const fs = require('fs');
 const app = express();
@@ -13,18 +13,17 @@ const config = require('../config/config');
 const PORT = config.server.port || 3000;
 const SECRET_KEY = config.secret_key.key;
 
-
 // Middleware to parse JSON and handle cookies
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(cookieParser());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // Middleware to check token validity and refresh if needed
 function checkToken(req, res, next) {
     const token = req.cookies.token;
-    if (!token) return res.status(401).json({message: 'NoToken', redirect: '/login'});
+    if (!token) return res.status(401).json({ message: 'NoToken', redirect: '/login' });
 
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
@@ -33,14 +32,14 @@ function checkToken(req, res, next) {
         const timeLeft = expirationTime - currentTime;
 
         if (timeLeft < 5 * 60) {
-            const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
-            res.cookie('token', newToken, {httpOnly: true, secure: true});
+            const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, SECRET_KEY, { expiresIn: '1h' });
+            res.cookie('token', newToken, { httpOnly: true, secure: true });
         }
 
         req.user = decoded;
         next();
     } catch (err) {
-        return res.status(401).json({message: 'InvalidToken', redirect: '/login'});
+        return res.status(401).json({ message: 'InvalidToken', redirect: '/login' });
     }
 }
 
@@ -54,7 +53,6 @@ const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite
     }
 });
 
-// Create database tables
 // Create database tables
 function createTables() {
     db.serialize(() => {
@@ -160,19 +158,19 @@ app.get('/terms', (req, res) => {
 
 // User registration
 app.post('/register', async (req, res) => {
-    const {email, password, age, gender, avgDegree, academicInstitution, termsAgreement} = req.body;
+    const { email, password, age, gender, avgDegree, academicInstitution, termsAgreement } = req.body;
     if (!email || !password || !age || !gender || !avgDegree || !academicInstitution || termsAgreement === false) {
-        return res.status(400).json({message: 'All fields are required'});
+        return res.status(400).json({ message: 'All fields are required' });
     }
 
     db.get('SELECT email FROM authentication WHERE email = ?', [email], async (err, row) => {
         if (err) {
             console.error('Error querying the database:', err.message);
-            return res.status(500).json({message: 'Server error'});
+            return res.status(500).json({ message: 'Server error' });
         }
 
         if (row) {
-            return res.status(409).json({message: 'User already exists. Please log in.', redirect: '/login'});
+            return res.status(409).json({ message: 'User already exists. Please log in.', redirect: '/login' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -180,13 +178,13 @@ app.post('/register', async (req, res) => {
 
         db.run('INSERT INTO users (id, age, gender, avgDegree, academicInstitution) VALUES (?, ?, ?, ?, ?)', [userId, age, gender, avgDegree, academicInstitution], (err) => {
             if (err) {
-                return res.status(500).json({message: 'Error registering new user in Users table: ' + err.message});
+                return res.status(500).json({ message: 'Error registering new user in Users table: ' + err.message });
             }
             db.run('INSERT INTO authentication (userId, email, password, termsAgreement, role) VALUES (?, ?, ?, ?, "user")', [userId, email, hashedPassword, termsAgreement], (authErr) => {
                 if (authErr) {
-                    return res.status(500).json({message: 'Error registering new user in Authentication table: ' + authErr.message});
+                    return res.status(500).json({ message: 'Error registering new user in Authentication table: ' + authErr.message });
                 }
-                res.status(200).json({message: 'User registered successfully', redirect: '/login'});
+                res.status(200).json({ message: 'User registered successfully', redirect: '/login' });
             });
         });
     });
@@ -194,7 +192,7 @@ app.post('/register', async (req, res) => {
 
 // User login
 app.post('/login', (req, res) => {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
     const sql = `SELECT userId, password, role FROM authentication WHERE email = ?`;
     const updateEntries = `UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?`;
     let tempUser;
@@ -202,16 +200,16 @@ app.post('/login', (req, res) => {
     db.get(sql, [email], async (err, user) => {
         if (err) {
             console.error('Database error:', err.message);
-            return res.status(500).json({message: 'Error on server side: ' + err.message});
+            return res.status(500).json({ message: 'Error on server side: ' + err.message });
         }
         if (!user) {
-            return res.status(404).json({message: 'User not found'});
+            return res.status(404).json({ message: 'User not found' });
         }
         if (await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({id: user.userId, role: user.role}, SECRET_KEY, {expiresIn: '1h'});
-            res.cookie('token', token, {httpOnly: true, secure: true});
-            res.cookie('userId', user.userId, {httpOnly: true, secure: true});
-            res.status(200).json({redirect: '/chooseModel', message: 'Login successful', role: user.role});
+            const token = jwt.sign({ id: user.userId, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+            res.cookie('token', token, { httpOnly: true, secure: true });
+            res.cookie('userId', user.userId, { httpOnly: true, secure: true });
+            res.status(200).json({ redirect: '/chooseModel', message: 'Login successful', role: user.role });
             db.run(updateEntries, [user.userId], async (err) => {
                 if (err) {
                     console.error('Error updating totalEntries:', err.message);
@@ -222,7 +220,7 @@ app.post('/login', (req, res) => {
 
 
         } else {
-            res.status(401).json({message: 'Invalid email or password'});
+            res.status(401).json({ message: 'Invalid email or password' });
         }
     });
 
@@ -250,16 +248,16 @@ app.post('/chooseModel', verifyToken, (req, res) => {
                     message: 'You do not have permission to access this page'
                 });
             }
-            res.status(200).json({redirect: '/classifiedImagesAdmin', message: 'Redirecting to classified images'});
+            res.status(200).json({ redirect: '/classifiedImagesAdmin', message: 'Redirecting to classified images' });
             break;
         case 'Single Training':
-            res.status(200).json({redirect: '/pre-training', message: 'Redirecting to pre-training page'});
+            res.status(200).json({ redirect: '/pre-training', message: 'Redirecting to pre-training page' });
             break;
         case 'Pre-Test':
-            res.status(200).json({redirect: '/pre-test', message: 'Redirecting to test page'});
+            res.status(200).json({ redirect: '/pre-test', message: 'Redirecting to test page' });
             break;
         default:
-            res.status(404).json({message: 'Action not found'});
+            res.status(404).json({ message: 'Action not found' });
     }
 });
 
@@ -300,7 +298,7 @@ app.get('/pre-training', (req, res) => {
 
 // Serve the pre-training page
 app.post('/pre-training', verifyToken, (req, res) => {
-    res.json({redirect: '/training', message: 'Pre-training completed successfully'});
+    res.json({ redirect: '/training', message: 'Pre-training completed successfully' });
 });
 
 // Serve the training page
@@ -309,7 +307,6 @@ app.get('/training', checkToken, (req, res) => {
 });
 
 // Serve the training page
-
 app.post('/training', verifyToken, async (req, res) => {
     const {
         photoName,
@@ -327,8 +324,8 @@ app.post('/training', verifyToken, async (req, res) => {
     const sql = `
         INSERT INTO answers (
             userId, date, photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, classificationSubSetDes,
-            answerSubmitTime, answerChange, alertActivated,submissionType, helpActivated, helpTimeActivated
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            answerSubmitTime, answerChange, alertActivated, submissionType, helpActivated, helpTimeActivated
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     // Function to get classification values
@@ -347,13 +344,14 @@ app.post('/training', verifyToken, async (req, res) => {
     }
     async function getClassificationValuesDes(classificationDes) {
         if (classificationDes === 'Low Risk') {
-            return {classificationSetDes: classificationDes, classificationSubSetDes: null};
-        }
-        else if (classificationDes === 'Septal' || classificationDes === 'Anterior' || classificationDes === 'Lateral' || classificationDes === 'Inferior') {
-            return {classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes};
-        }
-        else if(classificationDes === 'Hyperacute' || classificationDes === 'DeWinters' || classificationDes === 'LossOfBalance' || classificationDes === 'Wellens' || classificationDes === 'TInversion' ||  classificationDes === 'Avrste') {
-            return {classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes};
+            return { classificationSetDes: classificationDes, classificationSubSetDes: null };
+        } else if (classificationDes === 'Septal' || classificationDes === 'Anterior' || classificationDes === 'Lateral' || classificationDes === 'Inferior') {
+            return { classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes };
+        } else if (classificationDes === 'Hyperacute' || classificationDes === 'DeWinters' || classificationDes === 'LossOfBalance' || classificationDes === 'Wellens' || classificationDes === 'TInversion' || classificationDes === 'Avrste') {
+            return { classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes };
+        } else {
+            // Return a default value or throw an error if the classificationDes is not recognized
+            return { classificationSetDes: 'UNKNOWN', classificationSubSetDes: 'UNKNOWN' };
         }
     }
 
@@ -369,12 +367,12 @@ app.post('/training', verifyToken, async (req, res) => {
                 photoName,
                 classificationValuesSrc.classificationSetSrc || null,
                 classificationValuesSrc.classificationSubSetSrc || null,
-                classificationValuesDes.classificationSetDes || null,
-                classificationValuesDes.classificationSubSetDes || null,
+                classificationValuesDes.classificationSetDes || 'UNKNOWN',
+                classificationValuesDes.classificationSubSetDes || 'UNKNOWN',
                 answerTime,
                 answerChange,
                 alertActivated,
-                submissionType === 'automatic' ? 1 : 0,
+                submissionType === 'automatic' ? 'automatic' : 'manual',
                 helpButtonClicks.length > 0 ? 1 : 0,
                 helpButtonClicks.length > 0 ? helpButtonClicks[0] : null
             ];
@@ -409,7 +407,7 @@ app.post('/training', verifyToken, async (req, res) => {
                         SELECT COUNT(*) * 1.0 / u.totalAnswers
                         FROM answers a
                         JOIN users u ON a.userId = u.id
-                        WHERE a.classificationSet = a.classificationSet AND u.id = ?
+                        WHERE a.classificationSetSrc = a.classificationSetSrc AND u.id = ?
                     )
                     WHERE id = ?
                 `;
@@ -428,7 +426,6 @@ app.post('/training', verifyToken, async (req, res) => {
     }
 });
 
-
 // Endpoint to handle pre-test page
 app.get('/pre-test', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTest.html'));
@@ -436,9 +433,8 @@ app.get('/pre-test', verifyToken, (req, res) => {
 
 // Endpoint to handle pre-test page
 app.post('/pre-test', verifyToken, (req, res) => {
-    res.json({redirect: '/test', message: 'Redirecting to test page'});
+    res.json({ redirect: '/test', message: 'Redirecting to test page' });
 });
-
 
 // Function to get classification values
 async function getClassificationValuesSrc(photoName) {
@@ -462,10 +458,11 @@ async function getClassificationValuesDes(classificationDes) {
         return { classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes };
     } else if (['Hyperacute', 'DeWinters', 'LossOfBalance', 'Wellens', 'TInversion', 'Avrste'].includes(classificationDes)) {
         return { classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes };
+    } else {
+        // Return a default value or throw an error if the classificationDes is not recognized
+        return { classificationSetDes: 'UNKNOWN', classificationSubSetDes: 'UNKNOWN' };
     }
 }
-
-
 
 // Endpoint to handle test page
 app.get('/test', verifyToken, (req, res) => {
@@ -509,8 +506,8 @@ app.post('/test', verifyToken, async (req, res) => {
             photoName,
             classificationValuesSrc.classificationSetSrc || null,
             classificationValuesSrc.classificationSubSetSrc || null,
-            classificationValuesDes.classificationSetDes || null,
-            classificationValuesDes.classificationSubSetDes || null,
+            classificationValuesDes.classificationSetDes || 'UNKNOWN',
+            classificationValuesDes.classificationSubSetDes || 'UNKNOWN',
             answerTime,
             answerChange,
             alertActivated,
@@ -557,17 +554,17 @@ app.post('/classify-image', verifyToken, (req, res) => {
     // the file name is the image name
     // if classificationSet is Low Risk, classificationSubSet is null
     // Move the image to the graded folder and insert the classification into the database
-    const {fileName, classificationSet, classificationSubSet} = req.body;
+    const { fileName, classificationSet, classificationSubSet } = req.body;
     const outDir = path.join(__dirname, '..', 'public', 'img', 'graded', classificationSet, classificationSubSet || '');
     const filePath = path.join(outDir, fileName);
     const gradedDir = path.join(__dirname, '..', 'public', 'img', 'graded');
     if (!fs.existsSync(outDir)) {
-        fs.mkdirSync(outDir, {recursive: true});
+        fs.mkdirSync(outDir, { recursive: true });
     }
     fs.rename(path.join(__dirname, '..', 'public', 'img', 'bankPhotos', fileName), filePath, (err) => {
         if (err) {
             console.error('Error moving image:', err.message);
-            return res.status(500).json({message: 'Error moving image'});
+            return res.status(500).json({ message: 'Error moving image' });
         }
         // Check if the image is already classified
         const checkSql = `
@@ -578,17 +575,16 @@ app.post('/classify-image', verifyToken, (req, res) => {
         db.get(checkSql, [fileName], (err, row) => {
             if (err) {
                 console.error('Error checking image classification:', err.message);
-                return res.status(500).json({message: 'Error checking image classification'});
+                return res.status(500).json({ message: 'Error checking image classification' });
             }
             if (row) {
-                return res.status(409).json({message: 'Image already classified'});
+                return res.status(409).json({ message: 'Image already classified' });
             }
             insertClassification(fileName, classificationSet, classificationSubSet);
         });
     });
-    res.status(200).json({message: 'Image classified successfully'});
+    res.status(200).json({ message: 'Image classified successfully' });
 });
-
 
 // Endpoint to handle image classification for admins only, classification only.
 app.get('/random-image-classification', (req, res) => {
@@ -602,7 +598,7 @@ app.get('/random-image-classification', (req, res) => {
         }
         const randomIndex = Math.floor(Math.random() * files.length);
         const imagePath = files[randomIndex];
-        res.json({imagePath: `../img/bankPhotos/${imagePath}`});
+        res.json({ imagePath: `../img/bankPhotos/${imagePath}` });
     });
 });
 
@@ -640,24 +636,22 @@ app.get('/random-image', verifyToken, (req, res) => {
             if (!row) {
                 return res.status(404).send('Image classification not found');
             }
-            res.json({imagePath: `../img/graded/${row.classificationSet}/${row.classificationSubSet || ''}/${randomImagePath}`});
+            res.json({ imagePath: `../img/graded/${row.classificationSet}/${row.classificationSubSet || ''}/${randomImagePath}` });
         });
     });
 });
 
-
-
 // Main page and user data endpoints
 app.get('/main', verifyToken, (req, res) => {
     if (req.user.role === 'admin') {
-        return res.json({redirect: '/chooseModelAdmin', message: 'redirect to main'});
+        return res.json({ redirect: '/chooseModelAdmin', message: 'redirect to main' });
 
     }
-    res.json({redirect: '/chooseModel', message: 'redirect to main'});
+    res.json({ redirect: '/chooseModel', message: 'redirect to main' });
 });
 
 app.get('/user-data', verifyToken, (req, res) => {
-    res.json({redirect: '/info', message: 'redirect to user data'});
+    res.json({ redirect: '/info', message: 'redirect to user data' });
 });
 
 app.get('/info', verifyToken, (req, res) => {
@@ -667,10 +661,10 @@ app.get('/info', verifyToken, (req, res) => {
 app.get('/info/data', verifyToken, (req, res) => {
     const userId = req.cookies.userId;
     if (!userId) {
-        return res.status(400).json({message: 'No userId found in request'});
+        return res.status(400).json({ message: 'No userId found in request' });
     }
     const sql = `
-        SELECT photoName, classificationSrc, classificationDes
+        SELECT photoName, classificationSetSrc, classificationSetDes
         FROM answers
         WHERE userId = ?
     `;
@@ -688,12 +682,13 @@ app.get('/info/data', verifyToken, (req, res) => {
 
 // Serve sign-up page
 app.get('/sign-up', (req, res) => {
-    res.json({redirect: '/register', message: 'redirect to sign-up'});
+    res.json({ redirect: '/register', message: 'redirect to sign-up' });
 });
 
 // Serve sign-in page
 app.get('/sign-in', (req, res) => {
-    res.json({redirect: '/login', message: 'redirect to sign-in'});
+    res.json({ redirect: '/login', message: 'redirect to sign-in' });
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
