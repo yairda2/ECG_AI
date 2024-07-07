@@ -6,25 +6,52 @@
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/.name" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/student_app.iml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/student_app.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analizer/ECG_AI.py" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/analizer/ECG_AI.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0001_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0057_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0068_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0195_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0320_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0415_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/js/common.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/js/common.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/classifiedImagesAdmin.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/classifiedImagesAdmin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/preTraining.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/preTraining.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/register.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/test.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/test.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/training.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/training.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/authMiddleware.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/authMiddleware.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0012_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0018_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0033_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0075_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0099_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0148_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0159_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0170_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0253_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0279_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0302_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0330_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0336_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0348_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0384_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0435_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Anterior/0068_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Anterior/0106_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Anterior/0195_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Anterior/HR05741_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/DeWinters/0415_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/DeWinters/JS01775_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Inferior/0320_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Inferior/E07011_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Inferior/HR19034_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/0057_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/0341_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/A00245_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/A4599_1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/HR13438_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/JS00986_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LossOfBalance/0365_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/None/E05380_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Normal/A12526_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Normal/A24585_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Normal/E07221_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Normal/JS04377_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/0001_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/0249_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/A0192_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/A12876_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/HR21441_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/JS06699_0.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/_database.db" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -43,30 +70,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "JavaScript Debug.chooseModel.html.executor": "Run",
-    "JavaScript Debug.classifiedImagesAdmin.html.executor": "Run",
-    "JavaScript Debug.login.html.executor": "Run",
-    "JavaScript Debug.preTraining.html.executor": "Run",
-    "JavaScript Debug.train.html.executor": "Run",
-    "Node.js.authMiddleware.js.executor": "Debug",
-    "Node.js.common.js.executor": "Debug",
-    "Node.js.server.js.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "yair__dev",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/yair/Documents/GitHub/EEG_AI_firsst_collect/student_app/public/views",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;JavaScript Debug.chooseModel.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.classifiedImagesAdmin.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.login.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.preTraining.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.train.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.training.html.executor&quot;: &quot;Debug&quot;,
+    &quot;Node.js.authMiddleware.js.executor&quot;: &quot;Debug&quot;,
+    &quot;Node.js.common.js.executor&quot;: &quot;Debug&quot;,
+    &quot;Node.js.server -sqlite.js.executor&quot;: &quot;Run&quot;,
+    &quot;Node.js.server.js.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;yair__dev&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/yair/Documents/GitHub/EEG_AI_firsst_collect/student_app/public/views&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\yair\Documents\GitHub\EEG_AI_firsst_collect\student_app\public\views" />
@@ -76,10 +105,13 @@
     <configuration name="login.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63343/EEG_AI_firsst_collect/student_app/public/views/login.html" useBuiltInWebServerPort="true">
       <method v="2" />
     </configuration>
-    <configuration name="authMiddleware.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/authMiddleware.js" working-dir="$PROJECT_DIR$/student_app/server">
+    <configuration name="training.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/EEG_AI_firsst_collect/student_app/public/views/training.html" useBuiltInWebServerPort="true">
       <method v="2" />
     </configuration>
     <configuration name="common.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/public/js/common.js" working-dir="$PROJECT_DIR$/student_app/public/js">
+      <method v="2" />
+    </configuration>
+    <configuration name="server -sqlite.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/server -sqlite.js" working-dir="$PROJECT_DIR$/student_app/server">
       <method v="2" />
     </configuration>
     <configuration name="server.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/server.js" working-dir="$PROJECT_DIR$/student_app/server">
@@ -88,9 +120,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Node.js.server.js" />
+        <item itemvalue="JavaScript Debug.training.html" />
+        <item itemvalue="Node.js.server -sqlite.js" />
         <item itemvalue="JavaScript Debug.login.html" />
         <item itemvalue="Node.js.common.js" />
-        <item itemvalue="Node.js.authMiddleware.js" />
       </list>
     </recent_temporary>
   </component>
@@ -121,7 +154,13 @@
       <workItem from="1718900012017" duration="18883000" />
       <workItem from="1719173962464" duration="31000" />
       <workItem from="1719174001585" duration="620000" />
-      <workItem from="1719175770664" duration="2816000" />
+      <workItem from="1719175770664" duration="23431000" />
+      <workItem from="1719313433716" duration="11344000" />
+      <workItem from="1719579178542" duration="2937000" />
+      <workItem from="1719692521759" duration="1282000" />
+      <workItem from="1719951357712" duration="2000" />
+      <workItem from="1720115253300" duration="20967000" />
+      <workItem from="1720386491082" duration="476000" />
     </task>
     <servers />
   </component>
@@ -143,44 +182,29 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
-          <line>25</line>
-          <option name="timeStamp" value="21" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>164</line>
+          <line>154</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>176</line>
+          <line>165</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/public/views/login.html</url>
-          <line>25</line>
-          <option name="timeStamp" value="36" />
+          <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
+          <line>64</line>
+          <option name="timeStamp" value="58" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>211</line>
-          <option name="timeStamp" value="43" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>208</line>
-          <option name="timeStamp" value="44" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>275</line>
-          <option name="timeStamp" value="47" />
+          <line>413</line>
+          <option name="timeStamp" value="97" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
-          <line>113</line>
-          <option name="timeStamp" value="51" />
+          <line>22</line>
+          <option name="timeStamp" value="113" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

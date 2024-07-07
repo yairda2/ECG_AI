@@ -142,17 +142,45 @@
             background-color: #ffc107; /* Disabled button color */
             cursor: not-allowed;
         }
+
+        /* New alert styles */
+        .alert {
+            display: none;
+            padding: 20px;
+            font-size: 18px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert.success {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+
+        .alert.error {
+            background-color: #f44336; /* Red */
+            color: white;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div id="timer">45</div>
+    <div id="alertBox" class="alert"></div> <!-- Alert box -->
     <h1>Choose the right case</h1>
     <img id="imageToClassify" src="" alt="Random Image">
     <form id="classificationForm">
-        <h2>NORMAL:</h2>
+        <h2>Low Risk:</h2>
         <div class="category-section">
-            <label class="category-label"><input type="checkbox" name="classification" value="Normal"><span>Normal</span></label>
+            <label class="category-label"><input type="checkbox" name="classification" value="Low Risk"><span>Low Risk</span></label>
         </div>
 
         <h2>STEMI:</h2>
@@ -275,9 +303,20 @@
         const selectedCheckbox = document.querySelector('input[name="classification"]:checked');
         const category = selectedCheckbox ? selectedCheckbox.value : 'None';
         const imageSrc = document.getElementById('imageToClassify').src;
-        const paths = imageSrc.split('/');
+        const decodedImageSrc = decodeURIComponent(imageSrc); // Decode the URL
+        const paths = decodedImageSrc.split('/');
         const photoName = paths.pop();
-        const classificationSrc = paths.pop();
+        const correctAnswerSet = paths[paths.length - 2].toUpperCase();
+        const correctAnswerSubSet = paths[paths.length - 1];
+
+        let correctAnswer;
+        if (correctAnswerSet === "LOW RISK") {
+            correctAnswer = "Low Risk";
+        } else if (correctAnswerSet === "STEMI") {
+            correctAnswer = correctAnswerSubSet;
+        } else if (correctAnswerSet === "HIGH RISK") {
+            correctAnswer = correctAnswerSubSet;
+        }
 
         const answerChangeText = answerChanges.length > 0 ? answerChanges.join('; ') : 'None';
 
@@ -291,7 +330,6 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 photoName,
-                classificationSrc,
                 classificationDes: category,
                 answerTime: duration,
                 answerChange: answerChangeText,
@@ -302,7 +340,10 @@
         })
             .then(response => response.text())
             .then(message => {
-                fetchRandomImage(); // Fetch next image
+                showAlert(category === correctAnswer, correctAnswer);
+                setTimeout(() => {
+                    fetchRandomImage(); // Fetch next image and data after alert
+                }, 3000); // Fetch next image and data after 3 seconds
             })
             .catch(error => console.error('Error submitting classification:', error));
     }
@@ -335,10 +376,30 @@
 
     function getCorrectAnswer() {
         const imageSrc = document.getElementById('imageToClassify').src;
-        const paths = imageSrc.split('/');
-        return paths[paths.length - 2]; // Assuming the correct classification is the folder name
+        const decodedImageSrc = decodeURIComponent(imageSrc); // Decode the URL
+        const paths = decodedImageSrc.split('/');
+        const classificationSet = paths[paths.length - 2].toUpperCase(); // Assuming the classification set is the second last folder name
+        const classificationSubSet = paths[paths.length - 1]; // Assuming the classification subset is the last folder name if it exists
+        return classificationSet === "LOW RISK" ? "Low Risk" : classificationSubSet;
+    }
+
+    function showAlert(isCorrect, correctAnswer) {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.classList.remove('success', 'error'); // Remove existing classes
+        if (isCorrect) {
+            alertBox.textContent = `Correct! The answer is:\n${correctAnswer}.`;
+            alertBox.classList.add('success');
+        } else {
+            alertBox.textContent = `Incorrect! The correct answer is:\n ${correctAnswer}.`;
+            alertBox.classList.add('error');
+        }
+        alertBox.style.display = 'block';
+
+        setTimeout(() => {
+            alertBox.style.display = 'none';
+            fetchRandomImage(); // Fetch next image and data after hiding alert
+        }, 3000); // Hide after 3 seconds and then fetch next image and data
     }
 </script>
-<script src="../js/common.js"></script>
 </body>
 </html>
