@@ -265,7 +265,7 @@
             .then(response => response.text())
             .then(message => {
                 customAlert(message);
-                clearSelection(); // Clear the selection after classification
+                revertSelection(); // Revert to initial selection state after classification
                 fetchRandomImage(); // Fetch next image after classification
             })
             .catch(error => console.error('Error classifying image:', error));

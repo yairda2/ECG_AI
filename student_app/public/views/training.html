@@ -147,8 +147,6 @@
         .alert {
             display: none;
             padding: 20px;
-            background-color: #f44336; /* Red */
-            color: white;
             font-size: 18px;
             position: fixed;
             z-index: 1;
@@ -164,6 +162,12 @@
 
         .alert.success {
             background-color: #4CAF50; /* Green */
+            color: white;
+        }
+
+        .alert.error {
+            background-color: #f44336; /* Red */
+            color: white;
         }
     </style>
 </head>
@@ -299,14 +303,15 @@
         const selectedCheckbox = document.querySelector('input[name="classification"]:checked');
         const category = selectedCheckbox ? selectedCheckbox.value : 'None';
         const imageSrc = document.getElementById('imageToClassify').src;
-        const paths = imageSrc.split('/');
+        const decodedImageSrc = decodeURIComponent(imageSrc); // Decode the URL
+        const paths = decodedImageSrc.split('/');
         const photoName = paths.pop();
-        const correctAnswerSet = paths[paths.length - 2];
+        const correctAnswerSet = paths[paths.length - 2].toUpperCase();
         const correctAnswerSubSet = paths[paths.length - 1];
 
         let correctAnswer;
         if (correctAnswerSet === "LOW RISK") {
-            correctAnswer = "LOW RISK";
+            correctAnswer = "Low Risk";
         } else if (correctAnswerSet === "STEMI") {
             correctAnswer = correctAnswerSubSet;
         } else if (correctAnswerSet === "HIGH RISK") {
@@ -371,22 +376,22 @@
 
     function getCorrectAnswer() {
         const imageSrc = document.getElementById('imageToClassify').src;
-        const paths = imageSrc.split('/');
-        const classificationSet = paths[paths.length - 2]; // Assuming the classification set is the second last folder name
+        const decodedImageSrc = decodeURIComponent(imageSrc); // Decode the URL
+        const paths = decodedImageSrc.split('/');
+        const classificationSet = paths[paths.length - 2].toUpperCase(); // Assuming the classification set is the second last folder name
         const classificationSubSet = paths[paths.length - 1]; // Assuming the classification subset is the last folder name if it exists
-        return classificationSet === "Low Risk" ? "Low Risk" : classificationSubSet;
+        return classificationSet === "LOW RISK" ? "Low Risk" : classificationSubSet;
     }
 
     function showAlert(isCorrect, correctAnswer) {
         const alertBox = document.getElementById('alertBox');
+        alertBox.classList.remove('success', 'error'); // Remove existing classes
         if (isCorrect) {
-            alertBox.textContent = `Correct! The answer is ${correctAnswer}.`;
+            alertBox.textContent = `Correct! The answer is:\n${correctAnswer}.`;
             alertBox.classList.add('success');
-            alertBox.classList.remove('alert');
         } else {
-            alertBox.textContent = `Incorrect! The correct answer is ${correctAnswer}.`;
-            alertBox.classList.add('alert');
-            alertBox.classList.remove('success');
+            alertBox.textContent = `Incorrect! The correct answer is:\n ${correctAnswer}.`;
+            alertBox.classList.add('error');
         }
         alertBox.style.display = 'block';
 
