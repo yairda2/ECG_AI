@@ -6,53 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0012_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0018_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0033_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0075_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0099_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0148_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0159_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0170_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0253_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0279_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0302_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0330_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0336_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0348_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0384_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0435_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Anterior/0068_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Anterior/0106_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Anterior/0195_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Anterior/HR05741_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/DeWinters/0415_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/DeWinters/JS01775_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Inferior/0320_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Inferior/E07011_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Inferior/HR19034_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/0057_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/0341_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/A00245_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/A4599_1.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/HR13438_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Lateral/JS00986_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LossOfBalance/0365_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/None/E05380_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Normal/A12526_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Normal/A24585_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Normal/E07221_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Normal/JS04377_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/0001_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/0249_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/A0192_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/A12876_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/HR21441_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/Septal/JS06699_0.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/_database.db" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -160,7 +114,7 @@
       <workItem from="1719692521759" duration="1282000" />
       <workItem from="1719951357712" duration="2000" />
       <workItem from="1720115253300" duration="20967000" />
-      <workItem from="1720386491082" duration="476000" />
+      <workItem from="1720386491082" duration="1379000" />
     </task>
     <servers />
   </component>
