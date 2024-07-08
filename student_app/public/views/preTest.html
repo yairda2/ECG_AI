@@ -2,71 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PreTraining</title>
-    <link rel="stylesheet" type="text/css" href="/css/common.css">
-    <script src="/js/common.js"></script> <!-- Include common.js -->
+    <title>Pre-Test</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
-<style>
-    /* Style for buttons */
-    button {
-        width: 40%; /* Smaller width */
-        padding: 5px; /* Less padding */
-        border: none;
-        border-radius: 4px;
-        background-color: #007bff;
-        color: white;
-        cursor: pointer;
-        font-size: 16px; /* Slightly smaller font size */
-        display: block;
-        margin: 10px auto;
-        text-align: center; /* Center the text inside the button */
-        font-family: 'Iceberg', cursive; /* Stylish font, ensure this font is loaded */
-    }
-
-    button:hover {
-        background-color: #0056b3;
-    }
-
-    form {
-        text-align: center; /* Center the form content */
-    }
-
-    body {
-        font-family: 'Arial', sans-serif; /* Default body font */
-    }
-
-    .text-output {
-        text-align: center;
-        font-size: 20px;
-        margin: 20px;
-    }
-</style>
 <body>
-
-<!-- Main Page and Info Buttons -->
-<button id="mainpageButton" class="icon-button">Home</button>
-<button id="infoButton" class="icon-button">User Info</button>
-
-<form id="preTestForm" action="/pre-test" method="POST">
-    <div class="text-output" id="text-output">
-        <h1>Pre-Train</h1>
-        Hello dear user. Let's start a test session.<br>
-        Every time X you will get a picture of an ECG scan. And you will have to classify here.<br>
-        Note that you will need to submit the selection.<br>
-        The data will be stored and used to improve your and others' performance on ECG scans.<br>
-        In submit you will allow us to use this data.<br>
-    </div>
-    <button type="submit">Start Test</button>
-</form>
+<div class="container">
+    <h1>Pre-Test Instructions</h1>
+    <p>Please read the following instructions carefully before starting the pre-test.</p>
+    <button id="startPreTest">Start Pre-Test</button>
+</div>
 
 <script>
-    document.querySelectorAll('#preTestForm button').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            handlePageAction('/pre-test', 'POST');
-        });
+    document.getElementById('startPreTest').addEventListener('click', function() {
+        fetch('/pre-test', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            })
+            .catch(error => console.error('Error starting pre-test:', error));
     });
-
 </script>
 </body>
 </html>
