@@ -1,3 +1,4 @@
+// Import necessary libraries and modules
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -14,34 +15,14 @@ const config = require('../config/config');
 const PORT = config.server.port || 3000;
 const SECRET_KEY = config.secret_key.key;
 
+// Middleware setup
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-function checkToken(req, res, next) {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ message: 'NoToken', redirect: '/login' });
-
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        const currentTime = Math.floor(Date.now() / 1000);
-        const expirationTime = decoded.exp;
-        const timeLeft = expirationTime - currentTime;
-
-        if (timeLeft < 5 * 60) {
-            const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, SECRET_KEY, { expiresIn: '1h' });
-            res.cookie('token', newToken, { httpOnly: true, secure: true });
-        }
-
-        req.user = decoded;
-        next();
-    } catch (err) {
-        return res.status(401).json({ message: 'InvalidToken', redirect: '/login' });
-    }
-}
-
+// Database setup
 const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
@@ -51,6 +32,7 @@ const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite
     }
 });
 
+// Function to create necessary database tables
 function createTables() {
     db.serialize(() => {
         db.run(`
@@ -147,9 +129,205 @@ function createTables() {
     });
 }
 
+// Helper functions
+function checkToken(req, res, next) {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: 'NoToken', redirect: '/login' });
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const currentTime = Math.floor(Date.now() / 1000);
+        const expirationTime = decoded.exp;
+        const timeLeft = expirationTime - currentTime;
+
+        if (timeLeft < 5 * 60) {  // If less than 5 minutes left, renew the token
+            const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, SECRET_KEY, { expiresIn: '1h' });
+            res.cookie('token', newToken, { httpOnly: true, secure: true });
+        }
+
+        req.user = decoded;
+        next();
+    } catch (err) {
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'TokenExpired', redirect: '/login' });
+        }
+        return res.status(401).json({ message: 'InvalidToken', redirect: '/login' });
+    }
+}
+
+async function getClassificationValuesSrc(photoName) {
+    const query = `SELECT classificationSet AS classificationSetSrc, classificationSubSet AS classificationSubSetSrc 
+                   FROM imageClassification WHERE photoName = ?`;
+
+    return new Promise((resolve, reject) => {
+        db.get(query, [photoName], (err, row) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(row);
+        });
+    });
+}
+
+async function getClassificationValuesDes(classificationDes) {
+    if (classificationDes === 'Low Risk') {
+        return { classificationSetDes: classificationDes, classificationSubSetDes: null };
+    } else if (['Septal', 'Anterior', 'Lateral', 'Inferior'].includes(classificationDes)) {
+        return { classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes };
+    } else if (['Hyperacute', 'DeWinters', 'LossOfBalance', 'Wellens', 'TInversion', 'Avrste'].includes(classificationDes)) {
+        return { classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes };
+    }
+}
+
+function insertClassification(fileName, classificationSet, classificationSubSet) {
+    const sql = `
+        INSERT INTO imageClassification (photoName, classificationSet, classificationSubSet)
+        VALUES (?, ?, ?)
+    `;
+    db.run(sql, [fileName, classificationSet, classificationSubSet], (err) => {
+        if (err) {
+            console.error('Error inserting image classification into database:', err.message);
+        }
+    });
+}
+
+// Serve static HTML files
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'login.html')));
+app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'register.html')));
 app.get('/terms', (req, res) => {
     const terms = fs.readFileSync(path.join(__dirname, 'Terms.txt'), 'utf8');
     res.send(terms);
+});
+app.get('/classifiedImagesAdmin', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'classifiedImagesAdmin.html'));
+});
+app.get('/chooseModel', verifyToken, (req, res) => {
+    if (req.cookies.token) {
+        const decoded = jwt.verify(req.cookies.token, SECRET_KEY);
+        if (decoded.role === 'admin') {
+            return res.redirect('/chooseModelAdmin');
+        }
+    }
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModel.html'));
+});
+app.get('/chooseModelAdmin', verifyToken, (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+    const decoded = jwt.verify(token, SECRET_KEY);
+    if (decoded.role !== 'admin') {
+        return res.status(403).send('You do not have permission to access this page');
+    } else {
+        res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModelAdmin.html'));
+    }
+});
+app.get('/pre-training', (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).send('Access Denied');
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTraining.html'));
+});
+app.get('/training', checkToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
+});
+app.get('/pre-test', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTest.html'));
+});
+app.get('/test', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
+});
+app.get('/test-init', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
+});
+
+app.get('/info', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
+});
+
+// API endpoints
+app.get('/random-image-classification', (req, res) => {
+    const imagesDir = path.join(__dirname, '..', 'public', 'img', 'bankPhotos');
+    fs.readdir(imagesDir, (err, files) => {
+        if (err) {
+            return res.status(500).send('Failed to load images');
+        }
+        if (files.length === 0) {
+            return res.status(404).send('No images found');
+        }
+        const randomIndex = Math.floor(Math.random() * files.length);
+        const imagePath = files[randomIndex];
+        res.json({ imagePath: `../img/bankPhotos/${imagePath}` });
+    });
+});
+app.get('/random-image', verifyToken, (req, res) => {
+    const getClassifiedImagesQuery = `
+        SELECT photoName FROM imageClassification
+    `;
+
+    db.all(getClassifiedImagesQuery, (err, rows) => {
+        if (err) {
+            console.error('Error querying classified images:', err);
+            return res.status(500).send('Failed to load classified images');
+        }
+
+        if (rows.length === 0) {
+            return res.status(404).send('No classified images found');
+        }
+
+        const classifiedImages = rows.map(row => row.photoName);
+
+        const randomIndex = Math.floor(Math.random() * classifiedImages.length);
+        const randomImagePath = classifiedImages[randomIndex];
+        const sql = `
+            SELECT classificationSet, classificationSubSet
+            FROM imageClassification
+            WHERE photoName = ?
+        `;
+        db.get(sql, [randomImagePath], (err, row) => {
+            if (err) {
+                console.error('Error querying image classification:', err);
+                return res.status(500).send('Failed to load image classification');
+            }
+            if (!row) {
+                return res.status(404).send('Image classification not found');
+            }
+            res.json({ imagePath: `../img/graded/${row.classificationSet}/${row.classificationSubSet || ''}/${randomImagePath}` });
+        });
+    });
+});
+app.get('/main', verifyToken, (req, res) => {
+    if (req.user.role === 'admin') {
+        return res.json({ redirect: '/chooseModelAdmin', message: 'redirect to main' });
+    }
+    res.json({ redirect: '/chooseModel', message: 'redirect to main' });
+});
+app.get('/user-data', verifyToken, (req, res) => {
+    res.json({ redirect: '/info', message: 'redirect to user data' });
+});
+app.get('/info/data', verifyToken, (req, res) => {
+    const userId = req.cookies.userId;
+    if (!userId) {
+        return res.status(400).json({ message: 'No userId found in request' });
+    }
+    const sql = `
+        SELECT photoName, classificationSrc, classificationDes
+        FROM answers
+        WHERE userId = ?
+    `;
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            console.error('Database error:', err.message);
+            return res.status(500).send('Server error while fetching user data');
+        }
+        if (rows.length === 0) {
+            return res.status(404).send('No answers found for the given user');
+        }
+        res.json(rows); // Send the relevant data back to the client
+    });
+});
+app.get('/sign-up', (req, res) => {
+    res.json({ redirect: '/register', message: 'redirect to sign-up' });
+});
+app.get('/sign-in', (req, res) => {
+    res.json({ redirect: '/login', message: 'redirect to sign-in' });
 });
 
 app.post('/register', async (req, res) => {
@@ -189,7 +367,6 @@ app.post('/login', (req, res) => {
     const { email, password } = req.body;
     const sql = `SELECT userId, password, role FROM authentication WHERE email = ?`;
     const updateEntries = `UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?`;
-    let tempUser;
 
     db.get(sql, [email], async (err, user) => {
         if (err) {
@@ -211,24 +388,11 @@ app.post('/login', (req, res) => {
                     console.log(`totalEntries updated for userId ${user.userId}`);
                 }
             });
-
-
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
         }
     });
-
 });
-
-app.use('/training', verifyToken);
-app.use('/pre-training', verifyToken);
-app.use('/chooseModelAdmin', verifyToken);
-app.use('/classifiedImagesAdmin', verifyToken);
-app.use('/random-image-classification', verifyToken);
-app.use('/random-image', verifyToken);
-app.use('/classifiedImages', verifyToken);
-app.use('/classify-image', verifyToken);
-app.use('/chooseModel', verifyToken);
 
 app.post('/chooseModel', verifyToken, (req, res) => {
     const action = req.body.action;
@@ -253,44 +417,8 @@ app.post('/chooseModel', verifyToken, (req, res) => {
     }
 });
 
-app.get('/classifiedImagesAdmin', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'classifiedImagesAdmin.html'));
-});
-
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'login.html')));
-app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'register.html')));
-app.get('/chooseModel', verifyToken, (req, res) => {
-    if (req.cookies.token) {
-        const decoded = jwt.verify(req.cookies.token, SECRET_KEY);
-        if (decoded.role === 'admin') {
-            return res.redirect('/chooseModelAdmin');
-        }
-    }
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModel.html'));
-});
-app.get('/chooseModelAdmin', verifyToken, (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-    const decoded = jwt.verify(token, SECRET_KEY);
-    if (decoded.role !== 'admin') {
-        return res.status(403).send('You do not have permission to access this page');
-    } else {
-        res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModelAdmin.html'));
-    }
-});
-
-app.get('/pre-training', (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTraining.html'));
-});
-
 app.post('/pre-training', verifyToken, (req, res) => {
     res.json({ redirect: '/training', message: 'Pre-training completed successfully' });
-});
-
-app.get('/training', checkToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
 });
 
 app.post('/training', verifyToken, async (req, res) => {
@@ -313,31 +441,6 @@ app.post('/training', verifyToken, async (req, res) => {
             answerSubmitTime, answerChange, alertActivated,submissionType, helpActivated, helpTimeActivated
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-
-    async function getClassificationValuesSrc(photoName) {
-        const query = `SELECT classificationSet AS classificationSetSrc, classificationSubSet AS classificationSubSetSrc 
-                       FROM imageClassification WHERE photoName = ?`;
-
-        return new Promise((resolve, reject) => {
-            db.get(query, [photoName], (err, row) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(row);
-            });
-        });
-    }
-    async function getClassificationValuesDes(classificationDes) {
-        if (classificationDes === 'Low Risk') {
-            return { classificationSetDes: classificationDes, classificationSubSetDes: null };
-        }
-        else if (classificationDes === 'Septal' || classificationDes === 'Anterior' || classificationDes === 'Lateral' || classificationDes === 'Inferior') {
-            return { classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes };
-        }
-        else if(classificationDes === 'Hyperacute' || classificationDes === 'DeWinters' || classificationDes === 'LossOfBalance' || classificationDes === 'Wellens' || classificationDes === 'TInversion' ||  classificationDes === 'Avrste') {
-            return { classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes };
-        }
-    }
 
     async function setParams(userId, date, photoName, answerTime, answerChange, alertActivated, submissionType, helpButtonClicks, examId) {
         try {
@@ -406,40 +509,8 @@ app.post('/training', verifyToken, async (req, res) => {
     }
 });
 
-app.get('/pre-test', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTest.html'));
-});
-
 app.post('/pre-test', verifyToken, (req, res) => {
     res.json({ redirect: '/test', message: 'Redirecting to test page' });
-});
-
-async function getClassificationValuesSrc(photoName) {
-    const query = `SELECT classificationSet AS classificationSetSrc, classificationSubSet AS classificationSubSetSrc 
-                   FROM imageClassification WHERE photoName = ?`;
-
-    return new Promise((resolve, reject) => {
-        db.get(query, [photoName], (err, row) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(row);
-        });
-    });
-}
-
-async function getClassificationValuesDes(classificationDes) {
-    if (classificationDes === 'Low Risk') {
-        return { classificationSetDes: classificationDes, classificationSubSetDes: null };
-    } else if (['Septal', 'Anterior', 'Lateral', 'Inferior'].includes(classificationDes)) {
-        return { classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes };
-    } else if (['Hyperacute', 'DeWinters', 'LossOfBalance', 'Wellens', 'TInversion', 'Avrste'].includes(classificationDes)) {
-        return { classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes };
-    }
-}
-
-app.get('/test', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
 });
 
 app.post('/test', verifyToken, async (req, res) => {
@@ -503,22 +574,6 @@ app.post('/test', verifyToken, async (req, res) => {
     }
 });
 
-app.get('/info', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
-});
-
-function insertClassification(fileName, classificationSet, classificationSubSet) {
-    const sql = `
-        INSERT INTO imageClassification (photoName, classificationSet, classificationSubSet)
-        VALUES (?, ?, ?)
-    `;
-    db.run(sql, [fileName, classificationSet, classificationSubSet], (err) => {
-        if (err) {
-            console.error('Error inserting image classification into database:', err.message);
-        }
-    });
-}
-
 app.post('/classify-image', verifyToken, (req, res) => {
     const { fileName, classificationSet, classificationSubSet } = req.body;
     const outDir = path.join(__dirname, '..', 'public', 'img', 'graded', classificationSet, classificationSubSet || '');
@@ -551,102 +606,5 @@ app.post('/classify-image', verifyToken, (req, res) => {
     res.status(200).json({ message: 'Image classified successfully' });
 });
 
-app.get('/random-image-classification', (req, res) => {
-    const imagesDir = path.join(__dirname, '..', 'public', 'img', 'bankPhotos');
-    fs.readdir(imagesDir, (err, files) => {
-        if (err) {
-            return res.status(500).send('Failed to load images');
-        }
-        if (files.length === 0) {
-            return res.status(404).send('No images found');
-        }
-        const randomIndex = Math.floor(Math.random() * files.length);
-        const imagePath = files[randomIndex];
-        res.json({ imagePath: `../img/bankPhotos/${imagePath}` });
-    });
-});
-
-app.get('/random-image', verifyToken, (req, res) => {
-    const getClassifiedImagesQuery = `
-        SELECT photoName FROM imageClassification
-    `;
-
-    db.all(getClassifiedImagesQuery, (err, rows) => {
-        if (err) {
-            console.error('Error querying classified images:', err);
-            return res.status(500).send('Failed to load classified images');
-        }
-
-        if (rows.length === 0) {
-            return res.status(404).send('No classified images found');
-        }
-
-        const classifiedImages = rows.map(row => row.photoName);
-
-        const randomIndex = Math.floor(Math.random() * classifiedImages.length);
-        const randomImagePath = classifiedImages[randomIndex];
-        const sql = `
-            SELECT classificationSet, classificationSubSet
-            FROM imageClassification
-            WHERE photoName = ?
-        `;
-        db.get(sql, [randomImagePath], (err, row) => {
-            if (err) {
-                console.error('Error querying image classification:', err);
-                return res.status(500).send('Failed to load image classification');
-            }
-            if (!row) {
-                return res.status(404).send('Image classification not found');
-            }
-            res.json({ imagePath: `../img/graded/${row.classificationSet}/${row.classificationSubSet || ''}/${randomImagePath}` });
-        });
-    });
-});
-
-app.get('/main', verifyToken, (req, res) => {
-    if (req.user.role === 'admin') {
-        return res.json({ redirect: '/chooseModelAdmin', message: 'redirect to main' });
-
-    }
-    res.json({ redirect: '/chooseModel', message: 'redirect to main' });
-});
-
-app.get('/user-data', verifyToken, (req, res) => {
-    res.json({ redirect: '/info', message: 'redirect to user data' });
-});
-
-app.get('/info', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
-});
-
-app.get('/info/data', verifyToken, (req, res) => {
-    const userId = req.cookies.userId;
-    if (!userId) {
-        return res.status(400).json({ message: 'No userId found in request' });
-    }
-    const sql = `
-        SELECT photoName, classificationSrc, classificationDes
-        FROM answers
-        WHERE userId = ?
-    `;
-    db.all(sql, [userId], (err, rows) => {
-        if (err) {
-            console.error('Database error:', err.message);
-            return res.status(500).send('Server error while fetching user data');
-        }
-        if (rows.length === 0) {
-            return res.status(404).send('No answers found for the given user');
-        }
-        res.json(rows); // Send the relevant data back to the client
-    });
-});
-
-app.get('/sign-up', (req, res) => {
-    res.json({ redirect: '/register', message: 'redirect to sign-up' });
-});
-
-app.get('/sign-in', (req, res) => {
-    res.json({ redirect: '/login', message: 'redirect to sign-in' });
-});
-
+// Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
