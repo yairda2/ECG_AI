@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Test</title>
-    <link rel="stylesheet" href="common.css">
-    <script src="/js/common.js" defer></script> <!-- Include common.js -->
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        /* Existing styles */
+        /* Base styles */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -16,18 +14,19 @@
             background-color: #f4f4f4;
         }
 
+        /* Container to hold everything without scrolling */
         .container {
-            max-width: 800px;
+            max-width: 800px; /* Limit the width to keep everything tight */
             margin: auto;
             padding: 20px;
+            overflow: hidden; /* Prevent scrolling */
             position: relative;
-            overflow: hidden;
         }
 
         img {
-            width: 100%;
-            height: auto;
-            max-height: 300px;
+            width: 100%; /* Responsive width */
+            height: auto; /* Maintain aspect ratio */
+            max-height: 300px; /* Limit the height of the image */
             display: block;
             margin-bottom: 20px;
         }
@@ -99,7 +98,6 @@
             left: 20px;
             padding: 10px 20px;
             background-color: #b10000; /* Red color */
-            margin-top: 10px;
         }
 
         #backButton:hover {
@@ -132,29 +130,13 @@
             font-size: 16px;
             color: red;
         }
-
-        #customAlert {
-            display: none;
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            padding: 20px;
-            background: white;
-            border: 1px solid #ccc;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-        }
-
-        #customAlertMsg {
-            font-size: 16px;
-        }
     </style>
 </head>
 <body>
 <div class="container">
-
-    <h1>Image Classification Test</h1>
+    <div id="timer">45</div>
+    <div id="alertBox" class="alert"></div> <!-- Alert box -->
+    <h1>Choose the right case</h1>
     <img id="imageToClassify" src="" alt="Random Image">
     <div id="initialOptions">
         <h2>Classify as:</h2>
@@ -176,14 +158,13 @@
     <div id="classificationForm" style="display:none;">
         <h2 id="categoryTitle"></h2>
         <div class="category-section" id="categoryOptions"></div>
-        <button type="button" id="revertButton" onclick="revertSelection()">Revert</button>
-        <button type="button" onclick="submitClassification('manual')">Submit</button>
+        <button type="button" onclick="submitClassification()">Submit</button>
     </div>
     <div id="message"></div>
-    <button id="backButton" onclick="location.href='/chooseModel'">Back</button>
+    <button id="backButton" onclick="confirmBack()">Back</button>
     <button id="helpButton" onclick="provideHelp()">Help</button>
 
-    <div id="customAlert">
+    <div id="customAlert" style="display:none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; padding: 20px; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.5);">
         <p id="customAlertMsg"></p>
     </div>
 </div>
@@ -207,23 +188,9 @@
     };
 
     let selectedInitialCategory = '';
-    let initialChoice = null;
-    let timer = null;
-    let alertShown = false;
-    let answerChanges = []; // Track answer changes
-    let helpButtonClicks = []; // Track help button clicks
-    let helpInProgress = false; // Prevent multiple simultaneous help requests
     let startTime;
-
-    function customAlert(message, duration = 2000) {
-        const alertBox = document.getElementById('customAlert');
-        const alertMsg = document.getElementById('customAlertMsg');
-        alertMsg.innerText = message;
-        alertBox.style.display = 'block';
-        setTimeout(() => {
-            alertBox.style.display = 'none';
-        }, duration);
-    }
+    let timer;
+    let alertShown = false;
 
     document.addEventListener('DOMContentLoaded', function() {
         fetchRandomImage(); // Load an image when the page loads
@@ -252,8 +219,7 @@
             .then(data => {
                 document.getElementById('imageToClassify').src = data.imagePath;
                 clearSelection(); // Clear any previous selection
-                startTime = Date.now();
-                startTimer(); // Start the timer when a new image is fetched
+                startTimer();
             })
             .catch(error => console.error('Error fetching image:', error));
     }
@@ -293,83 +259,45 @@
         clearSelection(); // Clear any previous selection
     }
 
-    function submitClassification(submissionType) {
-        clearInterval(timer);
-        const endTime = Date.now();
-        const duration = submissionType === 'automatic' ? 45 : (endTime - startTime) / 1000;
-        const selectedCategory = document.querySelector('input[name="category"]:checked');
-        const category = selectedCategory ? selectedCategory.value : 'None';
+    function submitClassification() {
         const imageSrc = document.getElementById('imageToClassify').src;
-        const paths = imageSrc.split('/');
-        const photoName = paths.pop();
+        const selectedCategory = document.querySelector('input[name="category"]:checked');
+        const classificationSubSet = selectedCategory ? selectedCategory.value : '';
 
-        const answerChangeText = answerChanges.length > 0 ? answerChanges.join('; ') : 'None';
-
-        if (!selectedCategory && selectedInitialCategory !== 'LOW RISK') {
+        if (selectedInitialCategory !== 'LOW RISK' && !selectedCategory) {
             document.getElementById('message').innerText = 'Please select a category.';
             return;
         }
 
-        fetch('/test', {
+        fetch('/classify-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                examId: 1, // Assuming examId is 1 for this example
-                answerNumber: 1, // Assuming answerNumber is 1 for this example
-                photoName,
-                classificationDes: category,
-                answerTime: duration,
-                answerChange: answerChangeText,
-                alertActivated: alertShown ? 1 : 0,
-                submissionType,
-                helpButtonClicks: helpButtonClicks.join('; ')
+                fileName: imageSrc.split('/').pop(),
+                classificationSet: selectedInitialCategory,
+                classificationSubSet: classificationSubSet
             })
         })
             .then(response => response.text())
             .then(message => {
                 customAlert(message);
-                fetchRandomImage(); // Fetch next image
+                revertSelection(); // Revert to initial selection state after classification
+                fetchRandomImage(); // Fetch next image after classification
             })
-            .catch(error => console.error('Error submitting classification:', error));
-    }
-
-    function provideHelp() {
-        if (helpInProgress) return; // Prevent multiple simultaneous help requests
-
-        helpInProgress = true;
-        const currentTime = (Date.now() - startTime) / 1000;
-        helpButtonClicks.push(currentTime);
-
-        const correctAnswer = getCorrectAnswer();
-        const options = Array.from(document.querySelectorAll('input[name="category"]'));
-        const incorrectOptions = options.filter(input => input.value !== correctAnswer && !input.closest('label').querySelector('span').classList.contains('highlight'));
-
-        if (incorrectOptions.length > 2) {
-            const randomIndex = Math.floor(Math.random() * incorrectOptions.length);
-            const randomOption = incorrectOptions[randomIndex];
-            randomOption.closest('label').querySelector('span').classList.add('highlight');
-
-            setTimeout(() => {
-                helpInProgress = false; // Allow the next help click
-            }, 500); // Delay to avoid rapid multiple help clicks
-        } else {
-            document.getElementById('helpButton').disabled = true; // Disable button if only two options left
-        }
-    }
-
-    function getCorrectAnswer() {
-        const imageSrc = document.getElementById('imageToClassify').src;
-        const paths = imageSrc.split('/');
-        return paths[paths.length - 2]; // Assuming the correct classification is the folder name
+            .catch(error => console.error('Error classifying image:', error));
     }
 
     function clearSelection() {
-        document.querySelectorAll('input[type="radio"]').forEach(input => input.checked = false);
+        // Clear radio button selection
+        const radios = document.querySelectorAll('input[name="category"], input[name="initialCategory"]');
+        radios.forEach(radio => radio.checked = false);
+
+        // Clear message
         document.getElementById('message').innerText = '';
     }
 
     function startTimer() {
-        const showTimer = Math.random() < 0.5; // 50% chance to show the timer
+        let showTimer = Math.random() < 0.5; // 50% chance to show the timer
         const timerDisplay = document.getElementById('timer');
         if (showTimer) {
             let timeLeft = 45;
@@ -384,7 +312,7 @@
                 timerDisplay.textContent = timeLeft;
 
                 if (timeLeft <= 15 && !alertShown) {
-                    const selectedCheckbox = document.querySelector('input[name="category"]:checked');
+                    const selectedCheckbox = document.querySelector('input[name="classification"]:checked');
                     if (!selectedCheckbox) {
                         alert("Please choose at least one classification option.");
                         alertShown = true;
@@ -402,6 +330,28 @@
             }, 1000);
         } else {
             timerDisplay.style.display = 'none';
+        }
+    }
+
+    function confirmBack() {
+        if (confirm("Are you sure you want to go back? Your progress will be lost.")) {
+            location.href = '/chooseModel';
+        }
+    }
+
+    function provideHelp() {
+        const selectedCategory = document.querySelector('input[name="initialCategory"]:checked');
+        if (!selectedCategory) {
+            alert("Please select a category first.");
+            return;
+        }
+
+        const helpOptions = categories[selectedCategory.value];
+        if (helpOptions && helpOptions.length > 0) {
+            const randomOption = helpOptions[Math.floor(Math.random() * helpOptions.length)];
+            alert(`Hint: Consider ${randomOption.label}.`);
+        } else {
+            alert("No further hints available for LOW RISK.");
         }
     }
 </script>
