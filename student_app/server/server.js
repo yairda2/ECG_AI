@@ -18,9 +18,17 @@ const SECRET_KEY = config.secret_key.key;
 // Middleware setup
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/img', express.static(path.join(__dirname, '..', 'public', 'img')));
+
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+
+// Middleware to decode URL-encoded paths
+app.use((req, res, next) => {
+    req.url = decodeURIComponent(req.url);
+    next();
+});
 
 // Database setup
 const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
@@ -59,6 +67,7 @@ function createTables() {
                 expiredTime DATE,
                 role TEXT DEFAULT 'user',
                 termsAgreement BOOLEAN DEFAULT FALSE,
+                notification BOOLEAN DEFAULT TRUE,
                 FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
             )`);
 
@@ -75,7 +84,7 @@ function createTables() {
                 answerSubmitTime INTEGER DEFAULT 0,
                 answerChange TEXT,
                 alertActivated INTEGER DEFAULT 0,
-                submissionType TEXT CHECK(submissionType IN ('automatic', 'manual')),
+                submissionType TEXT,
                 helpActivated BOOLEAN DEFAULT FALSE,
                 helpTimeActivated INTEGER DEFAULT 0,
                 FOREIGN KEY (userId) REFERENCES users(id)
@@ -95,7 +104,7 @@ function createTables() {
                 answerSubmitTime INTEGER DEFAULT 0,
                 answerChange TEXT,
                 alertActivated INTEGER DEFAULT 0,
-                submissionType TEXT CHECK(submissionType IN ('automatic', 'manual')),
+                submissionType TEXT,
                 firstHelpActivated BOOLEAN DEFAULT FALSE,
                 secondHelpActivated BOOLEAN DEFAULT FALSE,
                 firstHelpTimeActivated INTEGER DEFAULT 0,
@@ -170,7 +179,7 @@ async function getClassificationValuesSrc(photoName) {
 }
 
 async function getClassificationValuesDes(classificationDes) {
-    if (classificationDes === 'Low Risk') {
+    if (classificationDes === 'LOW RISK') {
         return { classificationSetDes: classificationDes, classificationSubSetDes: null };
     } else if (['Septal', 'Anterior', 'Lateral', 'Inferior'].includes(classificationDes)) {
         return { classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes };
@@ -237,10 +246,10 @@ app.get('/test', verifyToken, (req, res) => {
 app.get('/test-init', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
 });
-
 app.get('/info', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
 });
+
 
 // API endpoints
 app.get('/random-image-classification', (req, res) => {
@@ -302,26 +311,26 @@ app.get('/main', verifyToken, (req, res) => {
 app.get('/user-data', verifyToken, (req, res) => {
     res.json({ redirect: '/info', message: 'redirect to user data' });
 });
-app.get('/info/data', verifyToken, (req, res) => {
-    const userId = req.cookies.userId;
-    if (!userId) {
-        return res.status(400).json({ message: 'No userId found in request' });
-    }
-    const sql = `
-        SELECT photoName, classificationSrc, classificationDes
-        FROM answers
-        WHERE userId = ?
-    `;
-    db.all(sql, [userId], (err, rows) => {
+
+
+
+app.get('/info/data', (req, res) => {
+    const sql = "SELECT photoName, classificationSetSrc, classificationSetDes, answerSubmitTime, helpActivated FROM answers";
+    db.all(sql, [], (err, rows) => {
         if (err) {
-            console.error('Database error:', err.message);
-            return res.status(500).send('Server error while fetching user data');
+            res.status(400).json({"error": err.message});
+            return;
         }
-        if (rows.length === 0) {
-            return res.status(404).send('No answers found for the given user');
-        }
-        res.json(rows); // Send the relevant data back to the client
+        res.json(rows);
     });
+});
+
+// Serve images
+app.get('/img/graded/:set/:photo', (req, res) => {
+    const set = req.params.set.toLowerCase();
+    const photo = req.params.photo.toLowerCase();
+    const imagePath = path.join(__dirname,'..', 'public', 'img', 'graded', set, photo);
+    res.sendFile(imagePath);
 });
 app.get('/sign-up', (req, res) => {
     res.json({ redirect: '/register', message: 'redirect to sign-up' });
@@ -424,25 +433,30 @@ app.post('/pre-training', verifyToken, (req, res) => {
 app.post('/training', verifyToken, async (req, res) => {
     const {
         photoName,
+        classificationDes,
         answerTime,
         answerChange,
         alertActivated,
-        submissionType,
-        helpButtonClicks,
-        examId  // Include examId if this answer is part of an exam
+        helpButtonClicks
     } = req.body;
 
-    const userId = req.user.id;
+    if (!req.cookies.userId) {
+        res.redirect('/login?message=Please login to continue')
+    }
+
+    const userId = req.cookies.userId
     const date = new Date().toISOString();
+    // Ensure submissionType is correctly set (you might need to adjust this based on your application logic)
+    const submissionType = req.body.submissionType === 'automatic' ? 'automatic' : 'manual';
 
     const sql = `
         INSERT INTO answers (
             userId, date, photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, classificationSubSetDes,
-            answerSubmitTime, answerChange, alertActivated,submissionType, helpActivated, helpTimeActivated
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            answerSubmitTime, answerChange, alertActivated, submissionType, helpActivated, helpTimeActivated
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    async function setParams(userId, date, photoName, answerTime, answerChange, alertActivated, submissionType, helpButtonClicks, examId) {
+    async function setParams(userId, date, photoName, answerTime, answerChange, alertActivated, submissionType, helpButtonClicks) {
         try {
             const classificationValuesSrc = await getClassificationValuesSrc(photoName);
             const classificationValuesDes = await getClassificationValuesDes(req.body.classificationDes);
@@ -469,7 +483,7 @@ app.post('/training', verifyToken, async (req, res) => {
     }
 
     try {
-        const params = await setParams(userId, date, photoName, answerTime, answerChange, alertActivated, submissionType, helpButtonClicks);
+        const params = await setParams(userId, date, photoName, answerTime, answerChange, alertActivated, submissionType, helpButtonClicks,helpButtonClicks);
 
         db.run(sql, params, function (err) {
             if (err) {
@@ -490,7 +504,7 @@ app.post('/training', verifyToken, async (req, res) => {
                         SELECT COUNT(*) * 1.0 / u.totalAnswers
                         FROM answers a
                         JOIN users u ON a.userId = u.id
-                        WHERE a.classificationSet = a.classificationSet AND u.id = ?
+                        WHERE a.classificationSetSrc = a.classificationSetSrc AND u.id = ?
                     )
                     WHERE id = ?
                 `;
@@ -499,6 +513,17 @@ app.post('/training', verifyToken, async (req, res) => {
                         console.error('Error updating avgAnswers:', err.message);
                     }
                 });
+            });
+            // update the totalTrainTime
+            const updateTotalTrainTime = `
+                UPDATE users
+                SET totalTrainTime = totalTrainTime + ?
+                WHERE id = ?
+            `;
+            db.run(updateTotalTrainTime, [answerTime, userId], (err) => {
+                if (err) {
+                    console.error('Error updating totalTrainTime:', err.message);
+                }
             });
 
             res.status(200).json({ message: 'Answer recorded successfully' });

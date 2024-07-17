@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Training</title>
-    <link rel="stylesheet" href="common.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/js/common.js" defer></script> <!-- Include common.js -->
-
     <style>
-        /* Existing styles */
+        /* Base styles */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -16,18 +15,19 @@
             background-color: #f4f4f4;
         }
 
+        /* Container to hold everything without scrolling */
         .container {
-            max-width: 800px;
+            max-width: 800px; /* Limit the width to keep everything tight */
             margin: auto;
             padding: 20px;
+            overflow: hidden; /* Prevent scrolling */
             position: relative;
-            overflow: hidden;
         }
 
         img {
-            width: 100%;
-            height: auto;
-            max-height: 300px;
+            width: 100%; /* Responsive width */
+            height: auto; /* Maintain aspect ratio */
+            max-height: 300px; /* Limit the height of the image */
             display: block;
             margin-bottom: 20px;
         }
@@ -37,76 +37,66 @@
             color: #333;
         }
 
-        .category-section {
+        .category-section, .initial-section {
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Allows items to wrap onto the next line */
         }
 
-        .category-label {
-            flex: 1 1 180px;
-            margin: 5px;
+        .category-label, .initial-label {
+            flex: 1 1 180px; /* Allows the label to grow and shrink with a basis of 180px */
             padding: 10px;
             background-color: #e7e7e7;
             border-radius: 5px;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            text-align: center;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            border: 2px solid transparent;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            margin: 5px;
+            text-align: center; /* Center text in the label */
+            user-select: none; /* Prevent user from selecting text */
+            border: 2px solid transparent; /* Add transparent border to handle border change */
+            transition: background-color 0.3s ease, border-color 0.3s ease; /* Transition for border color */
         }
 
-        .category-label:hover {
-            background-color: #568c3a;
+        input[type="checkbox"], input[type="radio"] {
+            display: none; /* Hide the radio button itself */
         }
 
-        .category-label input[type="checkbox"] {
-            display: none;
+        .category-label input[type="checkbox"]:checked + span,
+        .category-label input[type="radio"]:checked + span,
+        .initial-label input[type="radio"]:checked + span {
+            background-color: #c8e6c9; /* Light green background for active state */
+            border: 2px solid #4caf50; /* Green border for active state */
         }
 
-        .category-label input[type="checkbox"]:checked + span {
-            background-color: #c8e6c9;
-            border: 2px solid #4CAF50;
-        }
-
-        .category-label span {
+        .category-label span, .initial-label span {
             display: block;
             padding: 10px;
             cursor: pointer;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .category-label span.highlight {
-            background-color: #ffcccc; /* Light red for incorrect options */
             transition: background-color 0.3s ease;
         }
 
-        #timer {
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            font-size: 18px;
-            color: #555;
-            background: #e7e7e7;
-            border-radius: 10px;
-            padding: 5px 10px;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-            display: none; /* Hidden by default */
+        .category-label:hover span, .initial-label:hover span {
+            background-color: #568c3a;
+        }
+
+        .highlight {
+            background-color: #ffcccc; /* Light red for incorrect options */
+            border: 2px solid #ff0000; /* Red border for incorrect options */
         }
 
         button {
             padding: 10px 20px;
             font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50; /* Green background for submit button */
             color: white;
-            background-color: #4CAF50;
             border: none;
             border-radius: 5px;
-            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
             margin-top: 20px;
         }
 
         button:hover {
-            background-color: #45a049;
+            background-color: #45a049; /* Darker green on hover */
         }
 
         #backButton {
@@ -115,7 +105,6 @@
             left: 20px;
             padding: 10px 20px;
             background-color: #b10000; /* Red color */
-            margin-top: 10px;
         }
 
         #backButton:hover {
@@ -141,6 +130,19 @@
         #helpButton:disabled {
             background-color: #ffc107; /* Disabled button color */
             cursor: not-allowed;
+        }
+
+        #timer {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 18px;
+            color: #555;
+            background: #e7e7e7;
+            border-radius: 10px;
+            padding: 5px 10px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            display: block;
         }
 
         /* New alert styles */
@@ -177,99 +179,79 @@
     <div id="alertBox" class="alert"></div> <!-- Alert box -->
     <h1>Choose the right case</h1>
     <img id="imageToClassify" src="" alt="Random Image">
-    <form id="classificationForm">
-        <h2>Low Risk:</h2>
-        <div class="category-section">
-            <label class="category-label"><input type="checkbox" name="classification" value="Low Risk"><span>Low Risk</span></label>
+    <div id="initialOptions">
+        <h2>Classify as:</h2>
+        <div class="initial-section">
+            <label class="initial-label">
+                <input type="radio" name="initialCategory" value="STEMI">
+                <span>STEMI</span>
+            </label>
+            <label class="initial-label">
+                <input type="radio" name="initialCategory" value="HIGH RISK">
+                <span>HIGH RISK</span>
+            </label>
+            <label class="initial-label">
+                <input type="radio" name="initialCategory" value="LOW RISK">
+                <span>LOW RISK</span>
+            </label>
         </div>
-
-        <h2>STEMI:</h2>
-        <div class="category-section">
-            <label class="category-label"><input type="checkbox" name="classification" value="Septal"><span>Septal (V1-2)</span></label>
-            <label class="category-label"><input type="checkbox" name="classification" value="Anterior"><span>Anterior (V3-4)</span></label>
-            <label class="category-label"><input type="checkbox" name="classification" value="Lateral"><span>Lateral (I + aVL, V5-6)</span></label>
-            <label class="category-label"><input type="checkbox" name="classification" value="Inferior"><span>Inferior (II, III, aVF)</span></label>
-        </div>
-
-        <h2>HIGH RISK:</h2>
-        <div class="category-section">
-            <label class="category-label"><input type="checkbox" name="classification" value="Hyperacute"><span>Hyperacute T waves</span></label>
-            <label class="category-label"><input type="checkbox" name="classification" value="DeWinters"><span>De winters T waves</span></label>
-            <label class="category-label"><input type="checkbox" name="classification" value="LossOfBalance"><span>Loss of precordial T wave balance</span></label>
-            <label class="category-label"><input type="checkbox" name="classification" value="TInversion"><span>T wave inversion</span></label>
-            <label class="category-label"><input type="checkbox" name="classification" value="Wellens"><span>Wellens</span></label>
-            <label class="category-label"><input type="checkbox" name="classification" value="Avrste"><span>AVR STE</span></label>
-        </div>
-
+    </div>
+    <div id="classificationForm" style="display:none;">
+        <h2 id="categoryTitle"></h2>
+        <div class="category-section" id="categoryOptions"></div>
+        <button type="button" id="revertButton" onclick="revertSelection()">Revert</button>
         <button type="button" onclick="submitClassification('manual')">Submit</button>
-    </form>
+    </div>
+    <div id="message"></div>
     <button id="backButton" onclick="location.href='/chooseModel'">Back</button>
     <button id="helpButton" onclick="provideHelp()">Help</button>
+
+    <div id="customAlert" style="display:none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; padding: 20px; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.5);">
+        <p id="customAlertMsg"></p>
+    </div>
 </div>
 
 <script>
+    const categories = {
+        'STEMI': [
+            {value: 'SEPTAL', label: 'Septal (V1-2)'},
+            {value: 'ANTERIOR', label: 'Anterior (V3-4)'},
+            {value: 'LATERAL', label: 'Lateral (I + aVL, V5-6)'},
+            {value: 'INFERIOR', label: 'Inferior (II, III, aVF)'}
+        ],
+        'HIGH RISK': [
+            {value: 'HYPERACUTE', label: 'Hyperacute T waves'},
+            {value: 'DEWINTERS', label: 'De winters T waves'},
+            {value: 'LOSSOFBALANCE', label: 'Loss of precordial T wave balance'},
+            {value: 'TINVERSION', label: 'T wave inversion'},
+            {value: 'WELLENS', label: 'Wellens'},
+            {value: 'AVRSTE', label: 'AVR STE'}
+        ]
+    };
+
     let startTime;
-    let initialChoice = null;
-    let timer = null;
+    let timer;
     let alertShown = false;
     let answerChanges = []; // Track answer changes
     let helpButtonClicks = []; // Track help button clicks
     let helpInProgress = false; // Prevent multiple simultaneous help requests
+    let selectedInitialCategory = '';
 
     document.addEventListener('DOMContentLoaded', function() {
-        fetchRandomImage();
-    });
+        fetchRandomImage(); // Load an image when the page loads
 
-    document.querySelectorAll('input[type="checkbox"]').forEach(box => {
-        box.addEventListener('change', function() {
-            document.querySelectorAll('input[type="checkbox"]').forEach(input => {
-                if (input !== this) input.checked = false;
+        // Add event listener for initial category selection
+        document.querySelectorAll('input[name="initialCategory"]').forEach(input => {
+            input.addEventListener('change', function() {
+                selectedInitialCategory = this.value;
+                if (selectedInitialCategory === 'LOW RISK') {
+                    showLowRiskSelection();
+                } else {
+                    showSubCategories(selectedInitialCategory);
+                }
             });
-            if (!initialChoice) {
-                initialChoice = this.value;
-            } else if (initialChoice !== this.value) {
-                answerChanges.push(`${this.value},`);
-                initialChoice = this.value;
-            }
         });
     });
-
-    function startTimer() {
-        let showTimer = Math.random() < 0.5; // 50% chance to show the timer
-        const timerDisplay = document.getElementById('timer');
-        if (showTimer) {
-            let timeLeft = 45;
-            timerDisplay.textContent = timeLeft;
-            timerDisplay.style.display = 'block';
-            timerDisplay.style.color = '#555';
-            clearInterval(timer); // Clear any existing timer before starting a new one
-            alertShown = false; // Reset alert flag
-
-            timer = setInterval(() => {
-                timeLeft--;
-                timerDisplay.textContent = timeLeft;
-
-                if (timeLeft <= 15 && !alertShown) {
-                    const selectedCheckbox = document.querySelector('input[name="classification"]:checked');
-                    if (!selectedCheckbox) {
-                        alert("Please choose at least one classification option.");
-                        alertShown = true;
-                    }
-                }
-
-                if (timeLeft <= 15) {
-                    timerDisplay.style.color = 'red';
-                }
-
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    submitClassification('automatic');
-                }
-            }, 1000);
-        } else {
-            timerDisplay.style.display = 'none';
-        }
-    }
 
     function fetchRandomImage() {
         fetch('/random-image', { method: 'GET' })
@@ -281,37 +263,64 @@
             })
             .then(data => {
                 document.getElementById('imageToClassify').src = data.imagePath;
-                document.querySelectorAll('input[type="checkbox"]').forEach(input => {
-                    input.checked = false;
-                    input.closest('label').querySelector('span').classList.remove('highlight'); // Reset highlight
-                });
-                initialChoice = null;
-                answerChanges = []; // Reset answer changes
-                helpButtonClicks = []; // Reset help button clicks
-                document.getElementById('helpButton').disabled = false; // Enable help button
-                helpInProgress = false; // Reset help in progress
+                clearSelection(); // Clear any previous selection
                 startTime = Date.now();
-                startTimer(); // Start the timer when a new image is fetched
+                startTimer();
             })
             .catch(error => console.error('Error fetching image:', error));
+    }
+
+    function showLowRiskSelection() {
+        document.getElementById('initialOptions').style.display = 'none';
+        document.getElementById('classificationForm').style.display = 'block';
+        document.getElementById('categoryTitle').innerText = 'LOW RISK';
+        document.getElementById('categoryOptions').innerHTML = ''; // No further options for LOW RISK
+    }
+
+    function showSubCategories(category) {
+        const categoryTitle = document.getElementById('categoryTitle');
+        const categoryOptions = document.getElementById('categoryOptions');
+        categoryTitle.innerText = `${category}:`;
+        categoryOptions.innerHTML = '';
+
+        if (categories[category]) {
+            categories[category].forEach(subCategory => {
+                const label = document.createElement('label');
+                label.className = 'category-label';
+                label.innerHTML = `
+                <input type="radio" name="category" value="${subCategory.value}">
+                <span>${subCategory.label}</span>
+            `;
+                categoryOptions.appendChild(label);
+            });
+        }
+
+        document.getElementById('initialOptions').style.display = 'none';
+        document.getElementById('classificationForm').style.display = 'block';
+    }
+
+    function revertSelection() {
+        document.getElementById('initialOptions').style.display = 'block';
+        document.getElementById('classificationForm').style.display = 'none';
+        clearSelection(); // Clear any previous selection
     }
 
     function submitClassification(submissionType) {
         clearInterval(timer);
         const endTime = Date.now();
         const duration = submissionType === 'automatic' ? 45 : (endTime - startTime) / 1000;
-        const selectedCheckbox = document.querySelector('input[name="classification"]:checked');
-        const category = selectedCheckbox ? selectedCheckbox.value : 'None';
+        const selectedCheckbox = document.querySelector('input[name="category"]:checked');
+        const category = selectedCheckbox ? selectedCheckbox.value : (selectedInitialCategory === 'LOW RISK' ? 'LOW RISK' : 'None');
         const imageSrc = document.getElementById('imageToClassify').src;
         const decodedImageSrc = decodeURIComponent(imageSrc); // Decode the URL
         const paths = decodedImageSrc.split('/');
         const photoName = paths.pop();
         const correctAnswerSet = paths[paths.length - 2].toUpperCase();
-        const correctAnswerSubSet = paths[paths.length - 1];
+        const correctAnswerSubSet = paths[paths.length - 1].toUpperCase();
 
         let correctAnswer;
         if (correctAnswerSet === "LOW RISK") {
-            correctAnswer = "Low Risk";
+            correctAnswer = "LOW RISK";
         } else if (correctAnswerSet === "STEMI") {
             correctAnswer = correctAnswerSubSet;
         } else if (correctAnswerSet === "HIGH RISK") {
@@ -320,8 +329,9 @@
 
         const answerChangeText = answerChanges.length > 0 ? answerChanges.join('; ') : 'None';
 
-        if (!selectedCheckbox) {
+        if (!selectedCheckbox && selectedInitialCategory !== 'LOW RISK') {
             alert("Time expired! You did not select any classification.");
+            return;
         }
 
         // Send classification data to the server
@@ -355,16 +365,22 @@
         const currentTime = (Date.now() - startTime) / 1000;
         helpButtonClicks.push(currentTime);
 
-        // Get the correct answer based on directory name
-        const correctAnswer = getCorrectAnswer();
-        const options = Array.from(document.querySelectorAll('input[name="classification"]'));
-        const incorrectOptions = options.filter(input => input.value !== correctAnswer && !input.closest('label').querySelector('span').classList.contains('highlight'));
+        const incorrectOptions = Array.from(document.querySelectorAll('input[name="initialCategory"], input[name="category"]'))
+            .filter(input => !input.checked && !input.closest('label').querySelector('span').classList.contains('highlight'));
 
-        // Highlight incorrect options one by one randomly
-        if (incorrectOptions.length > 2) {
-            const randomIndex = Math.floor(Math.random() * incorrectOptions.length);
-            const randomOption = incorrectOptions[randomIndex];
-            randomOption.closest('label').querySelector('span').classList.add('highlight');
+        if (incorrectOptions.length > 1) {
+            const numOptionsToHighlight = 1; // Limit the number of highlighted options
+            const randomIndexes = [];
+            while (randomIndexes.length < numOptionsToHighlight) {
+                const randomIndex = Math.floor(Math.random() * incorrectOptions.length);
+                if (!randomIndexes.includes(randomIndex)) {
+                    randomIndexes.push(randomIndex);
+                }
+            }
+            randomIndexes.forEach(index => {
+                const randomOption = incorrectOptions[index];
+                randomOption.closest('label').querySelector('span').classList.add('highlight');
+            });
 
             setTimeout(() => {
                 helpInProgress = false; // Allow the next help click
@@ -374,13 +390,34 @@
         }
     }
 
-    function getCorrectAnswer() {
-        const imageSrc = document.getElementById('imageToClassify').src;
-        const decodedImageSrc = decodeURIComponent(imageSrc); // Decode the URL
-        const paths = decodedImageSrc.split('/');
-        const classificationSet = paths[paths.length - 2].toUpperCase(); // Assuming the classification set is the second last folder name
-        const classificationSubSet = paths[paths.length - 1]; // Assuming the classification subset is the last folder name if it exists
-        return classificationSet === "LOW RISK" ? "Low Risk" : classificationSubSet;
+    function startTimer() {
+        const timerDisplay = document.getElementById('timer');
+        let timeLeft = 45;
+        timerDisplay.textContent = timeLeft;
+        timerDisplay.style.display = 'block';
+        timerDisplay.style.color = '#555';
+        alertShown = false; // Reset alert flag
+
+        timer = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+            }
+
+            if (timeLeft <= 15 && !alertShown) {
+                alert("Please choose at least one classification option.");
+                alertShown = true;
+            }
+
+            if (timeLeft <= 15) {
+                timerDisplay.style.color = 'red';
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                submitClassification('automatic');
+            }
+        }, 1000);
     }
 
     function showAlert(isCorrect, correctAnswer) {
@@ -399,6 +436,26 @@
             alertBox.style.display = 'none';
             fetchRandomImage(); // Fetch next image and data after hiding alert
         }, 3000); // Hide after 3 seconds and then fetch next image and data
+    }
+
+    function clearSelection() {
+        // Clear radio button selection
+        const radios = document.querySelectorAll('input[name="category"], input[name="initialCategory"]');
+        radios.forEach(radio => radio.checked = false);
+
+        // Clear message
+        document.getElementById('message').innerText = '';
+
+        // Clear highlights
+        const highlights = document.querySelectorAll('.highlight');
+        highlights.forEach(highlight => highlight.classList.remove('highlight'));
+
+        // Enable help button
+        document.getElementById('helpButton').disabled = false;
+
+        // Reset help related states
+        helpButtonClicks = [];
+        helpInProgress = false;
     }
 </script>
 </body>
