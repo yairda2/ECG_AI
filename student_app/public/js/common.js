@@ -18,6 +18,9 @@ function handleServerResponse(response) {
         if (!response.ok) {
             if (data.message) {
                 alert(data.message);
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
             }
             if (data.redirect) {
                 window.location.href = data.redirect;
