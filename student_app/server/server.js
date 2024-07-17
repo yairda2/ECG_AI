@@ -18,9 +18,17 @@ const SECRET_KEY = config.secret_key.key;
 // Middleware setup
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/img', express.static(path.join(__dirname, '..', 'public', 'img')));
+
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+
+// Middleware to decode URL-encoded paths
+app.use((req, res, next) => {
+    req.url = decodeURIComponent(req.url);
+    next();
+});
 
 // Database setup
 const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
@@ -238,10 +246,10 @@ app.get('/test', verifyToken, (req, res) => {
 app.get('/test-init', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
 });
-
 app.get('/info', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
 });
+
 
 // API endpoints
 app.get('/random-image-classification', (req, res) => {
@@ -303,26 +311,26 @@ app.get('/main', verifyToken, (req, res) => {
 app.get('/user-data', verifyToken, (req, res) => {
     res.json({ redirect: '/info', message: 'redirect to user data' });
 });
-app.get('/info/data', verifyToken, (req, res) => {
-    const userId = req.cookies.userId;
-    if (!userId) {
-        return res.status(400).json({ message: 'No userId found in request' });
-    }
-    const sql = `
-        SELECT photoName, classificationSetSrc, classificationSetDes
-        FROM answers
-        WHERE userId = ?
-    `;
-    db.all(sql, [userId], (err, rows) => {
+
+
+
+app.get('/info/data', (req, res) => {
+    const sql = "SELECT photoName, classificationSetSrc, classificationSetDes, answerSubmitTime, helpActivated FROM answers";
+    db.all(sql, [], (err, rows) => {
         if (err) {
-            console.error('Database error:', err.message);
-            return res.status(500).send('Server error while fetching user data');
+            res.status(400).json({"error": err.message});
+            return;
         }
-        if (rows.length === 0) {
-            return res.status(404).send('No answers found for the given user');
-        }
-        res.json(rows); // Send the relevant data back to the client
+        res.json(rows);
     });
+});
+
+// Serve images
+app.get('/img/graded/:set/:photo', (req, res) => {
+    const set = req.params.set.toLowerCase();
+    const photo = req.params.photo.toLowerCase();
+    const imagePath = path.join(__dirname,'..', 'public', 'img', 'graded', set, photo);
+    res.sendFile(imagePath);
 });
 app.get('/sign-up', (req, res) => {
     res.json({ redirect: '/register', message: 'redirect to sign-up' });
@@ -505,6 +513,17 @@ app.post('/training', verifyToken, async (req, res) => {
                         console.error('Error updating avgAnswers:', err.message);
                     }
                 });
+            });
+            // update the totalTrainTime
+            const updateTotalTrainTime = `
+                UPDATE users
+                SET totalTrainTime = totalTrainTime + ?
+                WHERE id = ?
+            `;
+            db.run(updateTotalTrainTime, [answerTime, userId], (err) => {
+                if (err) {
+                    console.error('Error updating totalTrainTime:', err.message);
+                }
             });
 
             res.status(200).json({ message: 'Answer recorded successfully' });
