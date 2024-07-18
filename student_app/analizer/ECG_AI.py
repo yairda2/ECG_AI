@@ -1,104 +1,66 @@
-# Analaizer: ECG
-#Author: Yair Davidof
+import os
+import json
 import sqlite3
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split, learning_curve
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix
-import joblib
 import numpy as np
-from transformers import pipeline
-
-# Connect to the SQLite database
-db_path = r"C:\Users\yair\Documents\GitHub\EEG_AI_firsst_collect\student_app\server\database.db"
-conn = sqlite3.connect(db_path)
-
-# Load data from the database
-def load_data(table_name):
-    query = f"SELECT * FROM {table_name}"
-    return pd.read_sql_query(query, conn)
-
-# Load user and answers data
-users_df = load_data('users')
-answers_df = load_data('answers')
-
-# Merging users data with answers data on user ID
-merged_data = pd.merge(users_df, answers_df, left_on='id', right_on='userId')
-
-# Feature selection and preprocessing as needed
-features = merged_data[['age', 'avgDegree', 'totalAnswers', 'answerSubmitTime']]
-labels = merged_data['classificationDes']
-
-# Check the size of the dataset
-print("Number of samples in dataset:", features.shape[0])
-# Function to count records in each table
-def count_records(table_name):
-    query = f"SELECT COUNT(*) FROM {table_name}"
-    result = pd.read_sql_query(query, conn)
-    print(f"Count of records in {table_name}: {result.iloc[0, 0]}")
-
-# Use this function to check the counts in 'users' and 'answers'
-count_records('users')
-count_records('answers')
+import tensorflow as tf
+from transformers import TFAutoModel, AutoTokenizer
 
 
-# If the dataset is too small, you may need to verify data loading or merging logic.
-if features.shape[0] < 2:
-    print("Insufficient data for train-test split.")
-else:
-    # Proceed with train-test split
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
+# Path: analizer/ECG_AI.py
+db_path = os.path.join(os.path.dirname(__file__), '..', 'server', 'database.db')
+# Load the pre-trained BERT model and tokenizer
+model = TFAutoModel.from_pretrained('bert-base-uncased')
+tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
-# Split data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
+def rate_images():
+    """
+    Function to rate images based on their classification set and subset.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-# Train a RandomForest Classifier
-model = RandomForestClassifier(n_estimators=100, random_state=42)
-train_sizes, train_scores, test_scores = learning_curve(model, X_train, y_train, cv=5, scoring='accuracy', n_jobs=-1, train_sizes=np.linspace(0.01, 1.0, 50))
+    cursor.execute("SELECT photoName, classificationSet, classificationSubSet FROM imageClassification")
+    images = cursor.fetchall()
 
-# Plot learning curve
-plt.figure(figsize=(10, 6))
-plt.plot(train_sizes, np.mean(train_scores, axis=1), 'o-', color="r", label="Training score")
-plt.plot(train_sizes, np.mean(test_scores, axis=1), 'o-', color="g", label="Cross-validation score")
-plt.title("Learning Curve")
-plt.xlabel("Training Set Size")
-plt.ylabel("Accuracy Score")
-plt.legend(loc="best")
-plt.show()
+    for image in images:
+        photoName, classificationSet, classificationSubSet = image
+        text = f"{classificationSet} {classificationSubSet}"
+        inputs = tokenizer(text, return_tensors='tf')
+        outputs = model(**inputs)
+        rating = np.mean(outputs.last_hidden_state.numpy())
 
-# Predict on the test set
-predictions = model.predict(X_test)
-accuracy = accuracy_score(y_test, predictions)
+        cursor.execute("UPDATE imageClassification SET rate = ? WHERE photoName = ?", (rating, photoName))
 
-# Generate additional plots (Placeholder for actual metrics)
-for i in range(5):
-    plt.figure()
-    plt.plot(np.random.randn(100).cumsum(), label=f'Graph {i+1}')
-    plt.title(f'Additional Plot {i+1}')
-    plt.legend()
-    plt.show()
+    conn.commit()
+    conn.close()
 
-# Initialize the text generation pipeline with GPT-2
-generator = pipeline('text-generation', model='gpt-2')
+def learn_from_data():
+    """
+    Function to learn from user answers and update image ratings.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-# Generate feedback based on the model's performance
-def generate_feedback(accuracy, conf_matrix):
-    input_prompt = f"The model has achieved an accuracy of {accuracy:.2%}. The confusion matrix is {conf_matrix}. Please provide detailed feedback on the model's performance and recommendations for improvement."
-    feedback = generator(input_prompt, max_length=150, num_return_sequences=1)
-    return feedback[0]['generated_text']
+    cursor.execute("SELECT * FROM answers")
+    answers = cursor.fetchall()
 
-# Use the function to generate feedback
-conf_matrix = confusion_matrix(y_test, predictions)
-model_feedback = generate_feedback(accuracy, conf_matrix)
+    # Example learning: calculate average rating for each classification
+    ratings = {}
+    for answer in answers:
+        classificationSetDes = answer[6]
+        rate = answer[8]
+        if classificationSetDes not in ratings:
+            ratings[classificationSetDes] = []
+        ratings[classificationSetDes].append(rate)
 
-# Print and save the feedback
-print(model_feedback)
-with open('feedback_and_recommendations.txt', 'w') as file:
-    file.write(model_feedback)
+    for classification, rates in ratings.items():
+        avg_rate = np.mean(rates)
+        cursor.execute("UPDATE imageClassification SET rate = ? WHERE classificationSet = ?", (avg_rate, classification))
 
-# Save the trained model
-joblib.dump(model, 'ecg_model.pkl')
+    conn.commit()
+    conn.close()
 
-# Close the database connection
-conn.close()
+# Run the functions daily
+if __name__ == "__main__":
+    rate_images()
+    learn_from_data()
