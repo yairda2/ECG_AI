@@ -4,17 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0091_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0184_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0379_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0408_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/info.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/info.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/register.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
-    </list>
+    <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="pixed gender , list of uni , remove change ans" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -54,7 +44,7 @@
     "Node.js.authMiddleware.js.executor": "Debug",
     "Node.js.common.js.executor": "Debug",
     "Node.js.server -sqlite.js.executor": "Run",
-    "Node.js.server.js.executor": "Debug",
+    "Node.js.server.js.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "Elyasaf",
     "ignore.virus.scanning.warn.message": "true",
@@ -135,8 +125,17 @@
       <workItem from="1720115253300" duration="20967000" />
       <workItem from="1720386491082" duration="9092000" />
       <workItem from="1721308579409" duration="6000" />
-      <workItem from="1721308614722" duration="5986000" />
+      <workItem from="1721308614722" duration="6321000" />
     </task>
+    <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
+      <option name="closed" value="true" />
+      <created>1721336185591</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL‎-00001" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1721336185591</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -152,6 +151,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="pixed gender , list of uni , remove change ans" />
+    <option name="LAST_COMMIT_MESSAGE" value="pixed gender , list of uni , remove change ans" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
