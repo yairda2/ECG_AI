@@ -134,13 +134,13 @@
             const userInfoTable = document.getElementById('userInfo').getElementsByTagName('tbody')[0];
             userInfoTable.innerHTML = ''; // Clear the table
             data.forEach(item => {
-                const rowClass = item.classificationSrc === item.classificationDes ? 'correct' : 'incorrect';
-                const imagePath = `/img/graded/${item.classificationSrc}/${item.photoName}`;
+                const rowClass = item.classificationSetSrc === item.classificationSetDes ? 'correct' : 'incorrect';
+                const imagePath = `/img/graded/${item.classificationSetSrc}/${item.photoName}`;
                 const row = `
                 <tr>
                     <td><img src="${imagePath}" alt="Image not found (${item.photoName})" onclick="showModal('${imagePath}', '${item.classificationDes}', '${item.classificationSrc}')"></td>
-                    <td>${item.classificationDes}</td>
-                    <td>${item.classificationSrc}</td>
+                    <td>${item.classificationSetDes}</td>
+                    <td>${item.classificationSetSrc}</td>
                     <td class="${rowClass}">${item.result}</td>
                 </tr>
             `;

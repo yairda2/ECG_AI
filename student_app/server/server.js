@@ -73,7 +73,6 @@ function createTables() {
                 classificationSetDes TEXT,
                 classificationSubSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
-                answerChange TEXT,
                 alertActivated INTEGER DEFAULT 0,
                 submissionType TEXT CHECK(submissionType IN ('automatic', 'manual')),
                 helpActivated BOOLEAN DEFAULT FALSE,
@@ -93,7 +92,6 @@ function createTables() {
                 classificationSetDes TEXT,
                 classificationSubSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
-                answerChange TEXT,
                 alertActivated INTEGER DEFAULT 0,
                 submissionType TEXT CHECK(submissionType IN ('automatic', 'manual')),
                 firstHelpActivated BOOLEAN DEFAULT FALSE,
@@ -228,9 +226,6 @@ app.get('/pre-training', (req, res) => {
 app.get('/training', checkToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
 });
-app.get('/pre-test', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTest.html'));
-});
 app.get('/test', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
 });
@@ -308,7 +303,7 @@ app.get('/info/data', verifyToken, (req, res) => {
         return res.status(400).json({ message: 'No userId found in request' });
     }
     const sql = `
-        SELECT photoName, classificationSrc, classificationDes
+        SELECT photoName, classificationSetSrc, classificationSetDes
         FROM answers
         WHERE userId = ?
     `;
@@ -410,7 +405,7 @@ app.post('/chooseModel', verifyToken, (req, res) => {
             res.status(200).json({ redirect: '/pre-training', message: 'Redirecting to pre-training page' });
             break;
         case 'Pre-Test':
-            res.status(200).json({ redirect: '/pre-test', message: 'Redirecting to test page' });
+            res.status(200).json({ redirect: '/test', message: 'Redirecting to test page' });
             break;
         default:
             res.status(404).json({ message: 'Action not found' });
@@ -438,7 +433,7 @@ app.post('/training', verifyToken, async (req, res) => {
     const sql = `
         INSERT INTO answers (
             userId, date, photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, classificationSubSetDes,
-            answerSubmitTime, answerChange, alertActivated,submissionType, helpActivated, helpTimeActivated
+            answerSubmitTime, alertActivated,submissionType, helpActivated, helpTimeActivated
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
