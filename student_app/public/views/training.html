@@ -200,7 +200,6 @@
         <h2 id="categoryTitle"></h2>
         <div class="category-section" id="categoryOptions"></div>
         <button type="button" id="revertButton" onclick="revertSelection()">Revert</button>
-        <button type="button" onclick="submitClassification('manual')">Submit</button>
     </div>
     <div id="message"></div>
     <button id="backButton" onclick="location.href='/chooseModel'">Back</button>
@@ -232,7 +231,6 @@
     let startTime;
     let timer;
     let alertShown = false;
-    let answerChanges = []; // Track answer changes
     let helpButtonClicks = []; // Track help button clicks
     let helpInProgress = false; // Prevent multiple simultaneous help requests
     let selectedInitialCategory = '';
@@ -275,6 +273,7 @@
         document.getElementById('classificationForm').style.display = 'block';
         document.getElementById('categoryTitle').innerText = 'LOW RISK';
         document.getElementById('categoryOptions').innerHTML = ''; // No further options for LOW RISK
+        submitClassification('manual'); // Automatically submit for LOW RISK
     }
 
     function showSubCategories(category) {
@@ -327,8 +326,6 @@
             correctAnswer = correctAnswerSubSet;
         }
 
-        const answerChangeText = answerChanges.length > 0 ? answerChanges.join('; ') : 'None';
-
         if (!selectedCheckbox && selectedInitialCategory !== 'LOW RISK') {
             alert("Time expired! You did not select any classification.");
             return;
@@ -342,7 +339,6 @@
                 photoName,
                 classificationDes: category,
                 answerTime: duration,
-                answerChange: answerChangeText,
                 alertActivated: alertShown ? 1 : 0,
                 submissionType,
                 helpButtonClicks: helpButtonClicks.join('; ')
@@ -351,9 +347,6 @@
             .then(response => response.text())
             .then(message => {
                 showAlert(category === correctAnswer, correctAnswer);
-                setTimeout(() => {
-                    fetchRandomImage(); // Fetch next image and data after alert
-                }, 3000); // Fetch next image and data after 3 seconds
             })
             .catch(error => console.error('Error submitting classification:', error));
     }
@@ -424,10 +417,10 @@
         const alertBox = document.getElementById('alertBox');
         alertBox.classList.remove('success', 'error'); // Remove existing classes
         if (isCorrect) {
-            alertBox.textContent = `Correct! The answer is:\n${correctAnswer}.`;
+            alertBox.textContent = `Correct! The answer is: ${correctAnswer}.`;
             alertBox.classList.add('success');
         } else {
-            alertBox.textContent = `Incorrect! The correct answer is:\n ${correctAnswer}.`;
+            alertBox.textContent = `Incorrect! The correct answer is: ${correctAnswer}.`;
             alertBox.classList.add('error');
         }
         alertBox.style.display = 'block';
