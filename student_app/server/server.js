@@ -12,6 +12,7 @@ const app = express();
 const cors = require('cors');
 const verifyToken = require('./authMiddleware');
 const config = require('../config/config');
+const {token} = require("mysql/lib/protocol/Auth");
 const PORT = config.server.port || 3000;
 const SECRET_KEY = config.secret_key.key;
 
@@ -83,7 +84,6 @@ function createTables() {
                 classificationSubSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
                 answerChange TEXT,
-                alertActivated INTEGER DEFAULT 0,
                 submissionType TEXT,
                 helpActivated BOOLEAN DEFAULT FALSE,
                 helpTimeActivated INTEGER DEFAULT 0,
@@ -105,10 +105,8 @@ function createTables() {
                 answerChange TEXT,
                 alertActivated INTEGER DEFAULT 0,
                 submissionType TEXT,
-                firstHelpActivated BOOLEAN DEFAULT FALSE,
-                secondHelpActivated BOOLEAN DEFAULT FALSE,
-                firstHelpTimeActivated INTEGER DEFAULT 0,
-                secondHelpTimeActivated INTEGER DEFAULT 0,
+                helpActivated BOOLEAN DEFAULT FALSE,
+                helpActivated BOOLEAN DEFAULT FALSE,
                 PRIMARY KEY (examId, userId, answerNumber),
                 FOREIGN KEY (userId) REFERENCES users(id),
                 FOREIGN KEY (examId) REFERENCES exam(examId)
@@ -229,11 +227,6 @@ app.get('/chooseModelAdmin', verifyToken, (req, res) => {
         res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModelAdmin.html'));
     }
 });
-app.get('/pre-training', (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTraining.html'));
-});
 app.get('/training', checkToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
 });
@@ -315,8 +308,9 @@ app.get('/user-data', verifyToken, (req, res) => {
 
 
 app.get('/info/data', (req, res) => {
-    const sql = "SELECT photoName, classificationSetSrc, classificationSetDes, answerSubmitTime, helpActivated FROM answers";
-    db.all(sql, [], (err, rows) => {
+    const userId = req.cookies.userId;
+    const sql = "SELECT photoName, classificationSetSrc, classificationSetDes, answerSubmitTime, helpActivated FROM answers WHERE userId = ?";
+    db.all(sql, userId, (err, rows) => {
         if (err) {
             res.status(400).json({"error": err.message});
             return;
@@ -416,7 +410,7 @@ app.post('/chooseModel', verifyToken, (req, res) => {
             res.status(200).json({ redirect: '/classifiedImagesAdmin', message: 'Redirecting to classified images' });
             break;
         case 'Single Training':
-            res.status(200).json({ redirect: '/pre-training', message: 'Redirecting to pre-training page' });
+            res.status(200).json({ redirect: '/training', message: 'Redirecting to training page' });
             break;
         case 'Pre-Test':
             res.status(200).json({ redirect: '/pre-test', message: 'Redirecting to test page' });
@@ -424,10 +418,6 @@ app.post('/chooseModel', verifyToken, (req, res) => {
         default:
             res.status(404).json({ message: 'Action not found' });
     }
-});
-
-app.post('/pre-training', verifyToken, (req, res) => {
-    res.json({ redirect: '/training', message: 'Pre-training completed successfully' });
 });
 
 app.post('/training', verifyToken, async (req, res) => {
