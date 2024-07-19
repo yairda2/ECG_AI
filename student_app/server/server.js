@@ -229,11 +229,6 @@ app.get('/chooseModelAdmin', verifyToken, (req, res) => {
         res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModelAdmin.html'));
     }
 });
-app.get('/pre-training', (req, res) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).send('Access Denied');
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTraining.html'));
-});
 app.get('/training', checkToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
 });
@@ -416,7 +411,7 @@ app.post('/chooseModel', verifyToken, (req, res) => {
             res.status(200).json({ redirect: '/classifiedImagesAdmin', message: 'Redirecting to classified images' });
             break;
         case 'Single Training':
-            res.status(200).json({ redirect: '/pre-training', message: 'Redirecting to pre-training page' });
+            res.status(200).json({ redirect: '/training', message: 'Redirecting to training page' });
             break;
         case 'Pre-Test':
             res.status(200).json({ redirect: '/pre-test', message: 'Redirecting to test page' });
@@ -424,10 +419,6 @@ app.post('/chooseModel', verifyToken, (req, res) => {
         default:
             res.status(404).json({ message: 'Action not found' });
     }
-});
-
-app.post('/pre-training', verifyToken, (req, res) => {
-    res.json({ redirect: '/training', message: 'Pre-training completed successfully' });
 });
 
 app.post('/training', verifyToken, async (req, res) => {
