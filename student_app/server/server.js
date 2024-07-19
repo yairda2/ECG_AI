@@ -83,7 +83,6 @@ function createTables() {
                 classificationSetDes TEXT,
                 classificationSubSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
-                answerChange TEXT,
                 submissionType TEXT,
                 helpActivated BOOLEAN DEFAULT FALSE,
                 helpTimeActivated INTEGER DEFAULT 0,
@@ -102,10 +101,8 @@ function createTables() {
                 classificationSetDes TEXT,
                 classificationSubSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
-                answerChange TEXT,
                 alertActivated INTEGER DEFAULT 0,
                 submissionType TEXT,
-                helpActivated BOOLEAN DEFAULT FALSE,
                 helpActivated BOOLEAN DEFAULT FALSE,
                 PRIMARY KEY (examId, userId, answerNumber),
                 FOREIGN KEY (userId) REFERENCES users(id),
@@ -423,30 +420,27 @@ app.post('/chooseModel', verifyToken, (req, res) => {
 app.post('/training', verifyToken, async (req, res) => {
     const {
         photoName,
-        classificationDes,
         answerTime,
-        answerChange,
         alertActivated,
         helpButtonClicks
     } = req.body;
 
     if (!req.cookies.userId) {
-        res.redirect('/login?message=Please login to continue')
+        return res.redirect('/login?message=Please login to continue');
     }
 
-    const userId = req.cookies.userId
+    const userId = req.cookies.userId;
     const date = new Date().toISOString();
-    // Ensure submissionType is correctly set (you might need to adjust this based on your application logic)
     const submissionType = req.body.submissionType === 'automatic' ? 'automatic' : 'manual';
 
     const sql = `
         INSERT INTO answers (
             userId, date, photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, classificationSubSetDes,
-            answerSubmitTime, answerChange, alertActivated, submissionType, helpActivated, helpTimeActivated
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            answerSubmitTime, submissionType, helpActivated, helpTimeActivated
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    async function setParams(userId, date, photoName, answerTime, answerChange, alertActivated, submissionType, helpButtonClicks) {
+    async function setParams(userId, date, photoName, answerTime, alertActivated, submissionType, helpButtonClicks) {
         try {
             const classificationValuesSrc = await getClassificationValuesSrc(photoName);
             const classificationValuesDes = await getClassificationValuesDes(req.body.classificationDes);
@@ -460,9 +454,7 @@ app.post('/training', verifyToken, async (req, res) => {
                 classificationValuesDes.classificationSetDes || null,
                 classificationValuesDes.classificationSubSetDes || null,
                 answerTime,
-                answerChange,
-                alertActivated,
-                submissionType === 'automatic' ? 1 : 0,
+                submissionType,
                 helpButtonClicks.length > 0 ? 1 : 0,
                 helpButtonClicks.length > 0 ? helpButtonClicks[0] : null
             ];
@@ -473,7 +465,7 @@ app.post('/training', verifyToken, async (req, res) => {
     }
 
     try {
-        const params = await setParams(userId, date, photoName, answerTime, answerChange, alertActivated, submissionType, helpButtonClicks,helpButtonClicks);
+        const params = await setParams(userId, date, photoName, answerTime, alertActivated, submissionType, helpButtonClicks);
 
         db.run(sql, params, function (err) {
             if (err) {
@@ -491,10 +483,9 @@ app.post('/training', verifyToken, async (req, res) => {
                 const updateAvgAnswersSql = `
                     UPDATE users
                     SET avgAnswers = (
-                        SELECT COUNT(*) * 1.0 / u.totalAnswers
-                        FROM answers a
-                        JOIN users u ON a.userId = u.id
-                        WHERE a.classificationSetSrc = a.classificationSetSrc AND u.id = ?
+                        SELECT AVG(answerSubmitTime)
+                        FROM answers
+                        WHERE userId = ?
                     )
                     WHERE id = ?
                 `;
@@ -504,7 +495,7 @@ app.post('/training', verifyToken, async (req, res) => {
                     }
                 });
             });
-            // update the totalTrainTime
+
             const updateTotalTrainTime = `
                 UPDATE users
                 SET totalTrainTime = totalTrainTime + ?
@@ -524,6 +515,8 @@ app.post('/training', verifyToken, async (req, res) => {
     }
 });
 
+
+
 app.post('/pre-test', verifyToken, (req, res) => {
     res.json({ redirect: '/test', message: 'Redirecting to test page' });
 });
@@ -535,7 +528,6 @@ app.post('/test', verifyToken, async (req, res) => {
         answerTime,
         answerChange,
         alertActivated,
-        submissionType,
         helpButtonClicks,
         examId,
         answerNumber

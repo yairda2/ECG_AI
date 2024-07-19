@@ -312,7 +312,7 @@
         const category = selectedCheckbox ? selectedCheckbox.value : (selectedInitialCategory === 'LOW RISK' ? 'LOW RISK' : 'None');
         const imageSrc = document.getElementById('imageToClassify').src;
         const decodedImageSrc = decodeURIComponent(imageSrc); // Decode the URL
-        const paths = decodedImageSrc.split('/');
+        const paths = decodedImageSrc.split('//');
         const photoName = paths.pop();
         const correctAnswerSet = paths[paths.length - 2].toUpperCase();
         const correctAnswerSubSet = paths[paths.length - 1].toUpperCase();
@@ -339,9 +339,8 @@
                 photoName,
                 classificationDes: category,
                 answerTime: duration,
-                alertActivated: alertShown ? 1 : 0,
                 submissionType,
-                helpButtonClicks: helpButtonClicks.join('; ')
+                helpButtonClicks: helpButtonClicks
             })
         })
             .then(response => response.text())

@@ -4,7 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="pixed gender , list of uni , remove change ans" />
+    <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="pixed gender , list of uni , remove change ans">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0023_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0058_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0104_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0178_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0241_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0255_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0342_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0414_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/bankPhotos/0417_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/info.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/info.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/training.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/training.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,18 +28,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "ElyasafSinvani"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;ElyasafSinvani&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/yairda2/ECG_AI.git",
-    "accountId": "77cb79ca-a25d-47dd-b06d-0301ad16931c"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/yairda2/ECG_AI.git&quot;,
+    &quot;accountId&quot;: &quot;77cb79ca-a25d-47dd-b06d-0301ad16931c&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
@@ -37,9 +52,11 @@
   "keyToString": {
     "JavaScript Debug.chooseModel.html.executor": "Run",
     "JavaScript Debug.classifiedImagesAdmin.html.executor": "Run",
+    "JavaScript Debug.index.html.executor": "Run",
     "JavaScript Debug.login.html.executor": "Run",
     "JavaScript Debug.preTraining.html.executor": "Run",
     "JavaScript Debug.train.html.executor": "Run",
+    "JavaScript Debug.training.html (1).executor": "Run",
     "JavaScript Debug.training.html.executor": "Debug",
     "Node.js.authMiddleware.js.executor": "Debug",
     "Node.js.common.js.executor": "Debug",
@@ -65,13 +82,13 @@
     </key>
   </component>
   <component name="RunManager" selected="Node.js.server.js">
-    <configuration name="login.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63343/EEG_AI_firsst_collect/student_app/public/views/login.html" useBuiltInWebServerPort="true">
+    <configuration name="index.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/EEG_AI/student_app/public/index.html" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="training.html (1)" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/EEG_AI/student_app/public/views/training.html" useBuiltInWebServerPort="true">
       <method v="2" />
     </configuration>
     <configuration name="training.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/EEG_AI_firsst_collect/student_app/public/views/training.html" useBuiltInWebServerPort="true">
-      <method v="2" />
-    </configuration>
-    <configuration name="common.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/public/js/common.js" working-dir="$PROJECT_DIR$/student_app/public/js">
       <method v="2" />
     </configuration>
     <configuration name="server -sqlite.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/server -sqlite.js" working-dir="$PROJECT_DIR$/student_app/server">
@@ -83,10 +100,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Node.js.server.js" />
+        <item itemvalue="JavaScript Debug.training.html (1)" />
+        <item itemvalue="JavaScript Debug.index.html" />
         <item itemvalue="JavaScript Debug.training.html" />
         <item itemvalue="Node.js.server -sqlite.js" />
-        <item itemvalue="JavaScript Debug.login.html" />
-        <item itemvalue="Node.js.common.js" />
       </list>
     </recent_temporary>
   </component>
@@ -125,7 +142,8 @@
       <workItem from="1720115253300" duration="20967000" />
       <workItem from="1720386491082" duration="9092000" />
       <workItem from="1721308579409" duration="6000" />
-      <workItem from="1721308614722" duration="6321000" />
+      <workItem from="1721308614722" duration="9016000" />
+      <workItem from="1721385738233" duration="5806000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
@@ -135,7 +153,15 @@
       <option name="project" value="LOCAL‎" />
       <updated>1721336185591</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL‎-00002" summary="pixed gender , list of uni , remove change ans">
+      <option name="closed" value="true" />
+      <created>1721336439509</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL‎-00002" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1721336439509</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -161,19 +187,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
-          <line>64</line>
+          <line>67</line>
           <option name="timeStamp" value="58" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
-          <line>22</line>
+          <line>25</line>
           <option name="timeStamp" value="113" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>430</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="116" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
