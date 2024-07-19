@@ -12,6 +12,7 @@ const app = express();
 const cors = require('cors');
 const verifyToken = require('./authMiddleware');
 const config = require('../config/config');
+const {token} = require("mysql/lib/protocol/Auth");
 const PORT = config.server.port || 3000;
 const SECRET_KEY = config.secret_key.key;
 
@@ -310,8 +311,9 @@ app.get('/user-data', verifyToken, (req, res) => {
 
 
 app.get('/info/data', (req, res) => {
-    const sql = "SELECT photoName, classificationSetSrc, classificationSetDes, answerSubmitTime, helpActivated FROM answers";
-    db.all(sql, [], (err, rows) => {
+    const userId = req.cookies.userId;
+    const sql = "SELECT photoName, classificationSetSrc, classificationSetDes, answerSubmitTime, helpActivated FROM answers WHERE userId = ?";
+    db.all(sql, userId, (err, rows) => {
         if (err) {
             res.status(400).json({"error": err.message});
             return;
