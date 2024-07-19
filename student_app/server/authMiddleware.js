@@ -6,15 +6,20 @@ const SECRET_KEY = config.secret_key.key;
 function verifyToken(req, res, next) {
     const token = req.cookies.token;
     if (!token) {
-        return res.status(401).json({message: 'NoToken', redirect: '/login'});
+        res.redirect('/login?message=InvalidToken');
     }
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
-            res.redirect('/login?message=InvalidToken');
+            res.json({ message: 'Unauthorized', redirect: '/login' });
+        }
+        // if the time over reLogin
+        if (Date.now() >= decoded.exp * 1000) {
+            res.json({ message: 'Unauthorized', redirect: '/login' });
         }
         req.user = decoded;
         // TODO Add here check if the id exists in the database
+
         next();
     });
 }

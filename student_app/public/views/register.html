@@ -4,87 +4,135 @@
     <meta charset="UTF-8">
     <title>Register</title>
     <link rel="stylesheet" type="text/css" href="/css/common.css"> <!-- Assuming you have some CSS for styling -->
+    <style>
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top - high z-index */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content/Box */
+        .modal-content {
+            position: relative;
+            background-color: #fefefe;
+            margin: 10% auto; /* 10% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%; /* 50% of window width */
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Shadow for 3D effect */
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 35px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .radio-group label {
+            margin-right: 10px;
+        }
+
+        .autocomplete {
+            position: relative;
+            display: inline-block;
+        }
+
+        .autocomplete input {
+            width: calc(100% - 30px);
+        }
+
+        .autocomplete .arrow-down {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff;
+            border-bottom: 1px solid #d4d4d4;
+        }
+
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9;
+        }
+
+        .autocomplete-active {
+            background-color: #1e90ff !important;
+            color: #ffffff;
+        }
+    </style>
 </head>
-<style>
-    /* The Modal (background) */
-    .modal {
-        display: none; /* Hidden by default */
-        position: fixed; /* Stay in place */
-        z-index: 1000; /* Sit on top - high z-index */
-        left: 0;
-        top: 0;
-        width: 100%; /* Full width */
-        height: 100%; /* Full height */
-        overflow: auto; /* Enable scroll if needed */
-        background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
-    }
-
-    /* Modal Content/Box */
-    .modal-content {
-        position: relative;
-        background-color: #fefefe;
-        margin: 10% auto; /* 10% from the top and centered */
-        padding: 20px;
-        border: 1px solid #888;
-        width: 50%; /* 50% of window width */
-        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Shadow for 3D effect */
-    }
-
-    /* The Close Button */
-    .close {
-        color: #aaa;
-        position: absolute;
-        top: 10px;
-        right: 25px;
-        font-size: 35px;
-        font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .form-container {
-        max-width: 600px;
-        margin: auto;
-        padding: 20px;
-        border: 1px solid #ccc;
-        border-radius: 10px;
-        background-color: #f9f9f9;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group button {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-
-    .radio-group {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .radio-group label {
-        margin-right: 10px;
-    }
-</style>
-
 <body>
 
 <!-- Main Page and Info Buttons -->
@@ -112,88 +160,30 @@
                 <label for="female">Female</label>
                 <input type="radio" id="female" name="gender" value="female" required>
 
-                <label for="unspecified">Unspecified</label>
-                <input type="radio" id="unspecified" name="gender" value="unspecified" required>
+                <label for="other">Other</label>
+                <input type="radio" id="other" name="gender" value="other" required>
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group autocomplete">
             <label for="academicInstitution">Academic Institution:</label>
-            <select id="academicInstitution" name="academicInstitution" required>
-                <option value="">Select an institution</option>
-                <option value="Ariel University in Samaria">Ariel University in Samaria</option>
-                <option value="Ben Gurion University in the Negev">Ben Gurion University in the Negev</option>
-                <option value="Bar-Ilan University">Bar-Ilan University</option>
-                <option value="Haifa University">Haifa University</option>
-                <option value="Reichman University">Reichman University</option>
-                <option value="Tel Aviv University">Tel Aviv University</option>
-                <option value="Al Qasmi - Academic College of Education">Al Qasmi - Academic College of Education</option>
-                <option value="Amunah-Afrata - Academic College of Arts and Education">Amunah-Afrata - Academic College of Arts and Education</option>
-                <option value="Afka - the Academic College of Engineering in Tel Aviv">Afka - the Academic College of Engineering in Tel Aviv</option>
-                <option value="Bezalel - Jerusalem Academy of Art and Design">Bezalel - Jerusalem Academy of Art and Design</option>
-                <option value="Hebrew University of Jerusalem">Hebrew University of Jerusalem</option>
-                <option value="The Open University">The Open University</option>
-                <option value="The Academy of Music and Dance in Jerusalem">The Academy of Music and Dance in Jerusalem</option>
-                <option value="The Technion - Israeli Institute of Technology">The Technion - Israeli Institute of Technology</option>
-                <option value="Ahva Academic College">Ahva Academic College</option>
-                <option value="Ashkelon Academic College">Ashkelon Academic College</option>
-                <option value="Wingate Academic College">Wingate Academic College</option>
-                <option value="Beit Berl College">Beit Berl College</option>
-                <option value="West Galilee Academic College">West Galilee Academic College</option>
-                <option value="Hadassah Academic College Jerusalem">Hadassah Academic College Jerusalem</option>
-                <option value="The Shanan Religious Academic College for Education">The Shanan Religious Academic College for Education</option>
-                <option value="The Arab Academic College of Education in Israel - Haifa">The Arab Academic College of Education in Israel - Haifa</option>
-                <option value="The Herzog Academic College was founded by Lifshitz and Herzog Colleges">The Herzog Academic College was founded by Lifshitz and Herzog Colleges</option>
-                <option value="The academic college is greedy">The academic college is greedy</option>
-                <option value="Kinneret Academic College">Kinneret Academic College</option>
-                <option value="Baruda Academic College of Engineering in Karmiel">Baruda Academic College of Engineering in Karmiel</option>
-                <option value="The Sami Shimon Academic College of Engineering">The Sami Shimon Academic College of Engineering</option>
-                <option value="Washington Hill Academic College of Education">Washington Hill Academic College of Education</option>
-                <option value="The Academic College for Education and Sports Ohlo in Katsrin">The Academic College for Education and Sports Ohlo in Katsrin</option>
-                <option value="A. D. Gordon Academic College of Education">A. D. Gordon Academic College of Education</option>
-                <option value="David Yelin Academic College of Education">David Yelin Academic College of Education</option>
-                <option value="The Academic College of Education named after Kay">The Academic College of Education named after Kay</option>
-                <option value="Netanya Academic College">Netanya Academic College</option>
-                <option value="Sapir Academic College">Sapir Academic College</option>
-                <option value="Emek Jezreel Max Stern Academic College">Emek Jezreel Max Stern Academic College</option>
-                <option value="Safed Academic College">Safed Academic College</option>
-                <option value="Ramat Gan Academic College">Ramat Gan Academic College</option>
-                <option value="Tel Hai Academic College">Tel Hai Academic College</option>
-                <option value="Tel Aviv Jaffa Academic College">Tel Aviv Jaffa Academic College</option>
-                <option value="The College of Administration academic track">The College of Administration academic track</option>
-                <option value="Lev Academic Center">Lev Academic Center</option>
-                <option value="Levinsky-Wingate Academic Center">Levinsky-Wingate Academic Center</option>
-                <option value="The Academic Center for Law and Business">The Academic Center for Law and Business</option>
-                <option value="The Academic Center for Design and Education Witzo - Haifa by Neri Bloomfield">The Academic Center for Design and Education Witzo - Haifa by Neri Bloomfield</option>
-                <option value="Peres Academic Center">Peres Academic Center</option>
-                <option value="Ruppin Academic Center">Ruppin Academic Center</option>
-                <option value="The academic center is complete">The academic center is complete</option>
-                <option value="Shaari Science and Law Academic Center">Shaari Science and Law Academic Center</option>
-                <option value="Ono Academic College">Ono Academic College</option>
-                <option value="Weitzman Institution of Science">Weitzman Institution of Science</
-
-                option>
-                <option value="Holon Institute of Technology - HIT">Holon Institute of Technology - HIT</option>
-                <option value="Schechter Institute for Jewish Studies">Schechter Institute for Jewish Studies</option>
-                <option value="Oranim Academic College of Education">Oranim Academic College of Education</option>
-                <option value="Academic College of Education - Orot Israel from the foundation of the Orot Israel College and the Yaakov Heritage College">Academic College of Education - Orot Israel from the foundation of the Orot Israel College and the Yaakov Heritage College</option>
-                <option value="Jerusalem College">Jerusalem College</option>
-                <option value="Lewinsky College of Education">Lewinsky College of Education</option>
-                <option value="Sakhnin College for the Training of Teaching Staff">Sakhnin College for the Training of Teaching Staff</option>
-                <option value="The Kibbutzim Seminar - College of Education for Technology and the Arts">The Kibbutzim Seminar - College of Education for Technology and the Arts</option>
-                <option value="Azrieli - Jerusalem Academic College of Engineering">Azrieli - Jerusalem Academic College of Engineering</option>
-                <option value="Shankar engineering. Design. art">Shankar engineering. Design. art</option>
-                <option value="Talpiot - Academic College of Education">Talpiot - Academic College of Education</option>
-            </select>
+            <input type="text" id="academicInstitution" name="academicInstitution" required>
+            <div class="arrow-down" onclick="showDropdown()">&#x25BC;</div>
+            <div id="autocomplete-list" class="autocomplete-items"></div>
         </div>
-
+        <div class="form-group" id="otherInstitutionGroup" style="display: none;">
+            <label for="otherInstitution">Other Institution:</label>
+            <input type="text" id="otherInstitution" name="otherInstitution">
+        </div>
         <div class="form-group">
-            <label for="avgDegree">Average Degree:</label>
-            <input type="number" step="0.01" id="avgDegree" name="avgDegree" required>
+            <label for="avgDegree">Average grade of the degree:</label>
+            <input type="number" step="0.01" id="avgDegree" name="avgDegree" min="0" max="100" required>
+            <div id="avgDegreeError" style="color: red; display: none;">Average grade must be between 0 and 100.</div>
         </div>
         <div class="form-group">
             <label for="age">Age:</label>
             <input type="number" id="age" name="age" min="1" required>
+            <div id="ageError" style="color: red; display: none;">Age cannot be negative.</div>
         </div>
 
         <div class="form-group">
@@ -243,6 +233,87 @@
         }
     };
 
+    var institutions = [
+        "Ariel University in Samaria", "Ben Gurion University in the Negev", "Bar-Ilan University",
+        "Haifa University", "Reichman University", "Tel Aviv University", "Al Qasmi - Academic College of Education",
+        "Amunah-Afrata - Academic College of Arts and Education", "Afka - the Academic College of Engineering in Tel Aviv",
+        "Bezalel - Jerusalem Academy of Art and Design", "Hebrew University of Jerusalem", "The Open University",
+        "The Academy of Music and Dance in Jerusalem", "The Technion - Israeli Institute of Technology",
+        "Ahva Academic College", "Ashkelon Academic College", "Wingate Academic College", "Beit Berl College",
+        "West Galilee Academic College", "Hadassah Academic College Jerusalem", "The Shanan Religious Academic College for Education",
+        "The Arab Academic College of Education in Israel - Haifa", "The Herzog Academic College was founded by Lifshitz and Herzog Colleges",
+        "The academic college is greedy", "Kinneret Academic College", "Baruda Academic College of Engineering in Karmiel",
+        "The Sami Shimon Academic College of Engineering", "Washington Hill Academic College of Education",
+        "The Academic College for Education and Sports Ohlo in Katsrin", "A. D. Gordon Academic College of Education",
+        "David Yelin Academic College of Education", "The Academic College of Education named after Kay",
+        "Netanya Academic College", "Sapir Academic College", "Emek Jezreel Max Stern Academic College",
+        "Safed Academic College", "Ramat Gan Academic College", "Tel Hai Academic College", "Tel Aviv Jaffa Academic College",
+        "The College of Administration academic track", "Lev Academic Center", "Levinsky-Wingate Academic Center",
+        "The Academic Center for Law and Business", "The Academic Center for Design and Education Witzo - Haifa by Neri Bloomfield",
+        "Peres Academic Center", "Ruppin Academic Center", "The academic center is complete",
+        "Shaari Science and Law Academic Center", "Ono Academic College", "Weitzman Institution of Science",
+        "Holon Institute of Technology - HIT", "Schechter Institute for Jewish Studies", "Oranim Academic College of Education",
+        "Academic College of Education - Orot Israel from the foundation of the Orot Israel College and the Yaakov Heritage College",
+        "Jerusalem College", "Lewinsky College of Education", "Sakhnin College for the Training of Teaching Staff",
+        "The Kibbutzim Seminar - College of Education for Technology and the Arts", "Azrieli - Jerusalem Academic College of Engineering",
+        "Shankar engineering. Design. art", "Talpiot - Academic College of Education", "Other"
+    ];
+
+    document.getElementById('academicInstitution').addEventListener('input', function() {
+        var input = this.value.toLowerCase();
+        showDropdown(input);
+    });
+
+    function showDropdown(filter = '') {
+        var list = document.getElementById('autocomplete-list');
+        list.innerHTML = '';
+
+        var filtered = institutions.filter(function(item) {
+            return item.toLowerCase().includes(filter);
+        });
+
+        if (filtered.length === 0) {
+            var div = document.createElement('div');
+            div.innerHTML = "No matches found.";
+            list.appendChild(div);
+        } else {
+            filtered.forEach(function(item) {
+                var div = document.createElement('div');
+                div.innerHTML = item;
+                div.addEventListener('click', function() {
+                    document.getElementById('academicInstitution').value = item;
+                    list.innerHTML = '';
+                    if (item === 'Other') {
+                        document.getElementById('otherInstitutionGroup').style.display = 'block';
+                    } else {
+                        document.getElementById('otherInstitutionGroup').style.display = 'none';
+                    }
+                });
+                list.appendChild(div);
+            });
+        }
+    }
+
+    document.getElementById('age').addEventListener('input', function() {
+        var age = this.value;
+        var ageError = document.getElementById('ageError');
+        if (age < 0) {
+            ageError.style.display = 'block';
+        } else {
+            ageError.style.display = 'none';
+        }
+    });
+
+    document.getElementById('avgDegree').addEventListener('input', function() {
+        var avgDegree = this.value;
+        var avgDegreeError = document.getElementById('avgDegreeError');
+        if (avgDegree < 0 || avgDegree > 100) {
+            avgDegreeError.style.display = 'block';
+        } else {
+            avgDegreeError.style.display = 'none';
+        }
+    });
+
     document.getElementById('registerForm').addEventListener('submit', function (event) {
         event.preventDefault();
         const email = document.getElementById('email').value;
@@ -250,8 +321,18 @@
         const gender = document.querySelector('input[name="gender"]:checked').value;
         const avgDegree = parseFloat(document.getElementById('avgDegree').value);
         const age = parseInt(document.getElementById('age').value);
-        const academicInstitution = document.getElementById('academicInstitution').value;
+        const academicInstitution = document.getElementById('academicInstitution').value === 'Other' ? document.getElementById('otherInstitution').value : document.getElementById('academicInstitution').value;
         const termsAgreement = document.getElementById('termsAgreeCheckbox').checked;
+
+        if (age < 0) {
+            document.getElementById('ageError').style.display = 'block';
+            return;
+        }
+
+        if (avgDegree < 0 || avgDegree > 100) {
+            document.getElementById('avgDegreeError').style.display = 'block';
+            return;
+        }
 
         fetch('/register', {
             method: 'POST',
@@ -277,4 +358,3 @@
 </script>
 </body>
 </html>
-```

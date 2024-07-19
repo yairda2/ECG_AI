@@ -209,7 +209,7 @@
     });
 
     function fetchRandomImage() {
-        fetch('/random-image-classification', { method: 'GET' })
+        fetch('/random-image', { method: 'GET' })
             .then(response => {
                 if (response.status !== 200) {
                     throw new Error('Failed to fetch image');
