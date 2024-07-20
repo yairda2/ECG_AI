@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <title>Training</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="/js/common.js" defer></script> <!-- Include common.js -->
+    <script src="/js/common.js" defer></script>
     <style>
-        /* Base styles */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -14,124 +13,104 @@
             text-align: center;
             background-color: #f4f4f4;
         }
-
-        /* Container to hold everything without scrolling */
         .container {
-            max-width: 800px; /* Limit the width to keep everything tight */
+            max-width: 800px;
             margin: auto;
             padding: 20px;
-            overflow: hidden; /* Prevent scrolling */
+            overflow: hidden;
             position: relative;
         }
-
         img {
-            width: 100%; /* Responsive width */
-            height: auto; /* Maintain aspect ratio */
-            max-height: 300px; /* Limit the height of the image */
+            width: 100%;
+            height: auto;
+            max-height: 300px;
             display: block;
             margin-bottom: 20px;
         }
-
         h1, h2 {
             font-size: 20px;
             color: #333;
         }
-
         .category-section, .initial-section {
             display: flex;
             justify-content: center;
-            flex-wrap: wrap; /* Allows items to wrap onto the next line */
+            flex-wrap: wrap;
         }
-
         .category-label, .initial-label {
-            flex: 1 1 180px; /* Allows the label to grow and shrink with a basis of 180px */
+            flex: 1 1 180px;
             padding: 10px;
             background-color: #e7e7e7;
             border-radius: 5px;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
             margin: 5px;
-            text-align: center; /* Center text in the label */
-            user-select: none; /* Prevent user from selecting text */
-            border: 2px solid transparent; /* Add transparent border to handle border change */
-            transition: background-color 0.3s ease, border-color 0.3s ease; /* Transition for border color */
+            text-align: center;
+            user-select: none;
+            border: 2px solid transparent;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
-
-        input[type="checkbox"], input[type="radio"] {
-            display: none; /* Hide the radio button itself */
+        input[type="radio"] {
+            display: none;
         }
-
-        .category-label input[type="checkbox"]:checked + span,
         .category-label input[type="radio"]:checked + span,
         .initial-label input[type="radio"]:checked + span {
-            background-color: #c8e6c9; /* Light green background for active state */
-            border: 2px solid #4caf50; /* Green border for active state */
+            background-color: #c8e6c9;
+            border: 2px solid #4caf50;
         }
-
         .category-label span, .initial-label span {
             display: block;
             padding: 10px;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-
         .category-label:hover span, .initial-label:hover span {
             background-color: #568c3a;
         }
-
         .highlight {
-            background-color: #ffcccc; /* Light red for incorrect options */
-            border: 2px solid #ff0000; /* Red border for incorrect options */
+            background-color: #ffcccc;
+            border: 2px solid #ff0000;
         }
-
         button {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
-            background-color: #4CAF50; /* Green background for submit button */
+            background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 5px;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
             margin-top: 20px;
         }
-
         button:hover {
-            background-color: #45a049; /* Darker green on hover */
+            background-color: #45a049;
         }
-
         #backButton {
             position: absolute;
             top: 20px;
             left: 20px;
             padding: 10px 20px;
-            background-color: #b10000; /* Red color */
+            background-color: #b10000;
         }
-
         #backButton:hover {
-            background-color: #a00000; /* Slightly darker red on hover */
+            background-color: #a00000;
         }
-
         #helpButton {
             position: absolute;
             top: 60px;
             left: 20px;
             padding: 10px 20px;
-            background-color: #ff9800; /* Orange color */
+            background-color: #ff9800;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-
         #helpButton:hover {
-            background-color: #e68a00; /* Slightly darker orange on hover */
+            background-color: #e68a00;
         }
-
         #helpButton:disabled {
-            background-color: #ffc107; /* Disabled button color */
+            background-color: #ffc107;
             cursor: not-allowed;
         }
-
         #timer {
             position: absolute;
             right: 20px;
@@ -144,8 +123,6 @@
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
             display: block;
         }
-
-        /* New alert styles */
         .alert {
             display: none;
             padding: 20px;
@@ -161,14 +138,12 @@
             border-radius: 10px;
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
         }
-
         .alert.success {
-            background-color: #4CAF50; /* Green */
+            background-color: #4CAF50;
             color: white;
         }
-
         .alert.error {
-            background-color: #f44336; /* Red */
+            background-color: #f44336;
             color: white;
         }
     </style>
@@ -176,30 +151,29 @@
 <body>
 <div class="container">
     <div id="timer">45</div>
-    <div id="alertBox" class="alert"></div> <!-- Alert box -->
+    <div id="alertBox" class="alert"></div>
     <h1>Choose the right case</h1>
     <img id="imageToClassify" src="" alt="Random Image">
     <div id="initialOptions">
         <h2>Classify as:</h2>
         <div class="initial-section">
-            <label class="initial-label">
+            <label class="initial-label" data-category="STEMI">
                 <input type="radio" name="initialCategory" value="STEMI">
                 <span>STEMI</span>
             </label>
-            <label class="initial-label">
+            <label class="initial-label" data-category="HIGH RISK">
                 <input type="radio" name="initialCategory" value="HIGH RISK">
                 <span>HIGH RISK</span>
             </label>
-            <label class="initial-label">
+            <label class="initial-label" data-category="LOW RISK">
                 <input type="radio" name="initialCategory" value="LOW RISK">
                 <span>LOW RISK</span>
             </label>
         </div>
     </div>
-    <div id="classificationForm" style="display:none;">
+    <div id="classificationForm">
         <h2 id="categoryTitle"></h2>
         <div class="category-section" id="categoryOptions"></div>
-        <button type="button" id="revertButton" onclick="revertSelection()">Revert</button>
     </div>
     <div id="message"></div>
     <button id="backButton" onclick="location.href='/chooseModel'">Back</button>
@@ -209,41 +183,41 @@
         <p id="customAlertMsg"></p>
     </div>
 </div>
-
 <script>
     const categories = {
         'STEMI': [
-            {value: 'SEPTAL', label: 'Septal (V1-2)'},
-            {value: 'ANTERIOR', label: 'Anterior (V3-4)'},
-            {value: 'LATERAL', label: 'Lateral (I + aVL, V5-6)'},
-            {value: 'INFERIOR', label: 'Inferior (II, III, aVF)'}
+            {value: 'Septal', label: 'Septal (V1-2)'},
+            {value: 'Anterior', label: 'Anterior (V3-4)'},
+            {value: 'Lateral', label: 'Lateral (I + aVL, V5-6)'},
+            {value: 'Inferior', label: 'Inferior (II, III, aVF)'}
         ],
         'HIGH RISK': [
-            {value: 'HYPERACUTE', label: 'Hyperacute T waves'},
-            {value: 'DEWINTERS', label: 'De winters T waves'},
-            {value: 'LOSSOFBALANCE', label: 'Loss of precordial T wave balance'},
-            {value: 'TINVERSION', label: 'T wave inversion'},
-            {value: 'WELLENS', label: 'Wellens'},
-            {value: 'AVRSTE', label: 'AVR STE'}
+            {value: 'Hyperacute', label: 'Hyperacute T waves'},
+            {value: 'DeWinters', label: 'De winters T waves'},
+            {value: 'LossOfBalance', label: 'Loss of precordial T wave balance'},
+            {value: 'TInversion', label: 'T wave inversion'},
+            {value: 'Wellens', label: 'Wellens'},
+            {value: 'Avrste', label: 'AVR STE'}
         ]
     };
 
     let startTime;
     let timer;
     let alertShown = false;
-    let helpButtonClicks = []; // Track help button clicks
-    let helpInProgress = false; // Prevent multiple simultaneous help requests
+    let helpButtonClicks = [];
+    let helpInProgress = false;
     let selectedInitialCategory = '';
+    let correctAnswer = '';
 
     document.addEventListener('DOMContentLoaded', function() {
-        fetchRandomImage(); // Load an image when the page loads
+        fetchRandomImage();
 
-        // Add event listener for initial category selection
         document.querySelectorAll('input[name="initialCategory"]').forEach(input => {
             input.addEventListener('change', function() {
                 selectedInitialCategory = this.value;
+                highlightInitialSelection();
                 if (selectedInitialCategory === 'LOW RISK') {
-                    showLowRiskSelection();
+                    submitClassification('manual');
                 } else {
                     showSubCategories(selectedInitialCategory);
                 }
@@ -261,19 +235,25 @@
             })
             .then(data => {
                 document.getElementById('imageToClassify').src = data.imagePath;
-                clearSelection(); // Clear any previous selection
+                correctAnswer = data.correctAnswer; // Capture the correct answer
+                clearSelection();
                 startTime = Date.now();
                 startTimer();
             })
             .catch(error => console.error('Error fetching image:', error));
     }
 
-    function showLowRiskSelection() {
-        document.getElementById('initialOptions').style.display = 'none';
-        document.getElementById('classificationForm').style.display = 'block';
-        document.getElementById('categoryTitle').innerText = 'LOW RISK';
-        document.getElementById('categoryOptions').innerHTML = ''; // No further options for LOW RISK
-        submitClassification('manual'); // Automatically submit for LOW RISK
+    function highlightInitialSelection() {
+        document.querySelectorAll('.initial-label').forEach(label => {
+            const input = label.querySelector('input');
+            if (input.value === selectedInitialCategory) {
+                label.querySelector('span').style.backgroundColor = '#c8e6c9';
+                label.querySelector('span').style.borderColor = '#4caf50';
+            } else {
+                label.querySelector('span').style.backgroundColor = '';
+                label.querySelector('span').style.borderColor = 'transparent';
+            }
+        });
     }
 
     function showSubCategories(category) {
@@ -286,22 +266,14 @@
             categories[category].forEach(subCategory => {
                 const label = document.createElement('label');
                 label.className = 'category-label';
-                label.innerHTML = `
-                <input type="radio" name="category" value="${subCategory.value}">
-                <span>${subCategory.label}</span>
-            `;
+                label.innerHTML = `<input type="radio" name="category" value="${subCategory.value}">
+                                   <span>${subCategory.label}</span>`;
                 categoryOptions.appendChild(label);
+                label.querySelector('input').addEventListener('change', () => submitClassification('manual'));
             });
         }
 
-        document.getElementById('initialOptions').style.display = 'none';
         document.getElementById('classificationForm').style.display = 'block';
-    }
-
-    function revertSelection() {
-        document.getElementById('initialOptions').style.display = 'block';
-        document.getElementById('classificationForm').style.display = 'none';
-        clearSelection(); // Clear any previous selection
     }
 
     function submitClassification(submissionType) {
@@ -311,47 +283,35 @@
         const selectedCheckbox = document.querySelector('input[name="category"]:checked');
         const category = selectedCheckbox ? selectedCheckbox.value : (selectedInitialCategory === 'LOW RISK' ? 'LOW RISK' : 'None');
         const imageSrc = document.getElementById('imageToClassify').src;
-        const decodedImageSrc = decodeURIComponent(imageSrc); // Decode the URL
-        const paths = decodedImageSrc.split('//');
+        const decodedImageSrc = decodeURIComponent(imageSrc);
+        const paths = decodedImageSrc.split('/');
         const photoName = paths.pop();
-        const correctAnswerSet = paths[paths.length - 2].toUpperCase();
-        const correctAnswerSubSet = paths[paths.length - 1].toUpperCase();
 
-        let correctAnswer;
-        if (correctAnswerSet === "LOW RISK") {
-            correctAnswer = "LOW RISK";
-        } else if (correctAnswerSet === "STEMI") {
-            correctAnswer = correctAnswerSubSet;
-        } else if (correctAnswerSet === "HIGH RISK") {
-            correctAnswer = correctAnswerSubSet;
+        let classificationDes = null;
+        if (selectedInitialCategory !== 'LOW RISK') {
+            classificationDes = selectedCheckbox ? selectedCheckbox.value : null;
         }
 
-        if (!selectedCheckbox && selectedInitialCategory !== 'LOW RISK') {
-            alert("Time expired! You did not select any classification.");
-            return;
-        }
-
-        // Send classification data to the server
         fetch('/training', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 photoName,
-                classificationDes: category,
+                classificationDes,
                 answerTime: duration,
                 submissionType,
                 helpButtonClicks: helpButtonClicks
             })
         })
-            .then(response => response.text())
-            .then(message => {
+            .then(response => response.json())
+            .then(data => {
                 showAlert(category === correctAnswer, correctAnswer);
             })
             .catch(error => console.error('Error submitting classification:', error));
     }
 
     function provideHelp() {
-        if (helpInProgress) return; // Prevent multiple simultaneous help requests
+        if (helpInProgress) return;
 
         helpInProgress = true;
         const currentTime = (Date.now() - startTime) / 1000;
@@ -361,7 +321,7 @@
             .filter(input => !input.checked && !input.closest('label').querySelector('span').classList.contains('highlight'));
 
         if (incorrectOptions.length > 1) {
-            const numOptionsToHighlight = 1; // Limit the number of highlighted options
+            const numOptionsToHighlight = 1;
             const randomIndexes = [];
             while (randomIndexes.length < numOptionsToHighlight) {
                 const randomIndex = Math.floor(Math.random() * incorrectOptions.length);
@@ -375,10 +335,10 @@
             });
 
             setTimeout(() => {
-                helpInProgress = false; // Allow the next help click
-            }, 500); // Delay to avoid rapid multiple help clicks
+                helpInProgress = false;
+            }, 500);
         } else {
-            document.getElementById('helpButton').disabled = true; // Disable button if only two options left
+            document.getElementById('helpButton').disabled = true;
         }
     }
 
@@ -388,7 +348,7 @@
         timerDisplay.textContent = timeLeft;
         timerDisplay.style.display = 'block';
         timerDisplay.style.color = '#555';
-        alertShown = false; // Reset alert flag
+        alertShown = false;
 
         timer = setInterval(() => {
             if (timeLeft > 0) {
@@ -414,7 +374,7 @@
 
     function showAlert(isCorrect, correctAnswer) {
         const alertBox = document.getElementById('alertBox');
-        alertBox.classList.remove('success', 'error'); // Remove existing classes
+        alertBox.classList.remove('success', 'error');
         if (isCorrect) {
             alertBox.textContent = `Correct! The answer is: ${correctAnswer}.`;
             alertBox.classList.add('success');
@@ -426,8 +386,8 @@
 
         setTimeout(() => {
             alertBox.style.display = 'none';
-            fetchRandomImage(); // Fetch next image and data after hiding alert
-        }, 3000); // Hide after 3 seconds and then fetch next image and data
+            fetchRandomImage();
+        }, 3000);
     }
 
     function clearSelection() {
@@ -435,19 +395,25 @@
         const radios = document.querySelectorAll('input[name="category"], input[name="initialCategory"]');
         radios.forEach(radio => radio.checked = false);
 
-        // Clear message
-        document.getElementById('message').innerText = '';
-
         // Clear highlights
         const highlights = document.querySelectorAll('.highlight');
         highlights.forEach(highlight => highlight.classList.remove('highlight'));
 
-        // Enable help button
+        // Reset help button and state
         document.getElementById('helpButton').disabled = false;
-
-        // Reset help related states
         helpButtonClicks = [];
         helpInProgress = false;
+
+        // Clear sub-categories and initial selection highlights
+        document.getElementById('categoryOptions').innerHTML = '';
+        document.getElementById('categoryTitle').innerText = '';
+        document.querySelectorAll('.initial-label span').forEach(span => {
+            span.style.backgroundColor = '';
+            span.style.borderColor = 'transparent';
+        });
+
+        // Hide classification form
+        document.getElementById('classificationForm').style.display = 'none';
     }
 </script>
 </body>
