@@ -180,8 +180,11 @@ async function getClassificationValuesDes(classificationDes) {
         return { classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes };
     } else if (['Hyperacute', 'DeWinters', 'LossOfBalance', 'Wellens', 'TInversion', 'Avrste'].includes(classificationDes)) {
         return { classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes };
+    } else {
+        return {}; // Return an empty object if no conditions are met
     }
 }
+
 
 function insertClassification(fileName, classificationSet, classificationSubSet) {
     const sql = `
@@ -288,7 +291,8 @@ app.get('/random-image', verifyToken, (req, res) => {
             if (!row) {
                 return res.status(404).send('Image classification not found');
             }
-            res.json({ imagePath: `../img/graded/${row.classificationSet}/${row.classificationSubSet || ''}/${randomImagePath}` });
+            let correctAns = row.classificationSubSet === '' ? row.classificationSet:row.classificationSubSet;
+            res.json({ imagePath: `../img/graded/${row.classificationSet}/${row.classificationSubSet || ''}/${randomImagePath}` ,correctAnswer:correctAns});
         });
     });
 });
@@ -443,7 +447,7 @@ app.post('/training', verifyToken, async (req, res) => {
     async function setParams(userId, date, photoName, answerTime, alertActivated, submissionType, helpButtonClicks) {
         try {
             const classificationValuesSrc = await getClassificationValuesSrc(photoName);
-            const classificationValuesDes = await getClassificationValuesDes(req.body.classificationDes);
+            const classificationValuesDes = req.body.classificationDes ? await getClassificationValuesDes(req.body.classificationDes) : {};
 
             return [
                 userId,
@@ -487,8 +491,7 @@ app.post('/training', verifyToken, async (req, res) => {
                         FROM answers
                         WHERE userId = ?
                     )
-                    WHERE id = ?
-                `;
+                    WHERE id = ?`;
                 db.run(updateAvgAnswersSql, [userId, userId], (err) => {
                     if (err) {
                         console.error('Error updating avgAnswers:', err.message);
@@ -499,8 +502,7 @@ app.post('/training', verifyToken, async (req, res) => {
             const updateTotalTrainTime = `
                 UPDATE users
                 SET totalTrainTime = totalTrainTime + ?
-                WHERE id = ?
-            `;
+                WHERE id = ?`;
             db.run(updateTotalTrainTime, [answerTime, userId], (err) => {
                 if (err) {
                     console.error('Error updating totalTrainTime:', err.message);
