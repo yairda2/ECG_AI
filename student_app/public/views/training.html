@@ -288,6 +288,9 @@
         if (selectedInitialCategory !== 'LOW RISK') {
             classificationDes = selectedCheckbox ? selectedCheckbox.value : null;
         }
+        else {
+            classificationDes = 'LOW RISK';
+        }
 
         fetch('/training', {
             method: 'POST',
