@@ -99,6 +99,14 @@
         .home-button:hover {
             background-color: #45a049; /* Darker green on hover */
         }
+
+        .photo-cell.correct {
+            border: 2px solid #b2d8b2; /* Lighter green border for correct answers */
+        }
+
+        .photo-cell.incorrect {
+            border: 2px solid #f8b2b2; /* Lighter red border for incorrect answers */
+        }
     </style>
 </head>
 <body>
@@ -110,8 +118,8 @@
 
 <!-- The Modal -->
 <div id="myModal" class="modal">
-    <span class="close">&times;</span>
     <div class="modal-content">
+        <span class="close">&times;</span>
         <img id="modalImage" src="" alt="Photo">
         <div class="caption" id="modalCaption"></div>
     </div>
@@ -127,20 +135,34 @@
                     return;
                 }
 
-                let html = '<table><tr><th>Photo</th><th>Classification Set Src</th><th>Classification Set Des</th><th>Answer Submit Time</th><th>Help Button Clicks</th></tr>';
+                let html = '<table><tr><th>Photo</th><th>Correct Classification</th><th>Your Classification</th><th>Answer Submit Time</th><th>Help Button Clicks</th></tr>';
                 data.forEach(row => {
-                    const isCorrect = row.classificationSetSrc === row.classificationSetDes;
-                    const icon = isCorrect ? '🟢' : '🔴';
+                    let isCorrect;
+                    let photoPath;
+                    let correctAnswer;
+                    let userAnswer;
+                    let cellClass;
+                    if (row.classificationSetSrc === 'LOW RISK') {
+                        isCorrect = row.classificationSetSrc === row.classificationSetDes;
+                        photoPath = `/img/graded/${(row.classificationSetSrc)}/${(row.photoName)}`;
+                        correctAnswer = row.classificationSetSrc;
+                        userAnswer = row.classificationSetDes + (row.classificationSubSetDes ? ': ' + row.classificationSubSetDes : '');
+                    } else {
+                        isCorrect = row.classificationSetSrc === row.classificationSetDes && row.classificationSubSetSrc === row.classificationSubSetDes;
+                        photoPath = `/img/graded/${(row.classificationSetSrc)}/${(row.classificationSubSetSrc)}/${(row.photoName)}`;
+                        correctAnswer = row.classificationSetSrc + ': ' + row.classificationSubSetSrc;
+                        userAnswer =  row.classificationSetDes + (row.classificationSubSetDes ? ': ' + row.classificationSubSetDes : '');
+                    }
+                    cellClass = isCorrect ? 'photo-cell correct' : 'photo-cell incorrect';
                     const helpButtonClicks = row.helpButtonClicks || 'X';
-                    const photoPath = `/img/graded/${(row.classificationSetSrc)}/${(row.photoName)}`;
 
                     html += `<tr>
-                            <td><img src="${photoPath}" alt="${row.photoName}" style="width:50px;cursor:pointer" onclick="showModal('${photoPath}', '${row.classificationSetSrc}', '${row.classificationSetDes}', '${row.answerSubmitTime}')">${icon}</td>
-                            <td>${row.classificationSetSrc}</td>
-                            <td>${row.classificationSetDes}</td>
-                            <td>${row.answerSubmitTime}</td>
-                            <td>${helpButtonClicks}</td>
-                        </tr>`;
+                                <td class="${cellClass}"><img src="${photoPath}" alt="${row.photoName}" style="width:50px;cursor:pointer" onclick="showModal('${photoPath}', '${row.classificationSetSrc}', '${row.classificationSetDes}', '${row.answerSubmitTime}')"></td>
+                                <td>${correctAnswer}</td>
+                                <td>${userAnswer}</td>
+                                <td>${row.answerSubmitTime}</td>
+                                <td>${helpButtonClicks}</td>
+                            </tr>`;
                 });
                 html += '</table>';
 
@@ -159,8 +181,8 @@
         modal.style.display = "block";
         modalImg.src = photoPath;
         captionText.innerHTML = `
-            Classification Set Src: ${classificationSetSrc}<br>
-            Classification Set Des: ${classificationSetDes}<br>
+            Correct Classification: ${classificationSetSrc}<br>
+            Your Classification: ${classificationSetDes}<br>
             Answer Submit Time: ${answerSubmitTime}
         `;
     }
@@ -168,6 +190,13 @@
     document.querySelector('.close').onclick = function() {
         const modal = document.getElementById('myModal');
         modal.style.display = "none";
+    };
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('myModal');
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
     };
 </script>
 </body>

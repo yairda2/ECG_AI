@@ -230,9 +230,6 @@ app.get('/chooseModelAdmin', verifyToken, (req, res) => {
 app.get('/training', checkToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
 });
-app.get('/pre-test', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTest.html'));
-});
 app.get('/test', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
 });
@@ -310,7 +307,7 @@ app.get('/user-data', verifyToken, (req, res) => {
 
 app.get('/info/data', (req, res) => {
     const userId = req.cookies.userId;
-    const sql = "SELECT photoName, classificationSetSrc, classificationSetDes, answerSubmitTime, helpActivated FROM answers WHERE userId = ?";
+    const sql = "SELECT photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes,classificationSubSetDes, answerSubmitTime, helpActivated FROM answers WHERE userId = ?";
     db.all(sql, userId, (err, rows) => {
         if (err) {
             res.status(400).json({"error": err.message});
@@ -322,8 +319,8 @@ app.get('/info/data', (req, res) => {
 
 // Serve images
 app.get('/img/graded/:set/:photo', (req, res) => {
-    const set = req.params.set.toLowerCase();
-    const photo = req.params.photo.toLowerCase();
+    const set = req.params.set.toUpperCase()
+    const photo = req.params.photo;
     const imagePath = path.join(__dirname,'..', 'public', 'img', 'graded', set, photo);
     res.sendFile(imagePath);
 });
