@@ -410,8 +410,8 @@ app.post('/chooseModel', verifyToken, (req, res) => {
         case 'Single Training':
             res.status(200).json({ redirect: '/training', message: 'Redirecting to training page' });
             break;
-        case 'Pre-Test':
-            res.status(200).json({ redirect: '/pre-test', message: 'Redirecting to test page' });
+        case 'Test':
+            res.status(200).json({ redirect: '/test', message: 'Redirecting to test page' });
             break;
         default:
             res.status(404).json({ message: 'Action not found' });
