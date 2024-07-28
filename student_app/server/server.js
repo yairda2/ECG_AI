@@ -12,7 +12,6 @@ const app = express();
 const cors = require('cors');
 const verifyToken = require('./authMiddleware');
 const config = require('../config/config');
-const {token} = require("mysql/lib/protocol/Auth");
 const PORT = config.server.port || 3000;
 const SECRET_KEY = config.secret_key.key;
 
