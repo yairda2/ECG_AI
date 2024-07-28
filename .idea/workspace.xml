@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Downloading a timer, and a message about the elapsed time">
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/preTest.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/preTraining.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/training.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/training.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -138,7 +136,7 @@
       <workItem from="1721510103710" duration="3754000" />
       <workItem from="1721826084937" duration="2462000" />
       <workItem from="1722120379841" duration="38000" />
-      <workItem from="1722120432930" duration="2658000" />
+      <workItem from="1722120432930" duration="5031000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />

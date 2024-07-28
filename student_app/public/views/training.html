@@ -95,8 +95,8 @@
         }
         #helpButton {
             position: absolute;
-            top: 60px;
-            left: 20px;
+            top: 20px;
+            left: 140px;
             padding: 10px 20px;
             background-color: #ff9800;
             color: white;
@@ -201,7 +201,7 @@
     };
 
     let startTime;
-    let timer;
+    let helpCount = 0; // Counter for help requests
     let helpButtonClicks = [];
     let helpInProgress = false;
     let selectedInitialCategory = '';
@@ -214,6 +214,7 @@
             input.addEventListener('change', function() {
                 selectedInitialCategory = this.value;
                 highlightInitialSelection();
+                enableHelpButton();
                 if (selectedInitialCategory === 'LOW RISK') {
                     submitClassification('manual');
                 } else {
@@ -236,6 +237,7 @@
                 correctAnswer = data.correctAnswer; // Capture the correct answer
                 clearSelection();
                 startTime = Date.now();
+                helpCount = 0; // Reset help counter
             })
             .catch(error => console.error('Error fetching image:', error));
     }
@@ -266,7 +268,10 @@
                 label.innerHTML = `<input type="radio" name="category" value="${subCategory.value}">
                                    <span>${subCategory.label}</span>`;
                 categoryOptions.appendChild(label);
-                label.querySelector('input').addEventListener('change', () => submitClassification('manual'));
+                label.querySelector('input').addEventListener('change', () => {
+                    enableHelpButton();
+                    submitClassification('manual');
+                });
             });
         }
 
@@ -274,9 +279,8 @@
     }
 
     function submitClassification(submissionType) {
-        clearInterval(timer);
         const endTime = Date.now();
-        const duration = submissionType === 'automatic' ? 45 : (endTime - startTime) / 1000;
+        const duration = (endTime - startTime) / 1000;
         const selectedCheckbox = document.querySelector('input[name="category"]:checked');
         const category = selectedCheckbox ? selectedCheckbox.value : (selectedInitialCategory === 'LOW RISK' ? 'LOW RISK' : 'None');
         const imageSrc = document.getElementById('imageToClassify').src;
@@ -311,33 +315,47 @@
     }
 
     function provideHelp() {
-        if (helpInProgress) return;
+        if (helpInProgress || helpCount >= 3) return; // Allow max 3 helps
 
         helpInProgress = true;
+        helpCount++; // Increment help counter
         const currentTime = (Date.now() - startTime) / 1000;
         helpButtonClicks.push(currentTime);
 
-        const incorrectOptions = Array.from(document.querySelectorAll('input[name="initialCategory"], input[name="category"]'))
-            .filter(input => input.value !== correctAnswer&& !input.checked && !input.closest('label').querySelector('span').classList.contains('highlight'));
-        if (incorrectOptions.length > 1) {
-            const numOptionsToHighlight = 1;
-            const randomIndexes = [];
-            while (randomIndexes.length < numOptionsToHighlight) {
-                const randomIndex = Math.floor(Math.random() * incorrectOptions.length);
-                if (!randomIndexes.includes(randomIndex)) {
-                    randomIndexes.push(randomIndex);
-                }
-            }
-            randomIndexes.forEach(index => {
-                const randomOption = incorrectOptions[index];
-                randomOption.closest('label').querySelector('span').classList.add('highlight');
-            });
+        if (helpCount === 1) {
+            // Highlight one of the incorrect initial categories
+            const incorrectInitialOptions = Array.from(document.querySelectorAll('input[name="initialCategory"]'))
+                .filter(input => input.value !== correctAnswer && !input.closest('label').querySelector('span').classList.contains('highlight'));
 
-            setTimeout(() => {
-                helpInProgress = false;
-            }, 500);
-        } else {
-            document.getElementById('helpButton').disabled = true;
+            if (incorrectInitialOptions.length > 0) {
+                const randomIndex = Math.floor(Math.random() * incorrectInitialOptions.length);
+                const randomOption = incorrectInitialOptions[randomIndex];
+                randomOption.closest('label').querySelector('span').classList.add('highlight');
+                randomOption.disabled = true; // Disable the highlighted option
+            }
+        } else if (helpCount > 1) {
+            // Provide additional help within the subcategories if already in a selected category
+            const incorrectOptions = Array.from(document.querySelectorAll('input[name="category"]'))
+                .filter(input => input.value !== correctAnswer && !input.closest('label').querySelector('span').classList.contains('highlight'));
+
+            if (incorrectOptions.length > 0) {
+                const randomIndex = Math.floor(Math.random() * incorrectOptions.length);
+                const randomOption = incorrectOptions[randomIndex];
+                randomOption.closest('label').querySelector('span').classList.add('highlight');
+                randomOption.disabled = true; // Disable the highlighted option
+            } else {
+                document.getElementById('helpButton').disabled = true;
+            }
+        }
+
+        setTimeout(() => {
+            helpInProgress = false;
+        }, 500);
+    }
+
+    function enableHelpButton() {
+        if (helpCount < 3) {
+            document.getElementById('helpButton').disabled = false;
         }
     }
 
@@ -356,20 +374,23 @@
         setTimeout(() => {
             alertBox.style.display = 'none';
             fetchRandomImage();
-        }, 3000);
+        }, 1000);
     }
 
     function clearSelection() {
         // Clear radio button selection
         const radios = document.querySelectorAll('input[name="category"], input[name="initialCategory"]');
-        radios.forEach(radio => radio.checked = false);
+        radios.forEach(radio => {
+            radio.checked = false;
+            radio.disabled = false; // Enable all options
+        });
 
         // Clear highlights
         const highlights = document.querySelectorAll('.highlight');
         highlights.forEach(highlight => highlight.classList.remove('highlight'));
 
         // Reset help button and state
-        document.getElementById('helpButton').disabled = false;
+        enableHelpButton();
         helpButtonClicks = [];
         helpInProgress = false;
 
