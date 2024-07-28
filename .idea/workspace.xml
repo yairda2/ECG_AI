@@ -6,8 +6,33 @@
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Downloading a timer, and a message about the elapsed time">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/training.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/training.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/Avrste/0414_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/DeWinters/0091_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/DeWinters/0253_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/Hyperacute/0104_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/Wellens/0012_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/Wellens/0077_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/Wellens/0217_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/Wellens/0251_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/Wellens/0342_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/HIGH RISK/Wellens/0408_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0023_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0033_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0058_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0075_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0184_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0348_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0377_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0379_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0417_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/LOW RISK/0420_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/STEMI/Anterior/0241_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/STEMI/Inferior/0178_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/STEMI/Inferior/0255_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/STEMI/Inferior/0293_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/img/graded/STEMI/Inferior/0353_patient.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,7 +161,7 @@
       <workItem from="1721510103710" duration="3754000" />
       <workItem from="1721826084937" duration="2462000" />
       <workItem from="1722120379841" duration="38000" />
-      <workItem from="1722120432930" duration="5031000" />
+      <workItem from="1722120432930" duration="5636000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
