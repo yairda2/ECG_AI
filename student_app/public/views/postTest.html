@@ -13,7 +13,7 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 700px; /* Wider box */
             margin: auto;
             padding: 20px;
             background-color: #fff;
@@ -87,6 +87,15 @@
         .answer-item p {
             margin: 0;
         }
+
+        /* New styles for correct/incorrect answers */
+        .correct img {
+            border: 2px solid #4CAF50; /* Green border for correct answers */
+        }
+
+        .incorrect img {
+            border: 2px solid #F44336; /* Red border for incorrect answers */
+        }
     </style>
 </head>
 <body>
@@ -110,9 +119,8 @@
 </div>
 
 <script>
-
     document.addEventListener('DOMContentLoaded', function () {
-        fetch('/post-test-results', {method: 'GET'})
+        fetch('/post-test-results', { method: 'GET' })
             .then(response => response.json())
             .then(data => {
                 const resultsList = document.getElementById('resultsList');
@@ -126,33 +134,40 @@
                 const grade = data.grade;
 
                 resultsList.innerHTML = `
-                <li><strong>Total Questions:</strong> ${totalQuestions}</li>
-                <li><strong>Correct Answers:</strong> ${correctAnswers}</li>
-                <li><strong>Incorrect Answers:</strong> ${incorrectAnswers}</li>
-                <li><strong>Total Time:</strong> ${totalTime} seconds</li>
-                <li><strong>Average Time per Question:</strong> ${avgTimePerQuestion} seconds</li>
-                <li><strong>Grade:</strong> ${grade}</li>
-            `;
+                    <li><strong>Total Questions:</strong> ${totalQuestions}</li>
+                    <li><strong>Correct Answers:</strong> ${correctAnswers}</li>
+                    <li><strong>Incorrect Answers:</strong> ${incorrectAnswers}</li>
+                    <li><strong>Total Time:</strong> ${totalTime} seconds</li>
+                    <li><strong>Average Time per Question:</strong> ${avgTimePerQuestion} seconds</li>
+                    <li><strong>Grade:</strong> ${grade}</li>
+                `;
 
                 data.answers.forEach(answer => {
                     const answerItem = document.createElement('div');
                     answerItem.classList.add('answer-item');
 
-                    // Construct the image path
-                    let photoPath;
+                    // Determine if the answer is correct or incorrect
+                    const isCorrect = answer.classificationSetSrc === answer.classificationSetDes;
+
+                    // Construct the image path and add the correct/incorrect class
+                    let photoPath, answerClass;
                     if (answer.classificationSetSrc === 'LOW RISK') {
                         photoPath = `/img/graded/LOW RISK/${answer.photoName}`;
+                        answerClass = isCorrect ? 'correct' : 'incorrect';
                     } else if (answer.classificationSetSrc && answer.classificationSubSetSrc) {
                         photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.classificationSubSetSrc}/${answer.photoName}`;
+                        answerClass = isCorrect ? 'correct' : 'incorrect';
                     } else {
                         photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.photoName}`;
+                        answerClass = isCorrect ? 'correct' : 'incorrect';
                     }
 
+                    answerItem.classList.add(answerClass);
                     answerItem.innerHTML = `
-                    <img src="${photoPath}" alt="${answer.photoName}">
-                    <p><strong>Your Answer:</strong> ${answer.classificationSetDes || 'N/A'}</p>
-                    <p><strong>Correct Answer:</strong> ${answer.classificationSetSrc || 'N/A'}</p>
-                `;
+                        <img src="${photoPath}" alt="${answer.photoName}">
+                        <p><strong>Your Answer:</strong> ${answer.classificationSetDes || 'N/A'}</p>
+                        <p><strong>Correct Answer:</strong> ${answer.classificationSetSrc || 'N/A'}</p>
+                    `;
                     answersList.appendChild(answerItem);
                 });
             })
