@@ -110,13 +110,27 @@
             font-size: 16px;
             color: red;
         }
+
+        .question-number {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <div id="alertBox" class="alert"></div> <!-- Alert box -->
+    <div id="questionNumber" class="question-number"></div>
+    <div id="alertBox" class="alert"></div>
     <h1>Choose the right case</h1>
-    <img id="imageToClassify" src="" alt="Random Image">
+    <div class="image-container">
+        <img id="imageToClassify" src="" alt="Random Image">
+    </div>
     <div id="initialOptions">
         <h2>Classify as:</h2>
         <div class="initial-section">
@@ -140,10 +154,22 @@
 
 <script>
     let startTime;
+    let questionNumber = 0;
 
     document.addEventListener('DOMContentLoaded', function() {
+        fetchQuestionNumber();
         fetchRandomImage(); // Load an image when the page loads
     });
+
+    function fetchQuestionNumber() {
+        fetch('/current-question-number', { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                questionNumber = data.answerNumber;
+                updateQuestionNumber(); // Update the question number display
+            })
+            .catch(error => console.error('Error fetching question number:', error));
+    }
 
     function fetchRandomImage() {
         fetch('/random-image', { method: 'GET' })
@@ -159,30 +185,43 @@
                 clearSelection();
                 startTime = Date.now();
                 helpCount = 0; // Reset help counter
+                // updateQuestionNumber(); // Update the question number - Now called after fetchQuestionNumber
             })
             .catch(error => console.error('Error fetching image:', error));
     }
 
-    function submitClassification(category) {
-        const imageSrc = document.getElementById('imageToClassify').src;
-        const answerTime = (Date.now() - startTime) / 1000; // Calculate time taken in seconds
+    function updateQuestionNumber() {
+        document.getElementById('questionNumber').textContent = `Question ${questionNumber}`;
+    }
 
-        fetch('/test', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                photoName: imageSrc.split('/').pop(),
-                classificationDes: category,
-                answerTime: answerTime
+    let debounceTimer;
+    function submitClassification(category) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const imageSrc = document.getElementById('imageToClassify').src;
+            const answerTime = (Date.now() - startTime) / 1000; // Calculate time taken in seconds
+
+            fetch('/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    photoName: imageSrc.split('/').pop(),
+                    classificationDes: category,
+                    answerTime: answerTime
+                })
             })
-        })
-            .then(response => response.json())
-            .then(result => {
-                customAlert(result.message);
-                clearSelection(); // Clear the selection after submission
-                setTimeout(fetchRandomImage, 2000); // Fetch next image after a delay
-            })
-            .catch(error => console.error('Error submitting classification:', error));
+                .then(response => response.json())
+                .then(result => {
+                    if (result.redirect) {
+                        window.location.href = result.redirect;
+                    }
+                    clearSelection(); // Clear the selection after submission
+                    questionNumber = result.nextQuestionNumber || questionNumber + 1; // Update from server response
+                    updateQuestionNumber(); // Update the question number display
+                    setTimeout(fetchRandomImage, 2000); // Fetch next image after a delay
+                })
+                .catch(error => console.error('Error submitting classification:', error));
+        }, 300); // Adjust the debounce time as needed
     }
 
     function clearSelection() {
@@ -194,7 +233,6 @@
         // Clear message
         document.getElementById('message').innerText = '';
     }
-
 
     function confirmBack() {
         if (confirm("Are you sure you want to go back? Your progress will be lost.")) {
