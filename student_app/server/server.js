@@ -55,11 +55,11 @@ function createTables() {
                 avgDegree INTEGER DEFAULT 0,
                 academicInstitution TEXT,
                 totalEntries INTEGER DEFAULT 0,
-                totalAnswers INTEGER DEFAULT 0,
                 totalExams INTEGER DEFAULT 0,
                 avgExamTime INTEGER DEFAULT 0,
+                totalAnswers INTEGER DEFAULT 0,
                 totalTrainTime INTEGER DEFAULT 0,
-                avgAnswers INTEGER DEFAULT 0
+                userRate INTEGER DEFAULT 0
             )`);
 
         db.run(`
@@ -611,20 +611,6 @@ app.post('/training', verifyToken, async (req, res) => {
                         console.error('Error updating totalAnswers:', err.message);
                     }
                 });
-
-                const updateAvgAnswersSql = `
-                    UPDATE users
-                    SET avgAnswers = (
-                        SELECT AVG(answerSubmitTime)
-                        FROM answers
-                        WHERE userId = ?
-                    )
-                    WHERE id = ?`;
-                db.run(updateAvgAnswersSql, [userId, userId], (err) => {
-                    if (err) {
-                        console.error('Error updating avgAnswers:', err.message);
-                    }
-                });
             });
 
             const updateTotalTrainTime = `
@@ -697,7 +683,7 @@ app.get('/current-question-number', verifyToken, (req, res) => {
 
 // Ensure that the `submitClassification` route also updates the `answerNumber` in the cookie
 app.post('/test', verifyToken, async (req, res) => {
-    const {photoName, classificationDes, answerTime} = req.body;
+    const { photoName, classificationDes, answerTime } = req.body;
     const userId = req.user.id;
     const date = new Date().toISOString();
     const examId = req.cookies.examId;
@@ -707,21 +693,22 @@ app.post('/test', verifyToken, async (req, res) => {
     db.get(questionCountQuery, [examId], async (err, row) => {
         if (err) {
             console.error('Error querying the database:', err.message);
-            // Handle the error appropriately (e.g., send an error response)
-        } else if (row) {
+            res.status(500).json({ message: 'Error querying the database' });
+            return;
+        }
+
+        if (row) {
             const questionCount = parseInt(row.severalQuestions, 10);
-            // Use questionCount as needed
             console.log(`Number of questions: ${questionCount}`);
 
             const sql = `
-        INSERT INTO examAnswers (
-            examId, userId, date, answerNumber, photoName, classificationSetSrc, classificationSubSetSrc,
-            classificationSetDes, answerSubmitTime
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                INSERT INTO examAnswers (
+                    examId, userId, date, answerNumber, photoName, classificationSetSrc, classificationSubSetSrc,
+                    classificationSetDes, answerSubmitTime
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             try {
                 const classificationValuesSrc = await getClassificationValuesSrc(photoName);
-
                 const params = [
                     examId,
                     userId,
@@ -734,21 +721,27 @@ app.post('/test', verifyToken, async (req, res) => {
                     answerTime,
                 ];
 
-                db.run(sql, params, function (err) {
+                db.run(sql, params, (err) => {
                     if (err) {
                         console.error('Error inserting test answer into database:', err.message);
-                        return res.status(500).json({message: 'Error inserting test answer into database'});
+                        return res.status(500).json({ message: 'Error inserting test answer into database' });
                     }
 
-                    res.cookie('answerNumber', answerNumber, {httpOnly: true, secure: true});
-
                     if (answerNumber === questionCount) {
-                        res.clearCookie('answerNumber');
-                        res.status(200).json({message: 'Well done! Test is over', redirect: '/postTest'});
+                        updateExamStats(examId, userId, questionCount, (updateErr) => {
+                            if (updateErr) {
+                                return res.status(500).json({ message: 'Error updating exam stats' });
+                            }
+
+                            res.clearCookie('answerNumber');
+                            res.status(200).json({
+                                message: 'Test completed successfully',
+                                redirect: '/postTest'
+                            });
+                        });
                     } else {
-                        res.clearCookie('answerNumber');
                         answerNumber++;
-                        res.cookie('answerNumber', answerNumber, {httpOnly: true, secure: true});
+                        res.cookie('answerNumber', answerNumber, { httpOnly: true, secure: true });
                         res.status(200).json({
                             message: 'Test answer recorded successfully',
                             nextQuestionNumber: answerNumber
@@ -757,15 +750,122 @@ app.post('/test', verifyToken, async (req, res) => {
                 });
             } catch (error) {
                 console.error('Error getting classification values:', error);
-                res.status(500).json({message: 'Internal server error'});
+                res.status(500).json({ message: 'Internal server error' });
             }
         } else {
             console.error('No exam found with the provided examId');
-            // Handle the case where no data is found
+            res.status(404).json({ message: 'No exam found' });
         }
     });
-
 });
+
+function updateExamStats(examId, userId, questionCount, callback) {
+    const updateTotalExamTime = `
+        UPDATE exam
+        SET totalExamTime = (
+            SELECT SUM(answerSubmitTime)
+            FROM examAnswers
+            WHERE examId = ?
+        )
+        WHERE examId = ?`;
+
+    db.run(updateTotalExamTime, [examId, examId], (err) => {
+        if (err) {
+            console.error('Error updating totalExamTime:', err.message);
+            return callback(err);
+        }
+
+        const updateTotalAnswers = `
+            UPDATE users
+            SET totalAnswers = totalAnswers + ?
+            WHERE id = ?`;
+
+        db.run(updateTotalAnswers, [questionCount, userId], (err) => {
+            if (err) {
+                console.error('Error updating totalAnswers:', err.message);
+                return callback(err);
+            }
+
+            const updateTotalExams = `
+                UPDATE users
+                SET totalExams = totalExams + 1
+                WHERE id = ?`;
+
+            db.run(updateTotalExams, [userId], (err) => {
+                if (err) {
+                    console.error('Error updating totalExams:', err.message);
+                    return callback(err);
+                }
+
+                const updateAvgExamTime = `
+                    UPDATE users
+                    SET avgExamTime = (
+                        SELECT AVG(totalExamTime)
+                        FROM exam
+                        WHERE userId = ?
+                    )
+                    WHERE id = ?`;
+
+                db.run(updateAvgExamTime, [userId, userId], (err) => {
+                    if (err) {
+                        console.error('Error updating avgExamTime:', err.message);
+                        return callback(err);
+                    }
+
+                    const updateTotalTrainTime = `
+                        UPDATE users
+                        SET totalTrainTime = totalTrainTime + (
+                            SELECT SUM(answerSubmitTime)
+                            FROM examAnswers
+                            WHERE examId = ?
+                        )
+                        WHERE id = ?`;
+
+                    db.run(updateTotalTrainTime, [examId, userId], (err) => {
+                        if (err) {
+                            console.error('Error updating totalTrainTime:', err.message);
+                            return callback(err);
+                        }
+
+                        const calculateScore = `
+                            SELECT SUM(imageClassification.rate) as totalRate
+                            FROM examAnswers
+                            JOIN imageClassification ON examAnswers.photoName = imageClassification.photoName
+                            WHERE examAnswers.examId = ?`;
+
+                        db.get(calculateScore, [examId], (err, row) => {
+                            if (err) {
+                                console.error('Error calculating total rate:', err.message);
+                                return callback(err);
+                            }
+
+                            const totalRate = row.totalRate || 1;
+                            const updateScore = `
+                                UPDATE exam
+                                SET score = (
+                                    SELECT SUM((imageClassification.rate / ?) * 100)
+                                    FROM examAnswers
+                                    JOIN imageClassification ON examAnswers.photoName = imageClassification.photoName
+                                    WHERE examAnswers.examId = ?
+                                )
+                                WHERE examId = ?`;
+
+                            db.run(updateScore, [totalRate, examId, examId], (err) => {
+                                if (err) {
+                                    console.error('Error updating score:', err.message);
+                                    return callback(err);
+                                }
+
+                                console.log('Score updated successfully');
+                                callback();
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+}
 
 // Endpoint to handle post-test results
 app.get('/post-test-results', verifyToken, async (req, res) => {
@@ -840,10 +940,9 @@ app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
         res.status(200).json(results);
     } catch (error) {
         console.error('Error fetching detailed post-test results:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({message: 'Internal server error'});
     }
 });
-
 
 
 // endregion Post endpoints
