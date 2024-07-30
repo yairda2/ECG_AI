@@ -110,8 +110,9 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        fetch('/post-test-results', { method: 'GET' })
+
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/post-test-results', {method: 'GET'})
             .then(response => response.json())
             .then(data => {
                 const resultsList = document.getElementById('resultsList');
@@ -125,22 +126,33 @@
                 const grade = data.grade;
 
                 resultsList.innerHTML = `
-                    <li><strong>Total Questions:</strong> ${totalQuestions}</li>
-                    <li><strong>Correct Answers:</strong> ${correctAnswers}</li>
-                    <li><strong>Incorrect Answers:</strong> ${incorrectAnswers}</li>
-                    <li><strong>Total Time:</strong> ${totalTime} seconds</li>
-                    <li><strong>Average Time per Question:</strong> ${avgTimePerQuestion} seconds</li>
-                    <li><strong>Grade:</strong> ${grade}</li>
-                `;
+                <li><strong>Total Questions:</strong> ${totalQuestions}</li>
+                <li><strong>Correct Answers:</strong> ${correctAnswers}</li>
+                <li><strong>Incorrect Answers:</strong> ${incorrectAnswers}</li>
+                <li><strong>Total Time:</strong> ${totalTime} seconds</li>
+                <li><strong>Average Time per Question:</strong> ${avgTimePerQuestion} seconds</li>
+                <li><strong>Grade:</strong> ${grade}</li>
+            `;
 
                 data.answers.forEach(answer => {
                     const answerItem = document.createElement('div');
                     answerItem.classList.add('answer-item');
+
+                    // Construct the image path
+                    let photoPath;
+                    if (answer.classificationSetSrc === 'LOW RISK') {
+                        photoPath = `/img/graded/LOW RISK/${answer.photoName}`;
+                    } else if (answer.classificationSetSrc && answer.classificationSubSetSrc) {
+                        photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.classificationSubSetSrc}/${answer.photoName}`;
+                    } else {
+                        photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.photoName}`;
+                    }
+
                     answerItem.innerHTML = `
-                        <img src="/img/graded/${answer.classificationSetDes}/${answer.photoName}" alt="${answer.photoName}">
-                        <p><strong>Your Answer:</strong> ${answer.classificationSetDes || 'N/A'}</p>
-                        <p><strong>Correct Answer:</strong> ${answer.classificationSetSrc || 'N/A'}</p>
-                    `;
+                    <img src="${photoPath}" alt="${answer.photoName}">
+                    <p><strong>Your Answer:</strong> ${answer.classificationSetDes || 'N/A'}</p>
+                    <p><strong>Correct Answer:</strong> ${answer.classificationSetSrc || 'N/A'}</p>
+                `;
                     answersList.appendChild(answerItem);
                 });
             })
