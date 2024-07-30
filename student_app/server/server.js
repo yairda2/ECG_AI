@@ -1,5 +1,5 @@
 // Description: This file contains the server-side code for the ECG application.
-// Author: Yair Davidof & Eiasaf sinuani.
+// Author: Yair Davidof & Eiasaf Sinuani.
 // region Imports
 const express = require('express');
 const bcrypt = require('bcrypt');
@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/img', express.static(path.join(__dirname, '..', 'public', 'img')));
 app.use(cookieParser());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 // Middleware to decode URL-encoded paths
@@ -179,7 +179,7 @@ function insertDefaultData() {
 // region Helper functions
 function checkToken(req, res, next) {
     const token = req.cookies.token;
-    if (!token) return res.status(401).json({message: 'NoToken', redirect: '/login'});
+    if (!token) return res.status(401).json({ message: 'NoToken', redirect: '/login' });
 
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
@@ -188,17 +188,17 @@ function checkToken(req, res, next) {
         const timeLeft = expirationTime - currentTime;
 
         if (timeLeft < 5 * 60) {  // If less than 5 minutes left, renew the token
-            const newToken = jwt.sign({id: decoded.id, role: decoded.role}, SECRET_KEY, {expiresIn: '1h'});
-            res.cookie('token', newToken, {httpOnly: true, secure: true});
+            const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, SECRET_KEY, { expiresIn: '1h' });
+            res.cookie('token', newToken, { httpOnly: true, secure: true });
         }
 
         req.user = decoded;
         next();
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({message: 'TokenExpired', redirect: '/login'});
+            return res.status(401).json({ message: 'TokenExpired', redirect: '/login' });
         }
-        return res.status(401).json({message: 'InvalidToken', redirect: '/login'});
+        return res.status(401).json({ message: 'InvalidToken', redirect: '/login' });
     }
 }
 
@@ -218,11 +218,11 @@ async function getClassificationValuesSrc(photoName) {
 
 async function getClassificationValuesDes(classificationDes) {
     if (classificationDes === 'LOW RISK') {
-        return {classificationSetDes: classificationDes, classificationSubSetDes: null};
+        return { classificationSetDes: classificationDes, classificationSubSetDes: null };
     } else if (['Septal', 'Anterior', 'Lateral', 'Inferior'].includes(classificationDes)) {
-        return {classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes};
+        return { classificationSetDes: 'STEMI', classificationSubSetDes: classificationDes };
     } else if (['Hyperacute', 'DeWinters', 'LossOfBalance', 'Wellens', 'TInversion', 'Avrste'].includes(classificationDes)) {
-        return {classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes};
+        return { classificationSetDes: 'HIGH RISK', classificationSubSetDes: classificationDes };
     } else {
         return {}; // Return an empty object if no conditions are met
     }
@@ -327,7 +327,7 @@ app.get('/random-image-classification', (req, res) => {
         }
         const randomIndex = Math.floor(Math.random() * files.length);
         const imagePath = files[randomIndex];
-        res.json({imagePath: `../img/bankPhotos/${imagePath}`});
+        res.json({ imagePath: `../img/bankPhotos/${imagePath}` });
     });
 });
 
@@ -377,23 +377,23 @@ app.get('/random-image', verifyToken, (req, res) => {
 // Main page, redirect to chooseModel or chooseModelAdmin
 app.get('/main', verifyToken, (req, res) => {
     if (req.user.role === 'admin') {
-        return res.json({redirect: '/chooseModelAdmin', message: 'redirect to main'});
+        return res.json({ redirect: '/chooseModelAdmin', message: 'redirect to main' });
     }
-    res.json({redirect: '/chooseModel', message: 'redirect to main'});
+    res.json({ redirect: '/chooseModel', message: 'redirect to main' });
 });
 
 // User data page, redirect to info
 app.get('/user-data', verifyToken, (req, res) => {
-    res.json({redirect: '/info', message: 'redirect to user data'});
+    res.json({ redirect: '/info', message: 'redirect to user data' });
 });
 
 // Data for user info page
 app.get('/info/data', (req, res) => {
     const userId = req.cookies.userId;
-    const sql = "SELECT photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes,classificationSubSetDes, answerSubmitTime, helpActivated FROM answers WHERE userId = ?";
+    const sql = "SELECT photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, classificationSubSetDes, answerSubmitTime, helpActivated FROM answers WHERE userId = ?";
     db.all(sql, userId, (err, rows) => {
         if (err) {
-            res.status(400).json({"error": err.message});
+            res.status(400).json({ "error": err.message });
             return;
         }
         res.json(rows);
@@ -410,12 +410,12 @@ app.get('/img/graded/:set/:photo', (req, res) => {
 
 // Sign up, redirect to register
 app.get('/sign-up', (req, res) => {
-    res.json({redirect: '/register', message: 'redirect to sign-up'});
+    res.json({ redirect: '/register', message: 'redirect to sign-up' });
 });
 
 // Sign in, redirect to log in
 app.get('/sign-in', (req, res) => {
-    res.json({redirect: '/login', message: 'redirect to sign-in'});
+    res.json({ redirect: '/login', message: 'redirect to sign-in' });
 });
 
 // Serve post-test page
@@ -431,19 +431,19 @@ app.get('/detailedResults', (req, res) => {
 
 // region Post endpoints
 app.post('/register', async (req, res) => {
-    const {email, password, age, gender, avgDegree, academicInstitution, termsAgreement} = req.body;
+    const { email, password, age, gender, avgDegree, academicInstitution, termsAgreement } = req.body;
     if (!email || !password || !age || !gender || !avgDegree || !academicInstitution || termsAgreement === false) {
-        return res.status(400).json({message: 'All fields are required'});
+        return res.status(400).json({ message: 'All fields are required' });
     }
 
     db.get('SELECT email FROM authentication WHERE email = ?', [email], async (err, row) => {
         if (err) {
             console.error('Error querying the database:', err.message);
-            return res.status(500).json({message: 'Server error'});
+            return res.status(500).json({ message: 'Server error' });
         }
 
         if (row) {
-            return res.status(409).json({message: 'User already exists. Please log in.', redirect: '/login'});
+            return res.status(409).json({ message: 'User already exists. Please log in.', redirect: '/login' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -451,36 +451,36 @@ app.post('/register', async (req, res) => {
 
         db.run('INSERT INTO users (id, age, gender, avgDegree, academicInstitution) VALUES (?, ?, ?, ?, ?)', [userId, age, gender, avgDegree, academicInstitution], (err) => {
             if (err) {
-                return res.status(500).json({message: 'Error registering new user in Users table: ' + err.message});
+                return res.status(500).json({ message: 'Error registering new user in Users table: ' + err.message });
             }
             db.run('INSERT INTO authentication (userId, email, password, termsAgreement, role) VALUES (?, ?, ?, ?, "user")', [userId, email, hashedPassword, termsAgreement], (authErr) => {
                 if (authErr) {
-                    return res.status(500).json({message: 'Error registering new user in Authentication table: ' + authErr.message});
+                    return res.status(500).json({ message: 'Error registering new user in Authentication table: ' + authErr.message });
                 }
-                res.status(200).json({message: 'User registered successfully', redirect: '/login'});
+                res.status(200).json({ message: 'User registered successfully', redirect: '/login' });
             });
         });
     });
 });
 
 app.post('/login', (req, res) => {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
     const sql = `SELECT userId, password, role FROM authentication WHERE email = ?`;
     const updateEntries = `UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?`;
 
     db.get(sql, [email], async (err, user) => {
         if (err) {
             console.error('Database error:', err.message);
-            return res.status(500).json({message: 'Error on server side: ' + err.message});
+            return res.status(500).json({ message: 'Error on server side: ' + err.message });
         }
         if (!user) {
-            return res.status(404).json({message: 'User not found'});
+            return res.status(404).json({ message: 'User not found' });
         }
         if (await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({id: user.userId, role: user.role}, SECRET_KEY, {expiresIn: '1h'});
-            res.cookie('token', token, {httpOnly: true, secure: true});
-            res.cookie('userId', user.userId, {httpOnly: true, secure: true});
-            res.status(200).json({redirect: '/chooseModel', message: 'Login successful', role: user.role});
+            const token = jwt.sign({ id: user.userId, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+            res.cookie('token', token, { httpOnly: true, secure: true });
+            res.cookie('userId', user.userId, { httpOnly: true, secure: true });
+            res.status(200).json({ redirect: '/chooseModel', message: 'Login successful', role: user.role });
             db.run(updateEntries, [user.userId], async (err) => {
                 if (err) {
                     console.error('Error updating totalEntries:', err.message);
@@ -489,7 +489,7 @@ app.post('/login', (req, res) => {
                 }
             });
         } else {
-            res.status(401).json({message: 'Invalid email or password'});
+            res.status(401).json({ message: 'Invalid email or password' });
         }
     });
 });
@@ -504,31 +504,31 @@ app.post('/chooseModel', verifyToken, (req, res) => {
                     message: 'You do not have permission to access this page'
                 });
             }
-            res.status(200).json({redirect: '/classifiedImagesAdmin', message: 'Redirecting to classified images'});
+            res.status(200).json({ redirect: '/classifiedImagesAdmin', message: 'Redirecting to classified images' });
             break;
         case 'Single Training':
-            res.status(200).json({redirect: '/training', message: 'Redirecting to training page'});
+            res.status(200).json({ redirect: '/training', message: 'Redirecting to training page' });
             break;
         case 'Test':
-            res.status(200).json({redirect: '/pre-test', message: 'Redirecting to test page'});
+            res.status(200).json({ redirect: '/pre-test', message: 'Redirecting to test page' });
             break;
         default:
-            res.status(404).json({message: 'Action not found'});
+            res.status(404).json({ message: 'Action not found' });
     }
 });
 
 app.post('/classify-image', verifyToken, (req, res) => {
-    const {fileName, classificationSet, classificationSubSet} = req.body;
+    const { fileName, classificationSet, classificationSubSet } = req.body;
     const outDir = path.join(__dirname, '..', 'public', 'img', 'graded', classificationSet, classificationSubSet || '');
     const filePath = path.join(outDir, fileName);
     const gradedDir = path.join(__dirname, '..', 'public', 'img', 'graded');
     if (!fs.existsSync(outDir)) {
-        fs.mkdirSync(outDir, {recursive: true});
+        fs.mkdirSync(outDir, { recursive: true });
     }
     fs.rename(path.join(__dirname, '..', 'public', 'img', 'bankPhotos', fileName), filePath, (err) => {
         if (err) {
             console.error('Error moving image:', err.message);
-            return res.status(500).json({message: 'Error moving image'});
+            return res.status(500).json({ message: 'Error moving image' });
         }
         const checkSql = `
             SELECT photoName
@@ -538,15 +538,15 @@ app.post('/classify-image', verifyToken, (req, res) => {
         db.get(checkSql, [fileName], (err, row) => {
             if (err) {
                 console.error('Error checking image classification:', err.message);
-                return res.status(500).json({message: 'Error checking image classification'});
+                return res.status(500).json({ message: 'Error checking image classification' });
             }
             if (row) {
-                return res.status(409).json({message: 'Image already classified'});
+                return res.status(409).json({ message: 'Image already classified' });
             }
             insertClassification(fileName, classificationSet, classificationSubSet);
         });
     });
-    res.status(200).json({message: 'Image classified successfully'});
+    res.status(200).json({ message: 'Image classified successfully' });
 });
 
 app.post('/training', verifyToken, async (req, res) => {
@@ -602,7 +602,7 @@ app.post('/training', verifyToken, async (req, res) => {
         db.run(sql, params, function (err) {
             if (err) {
                 console.error('Error inserting answer into database:', err.message);
-                return res.status(500).json({message: 'Error inserting answer into database'});
+                return res.status(500).json({ message: 'Error inserting answer into database' });
             }
 
             db.serialize(() => {
@@ -623,24 +623,24 @@ app.post('/training', verifyToken, async (req, res) => {
                 }
             });
 
-            res.status(200).json({message: 'Answer recorded successfully'});
+            res.status(200).json({ message: 'Answer recorded successfully' });
         });
     } catch (error) {
         console.error('Error setting params:', error);
-        res.status(500).json({message: 'Internal server error'});
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
 
 app.post('/pre-test', verifyToken, (req, res) => {
-    // set to the cookie exam number and answer number.
+    // Set the cookie exam number and answer number.
     const questionCount = req.body.questionCount;
 
     const examId = uuidv4();
     const answerNumber = 1;
-    res.cookie('examId', examId, {httpOnly: true, secure: true});
-    res.cookie('questionCount', questionCount, {httpOnly: true, secure: true});
-    res.cookie('answerNumber', answerNumber, {httpOnly: true, secure: true});
-    res.status(200).json({message: 'Pre-test initiated successfully', redirect: '/test'});
+    res.cookie('examId', examId, { httpOnly: true, secure: true });
+    res.cookie('questionCount', questionCount, { httpOnly: true, secure: true });
+    res.cookie('answerNumber', answerNumber, { httpOnly: true, secure: true });
+    res.status(200).json({ message: 'Pre-test initiated successfully', redirect: '/test' });
 
     // Insert exam into database
     const userId = req.user.id;
@@ -678,7 +678,7 @@ app.post('/pre-test', verifyToken, (req, res) => {
 // Route to get the current question number
 app.get('/current-question-number', verifyToken, (req, res) => {
     const answerNumber = req.cookies.answerNumber || 1;
-    res.json({answerNumber: answerNumber});
+    res.json({ answerNumber: answerNumber });
 });
 
 // Ensure that the `submitClassification` route also updates the `answerNumber` in the cookie
@@ -827,6 +827,7 @@ function updateExamStats(examId, userId, questionCount, callback) {
                             return callback(err);
                         }
 
+                        // TODO fix this function so she will insert to the db the score
                         const calculateScore = `
                             SELECT SUM(imageClassification.rate) as totalRate
                             FROM examAnswers
@@ -839,7 +840,12 @@ function updateExamStats(examId, userId, questionCount, callback) {
                                 return callback(err);
                             }
 
-                            const totalRate = row.totalRate || 1;
+                            const totalRate = row.totalRate || 1;  // Ensure totalRate is not zero to avoid division by zero
+                            console.log('Total Rate:', totalRate);  // Debugging: Log totalRate value
+
+                            const totalRateSum = row.totalRate || 1;  // Correct the totalRateSum fetching
+                            console.log('Total Rate Sum:', totalRateSum);  // Debugging: Log totalRateSum value
+
                             const updateScore = `
                                 UPDATE exam
                                 SET score = (
@@ -850,16 +856,17 @@ function updateExamStats(examId, userId, questionCount, callback) {
                                 )
                                 WHERE examId = ?`;
 
-                            db.run(updateScore, [totalRate, examId, examId], (err) => {
+                            db.run(updateScore, [totalRateSum, examId, examId], (err) => {
                                 if (err) {
                                     console.error('Error updating score:', err.message);
-                                    return callback(err);
+                                    return callback(err);  // Handle the error appropriately
                                 }
 
                                 console.log('Score updated successfully');
-                                callback();
+                                callback();  // Continue the flow of the program
                             });
                         });
+
                     });
                 });
             });
@@ -877,7 +884,7 @@ app.get('/post-test-results', verifyToken, async (req, res) => {
         res.status(200).json(results);
     } catch (error) {
         console.error('Error fetching post-test results:', error);
-        res.status(500).json({message: 'Internal server error'});
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
 
@@ -940,10 +947,9 @@ app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
         res.status(200).json(results);
     } catch (error) {
         console.error('Error fetching detailed post-test results:', error);
-        res.status(500).json({message: 'Internal server error'});
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
-
 
 // endregion Post endpoints
 
