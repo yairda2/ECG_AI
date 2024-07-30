@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Detailed Test Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .results-list {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 20px;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .answer-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            transition: background-color 0.3s ease;
+        }
+
+        .answer-item img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .answer-item p {
+            margin: 5px 0;
+        }
+
+        .answer-item.correct {
+            border-color: #4CAF50;
+        }
+
+        .answer-item.incorrect {
+            border-color: #f44336;
+        }
+
+        .answer-item.correct:hover {
+            background-color: #e8f5e9;
+        }
+
+        .answer-item.incorrect:hover {
+            background-color: #ffebee;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Detailed Test Results</h1>
+    <div class="results-list" id="answersList">
+        <!-- Detailed results will be displayed here -->
+    </div>
+
+    <div class="button-container">
+        <button onclick="goBack()">Back to Main Menu</button>
+        <button onclick="backToTestDetails()">Back to Test Summary</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/post-test-detailed-results', { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                const answersList = document.getElementById('answersList');
+
+                data.answers.forEach(answer => {
+                    let photoPath;
+                    if (answer.classificationSetSrc === 'LOW RISK') {
+                        photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.photoName}`;
+                    } else {
+                        photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.classificationSubSetSrc}/${answer.photoName}`;
+                    }
+
+                    const isCorrect = (answer.classificationSetSrc === 'LOW RISK' && answer.classificationSetDes === 'LOW RISK') ||
+                        (['STEMI', 'HIGH RISK'].includes(answer.classificationSetSrc) && answer.classificationSetDes === 'HIGH RISK/STEMI');
+
+                    const answerItem = document.createElement('div');
+                    answerItem.classList.add('answer-item');
+                    answerItem.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    answerItem.innerHTML = `
+                        <img src="${photoPath}" alt="${answer.photoName}">
+                        <p><strong>Your Answer:</strong> ${answer.classificationSetDes || 'N/A'}</p>
+                        <p><strong>Correct Answer:</strong> ${answer.classificationSetSrc || 'N/A'}</p>
+                        <p><strong>Time Taken:</strong> ${answer.answerSubmitTime} seconds</p>
+                    `;
+                    answersList.appendChild(answerItem);
+                });
+            })
+            .catch(error => console.error('Error fetching detailed test results:', error));
+    });
+
+    function goBack() {
+        window.location.href = '/chooseModel';
+    }
+
+    function backToTestDetails() {
+        window.location.href = '/postTest';
+    }
+</script>
+
+</body>
+</html>
