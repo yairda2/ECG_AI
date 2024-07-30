@@ -26,14 +26,12 @@ app.use(cookieParser());
 app.use(express.urlencoded({extended: true}));
 app.use(cors());
 
-
 // Middleware to decode URL-encoded paths
 app.use((req, res, next) => {
     req.url = decodeURIComponent(req.url);
     next();
 });
 // endregion Middleware setup
-
 
 // region Database setup
 const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
@@ -45,7 +43,6 @@ const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite
         insertDefaultData();
     }
 });
-
 
 // Function to create necessary database tables
 function createTables() {
@@ -110,7 +107,6 @@ function createTables() {
                 FOREIGN KEY (examId) REFERENCES exam(examId)
             )`);
 
-
         db.run(`
             CREATE TABLE IF NOT EXISTS exam (
                 examId TEXT PRIMARY KEY,
@@ -158,32 +154,27 @@ function insertDefaultData() {
             return;
         }
 
+        hashedPassword.then((hash) => {
+            db.run('INSERT INTO users (id, age, gender, avgDegree, academicInstitution) VALUES (?, ?, ?, ?, ?)',
+                [userId, age, gender, avgDegree, college], (err) => {
+                    if (err) {
+                        console.error('Error inserting default data into users table:', err.message);
+                    }
 
+                    db.run('INSERT INTO authentication (userId, email, password, role, termsAgreement) VALUES (?, ?, ?, ?, ?)',
+                        [userId, email, hash, role, termsAgreement], (err) => {
+                            if (err) {
+                                console.error('Error inserting default data into authentication table:', err.message);
+                            }
+                        });
 
-    hashedPassword.then((hash) => {
-        db.run('INSERT INTO users (id, age, gender, avgDegree, academicInstitution) VALUES (?, ?, ?, ?, ?)',
-            [userId, age, gender, avgDegree, college], (err) => {
-                if (err) {
-                    console.error('Error inserting default data into users table:', err.message);
-                }
-
-                db.run('INSERT INTO authentication (userId, email, password, role, termsAgreement) VALUES (?, ?, ?, ?, ?)',
-                    [userId, email, hash, role, termsAgreement], (err) => {
-                        if (err) {
-                            console.error('Error inserting default data into authentication table:', err.message);
-                        }
-                    });
-
-            });
-            }
-        );
+                });
+        });
 
     });
 }
 
-
 // endregion Database setup
-
 
 // region Helper functions
 function checkToken(req, res, next) {
@@ -211,7 +202,6 @@ function checkToken(req, res, next) {
     }
 }
 
-
 async function getClassificationValuesSrc(photoName) {
     const query = `SELECT classificationSet AS classificationSetSrc, classificationSubSet AS classificationSubSetSrc 
                    FROM imageClassification WHERE photoName = ?`;
@@ -226,7 +216,6 @@ async function getClassificationValuesSrc(photoName) {
     });
 }
 
-
 async function getClassificationValuesDes(classificationDes) {
     if (classificationDes === 'LOW RISK') {
         return {classificationSetDes: classificationDes, classificationSubSetDes: null};
@@ -239,7 +228,6 @@ async function getClassificationValuesDes(classificationDes) {
     }
 }
 
-
 function insertClassification(fileName, classificationSet, classificationSubSet) {
     const sql = `
         INSERT INTO imageClassification (photoName, classificationSet, classificationSubSet)
@@ -251,17 +239,26 @@ function insertClassification(fileName, classificationSet, classificationSubSet)
         }
     });
 }
-// endregion Helper functions
 
+function checkUserExist(id) {
+    const sql = `SELECT id FROM users WHERE id = ?`;
+    db.get(sql, [id], (err, row) => {
+        if (err) {
+            console.error('Error querying the database:', err.message);
+            return false;
+        }
+        return row;
+    });
+}
+
+// endregion Helper functions
 
 // region Get endpoints
 // Login page
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'login.html')));
 
-
 // Register page
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'register.html')));
-
 
 // Terms text data
 app.get('/terms', (req, res) => {
@@ -269,12 +266,10 @@ app.get('/terms', (req, res) => {
     res.send(terms);
 });
 
-
 // Admin classified images page
 app.get('/classifiedImagesAdmin', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'classifiedImagesAdmin.html'));
 });
-
 
 // Main page
 app.get('/chooseModel', verifyToken, (req, res) => {
@@ -286,7 +281,6 @@ app.get('/chooseModel', verifyToken, (req, res) => {
     }
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModel.html'));
 });
-
 
 // Admin page
 app.get('/chooseModelAdmin', verifyToken, (req, res) => {
@@ -300,30 +294,25 @@ app.get('/chooseModelAdmin', verifyToken, (req, res) => {
     }
 });
 
-
 // Training page
 app.get('/training', checkToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
 });
 
-// Pre test
+// Pre-test
 app.get('/pre-test', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTest.html'));
 });
 
-
 // Test page
 app.get('/test', verifyToken, (req, res) => {
-
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
 });
-
 
 // User data page
 app.get('/info', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
 });
-
 
 // This endpoint is used to get the image path for the image classification task,
 // Those are not classified yet
@@ -341,7 +330,6 @@ app.get('/random-image-classification', (req, res) => {
         res.json({imagePath: `../img/bankPhotos/${imagePath}`});
     });
 });
-
 
 // Those images are already classified
 // Get random image for training and test
@@ -386,7 +374,6 @@ app.get('/random-image', verifyToken, (req, res) => {
     });
 });
 
-
 // Main page, redirect to chooseModel or chooseModelAdmin
 app.get('/main', verifyToken, (req, res) => {
     if (req.user.role === 'admin') {
@@ -395,12 +382,10 @@ app.get('/main', verifyToken, (req, res) => {
     res.json({redirect: '/chooseModel', message: 'redirect to main'});
 });
 
-
 // User data page, redirect to info
 app.get('/user-data', verifyToken, (req, res) => {
     res.json({redirect: '/info', message: 'redirect to user data'});
 });
-
 
 // Data for user info page
 app.get('/info/data', (req, res) => {
@@ -415,7 +400,6 @@ app.get('/info/data', (req, res) => {
     });
 });
 
-
 // Serve images for image user info page
 app.get('/img/graded/:set/:photo', (req, res) => {
     const set = req.params.set.toUpperCase()
@@ -424,19 +408,26 @@ app.get('/img/graded/:set/:photo', (req, res) => {
     res.sendFile(imagePath);
 });
 
-
 // Sign up, redirect to register
 app.get('/sign-up', (req, res) => {
     res.json({redirect: '/register', message: 'redirect to sign-up'});
 });
 
-
 // Sign in, redirect to log in
 app.get('/sign-in', (req, res) => {
     res.json({redirect: '/login', message: 'redirect to sign-in'});
 });
-// endregion Get endpoints
 
+// Serve post-test page
+app.get('/postTest', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'postTest.html'));
+});
+
+// Route to serve detailedResults.html
+app.get('/detailedResults', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'detailedResults.html'));
+});
+// endregion Get endpoints
 
 // region Post endpoints
 app.post('/register', async (req, res) => {
@@ -472,7 +463,6 @@ app.post('/register', async (req, res) => {
     });
 });
 
-
 app.post('/login', (req, res) => {
     const {email, password} = req.body;
     const sql = `SELECT userId, password, role FROM authentication WHERE email = ?`;
@@ -504,7 +494,6 @@ app.post('/login', (req, res) => {
     });
 });
 
-
 app.post('/chooseModel', verifyToken, (req, res) => {
     const action = req.body.action;
     switch (action) {
@@ -527,7 +516,6 @@ app.post('/chooseModel', verifyToken, (req, res) => {
             res.status(404).json({message: 'Action not found'});
     }
 });
-
 
 app.post('/classify-image', verifyToken, (req, res) => {
     const {fileName, classificationSet, classificationSubSet} = req.body;
@@ -560,7 +548,6 @@ app.post('/classify-image', verifyToken, (req, res) => {
     });
     res.status(200).json({message: 'Image classified successfully'});
 });
-
 
 app.post('/training', verifyToken, async (req, res) => {
     const {
@@ -658,13 +645,12 @@ app.post('/training', verifyToken, async (req, res) => {
     }
 });
 
-
 app.post('/pre-test', verifyToken, (req, res) => {
     // set to the cookie exam number and answer number.
     const questionCount = req.body.questionCount;
 
     const examId = uuidv4();
-    const answerNumber = 0;
+    const answerNumber = 1;
     res.cookie('examId', examId, {httpOnly: true, secure: true});
     res.cookie('questionCount', questionCount, {httpOnly: true, secure: true});
     res.cookie('answerNumber', answerNumber, {httpOnly: true, secure: true});
@@ -703,75 +689,164 @@ app.post('/pre-test', verifyToken, (req, res) => {
     });
 });
 
+// Route to get the current question number
+app.get('/current-question-number', verifyToken, (req, res) => {
+    const answerNumber = req.cookies.answerNumber || 1;
+    res.json({answerNumber: answerNumber});
+});
 
+// Ensure that the `submitClassification` route also updates the `answerNumber` in the cookie
 app.post('/test', verifyToken, async (req, res) => {
-    const {
-        photoName,
-        classificationDes,
-        answerTime,
-    } = req.body;
-
+    const {photoName, classificationDes, answerTime} = req.body;
     const userId = req.user.id;
     const date = new Date().toISOString();
     const examId = req.cookies.examId;
-    const questionCount = req.cookies.questionCount;
-    const answerNumber = req.cookies.answerNumber;
+    let answerNumber = parseInt(req.cookies.answerNumber, 10) || 0;
+    const questionCountQuery = 'SELECT severalQuestions FROM exam WHERE examId = ?';
 
-    const sql = `
+    db.get(questionCountQuery, [examId], async (err, row) => {
+        if (err) {
+            console.error('Error querying the database:', err.message);
+            // Handle the error appropriately (e.g., send an error response)
+        } else if (row) {
+            const questionCount = parseInt(row.severalQuestions, 10);
+            // Use questionCount as needed
+            console.log(`Number of questions: ${questionCount}`);
+
+            const sql = `
         INSERT INTO examAnswers (
             examId, userId, date, answerNumber, photoName, classificationSetSrc, classificationSubSetSrc,
             classificationSetDes, answerSubmitTime
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+            try {
+                const classificationValuesSrc = await getClassificationValuesSrc(photoName);
+
+                const params = [
+                    examId,
+                    userId,
+                    date,
+                    answerNumber,
+                    photoName,
+                    classificationValuesSrc.classificationSetSrc || null,
+                    classificationValuesSrc.classificationSubSetSrc || null,
+                    classificationDes,
+                    answerTime,
+                ];
+
+                db.run(sql, params, function (err) {
+                    if (err) {
+                        console.error('Error inserting test answer into database:', err.message);
+                        return res.status(500).json({message: 'Error inserting test answer into database'});
+                    }
+
+                    res.cookie('answerNumber', answerNumber, {httpOnly: true, secure: true});
+
+                    if (answerNumber === questionCount) {
+                        res.clearCookie('answerNumber');
+                        res.status(200).json({message: 'Well done! Test is over', redirect: '/postTest'});
+                    } else {
+                        res.clearCookie('answerNumber');
+                        answerNumber++;
+                        res.cookie('answerNumber', answerNumber, {httpOnly: true, secure: true});
+                        res.status(200).json({
+                            message: 'Test answer recorded successfully',
+                            nextQuestionNumber: answerNumber
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error getting classification values:', error);
+                res.status(500).json({message: 'Internal server error'});
+            }
+        } else {
+            console.error('No exam found with the provided examId');
+            // Handle the case where no data is found
+        }
+    });
+
+});
+
+// Endpoint to handle post-test results
+app.get('/post-test-results', verifyToken, async (req, res) => {
+    const examId = req.cookies.examId; // Assume examId is stored in a cookie
+    const userId = req.user.id; // Retrieved from the verifyToken middleware
 
     try {
-        const classificationValuesSrc = await getClassificationValuesSrc(photoName);
-        //const classificationValuesDes = await getClassificationValuesDes(classificationDes);
-
-        const params = [
-            examId,
-            userId,
-            date,
-            answerNumber,
-            photoName,
-            classificationValuesSrc.classificationSetSrc || null,
-            classificationValuesSrc.classificationSubSetSrc || null,
-            classificationDes,
-            answerTime,
-        ];
-
-        // Insert test answer into database
-        db.run(sql, params, function (err) {
-            if (err) {
-                console.error('Error inserting test answer into database:', err.message);
-                return res.status(500).json({message: 'Error inserting test answer into database'});
-            }
-
-            else {
-                console.log('Test answer inserted successfully');
-                // Update cookies
-                if (answerNumber === 15) {
-                    res.clearCookie('examId');
-                    res.clearCookie('answerNumber');
-                    res.status(200).json({message: 'Well done !\nTest is over recorded successfully', redirect: '/postTest'});
-                } else if (answerNumber < 15) {
-                    res.clearCookie('answerNumber', answerNumber, {httpOnly: true, secure: true});
-                    res.cookie('answerNumber', answerNumber + 1, {httpOnly: true, secure: true});
-                    res.status(200).json({message: 'Test answer recorded successfully'});
-                }
-            }
-
-        });
-
-
+        const results = await getPostTestResults(examId, userId);
+        res.status(200).json(results);
     } catch (error) {
-        console.error('Error getting classification values:', error);
+        console.error('Error fetching post-test results:', error);
         res.status(500).json({message: 'Internal server error'});
     }
 });
 
-// endregion Post endpoints
+// Function to fetch post-test results from the database
+async function getPostTestResults(examId, userId) {
+    const sql = `
+        SELECT photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, answerSubmitTime
+        FROM examAnswers
+        WHERE examId = ? AND userId = ?
+    `;
 
+    return new Promise((resolve, reject) => {
+        db.all(sql, [examId, userId], (err, rows) => {
+            if (err) {
+                return reject(err);
+            }
+
+            // Log the data retrieved for debugging
+            console.log("Rows fetched:", rows);
+
+            let totalQuestions = rows.length;
+            let correctAnswers = rows.filter(row => {
+                // if SetSrc = SetDes = LOW RISK or if SetSrc = (STEMI or HIGH RISK) and SetDes = HIGH RISK/STEMI
+                return (row.classificationSetSrc === row.classificationSetDes && row.classificationSetDes === 'LOW RISK') ||
+                    (['STEMI', 'HIGH RISK'].includes(row.classificationSetSrc) && row.classificationSetDes === 'HIGH RISK/STEMI');
+            }).length;
+
+            let totalTime = rows.reduce((acc, row) => acc + row.answerSubmitTime, 0);
+            let grade = (correctAnswers / totalQuestions) * 100;
+
+            // Log results for debugging
+            console.log("Total Questions:", totalQuestions);
+            console.log("Correct Answers:", correctAnswers);
+            console.log("Total Time:", totalTime);
+            console.log("Grade:", grade);
+
+            resolve({
+                totalQuestions,
+                correctAnswers,
+                totalTime,
+                grade: grade.toFixed(2),
+                answers: rows
+            });
+        });
+    });
+}
+
+// Route to serve detailedResults.html
+app.get('/detailedResults', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'detailedResults.html'));
+});
+
+// Endpoint to fetch detailed post-test results
+app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
+    const examId = req.cookies.examId;
+    const userId = req.user.id;
+
+    try {
+        const results = await getPostTestResults(examId, userId);
+        res.status(200).json(results);
+    } catch (error) {
+        console.error('Error fetching detailed post-test results:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+
+
+// endregion Post endpoints
 
 // Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
