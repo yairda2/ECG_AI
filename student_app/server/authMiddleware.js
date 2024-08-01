@@ -11,15 +11,14 @@ function verifyToken(req, res, next) {
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
-            res.json({ message: 'Unauthorized', redirect: '/login' });
+            res.redirect('/login?message=InvalidToken');
         }
         // if the time over reLogin
         if (Date.now() >= decoded.exp * 1000) {
-            res.json({ message: 'Unauthorized', redirect: '/login' });
+            res.redirect('/login?message=TokenExpired');
         }
         req.user = decoded;
         // TODO Add here check if the id exists in the database
-
         next();
     });
 }

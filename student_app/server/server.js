@@ -1,10 +1,12 @@
-// Import necessary libraries and modules
+// Description: This file contains the server-side code for the ECG application.
+// Author: Yair Davidof & Eiasaf Sinuani.
+// region Imports
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sqlite3 = require('sqlite3').verbose();
 const cookieParser = require('cookie-parser');
-const { v4: uuidv4 } = require('uuid');
+const {v4: uuidv4} = require('uuid');
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
@@ -14,12 +16,12 @@ const verifyToken = require('./authMiddleware');
 const config = require('../config/config');
 const PORT = config.server.port || 3000;
 const SECRET_KEY = config.secret_key.key;
+// endregion Imports
 
-// Middleware setup
+// region Middleware setup
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/img', express.static(path.join(__dirname, '..', 'public', 'img')));
-
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -29,14 +31,16 @@ app.use((req, res, next) => {
     req.url = decodeURIComponent(req.url);
     next();
 });
+// endregion Middleware setup
 
-// Database setup
+// region Database setup
 const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to the SQLite database.');
         createTables();
+        insertDefaultData();
     }
 });
 
@@ -51,11 +55,11 @@ function createTables() {
                 avgDegree INTEGER DEFAULT 0,
                 academicInstitution TEXT,
                 totalEntries INTEGER DEFAULT 0,
-                totalAnswers INTEGER DEFAULT 0,
                 totalExams INTEGER DEFAULT 0,
                 avgExamTime INTEGER DEFAULT 0,
+                totalAnswers INTEGER DEFAULT 0,
                 totalTrainTime INTEGER DEFAULT 0,
-                avgAnswers INTEGER DEFAULT 0
+                userRate INTEGER DEFAULT 0
             )`);
 
         db.run(`
@@ -82,7 +86,6 @@ function createTables() {
                 classificationSetDes TEXT,
                 classificationSubSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
-                submissionType TEXT,
                 helpActivated BOOLEAN DEFAULT FALSE,
                 helpTimeActivated INTEGER DEFAULT 0,
                 FOREIGN KEY (userId) REFERENCES users(id)
@@ -98,11 +101,7 @@ function createTables() {
                 classificationSetSrc TEXT,
                 classificationSubSetSrc TEXT,
                 classificationSetDes TEXT,
-                classificationSubSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
-                alertActivated INTEGER DEFAULT 0,
-                submissionType TEXT,
-                helpActivated BOOLEAN DEFAULT FALSE,
                 PRIMARY KEY (examId, userId, answerNumber),
                 FOREIGN KEY (userId) REFERENCES users(id),
                 FOREIGN KEY (examId) REFERENCES exam(examId)
@@ -110,10 +109,9 @@ function createTables() {
 
         db.run(`
             CREATE TABLE IF NOT EXISTS exam (
-                examId INTEGER PRIMARY KEY AUTOINCREMENT,
+                examId TEXT PRIMARY KEY,
                 userId TEXT,
                 date TEXT,
-                title TEXT,
                 severalQuestions INTEGER DEFAULT 0,
                 score INTEGER DEFAULT 0,
                 totalExamTime INTEGER DEFAULT 0,
@@ -132,7 +130,53 @@ function createTables() {
     });
 }
 
-// Helper functions
+// Insert default data into the database, authentication table
+function insertDefaultData() {
+    const password = '12345678';
+    const hashedPassword = bcrypt.hash(password, 10);
+    const userId = uuidv4();
+    const email = 'YISHAY121@gmail.com';
+    const gender = 'male';
+    const role = 'admin';
+    const termsAgreement = true;
+    const college = 'Technion';
+    const avgDegree = 0;
+    const age = 0;
+
+    // Insert default admin user, only if it doesn't already exist
+    db.get('SELECT email FROM authentication WHERE email = ?', [email], (err, row) => {
+        if (err) {
+            console.error('Error querying the database:', err.message);
+            return;
+        }
+
+        if (row) {
+            return;
+        }
+
+        hashedPassword.then((hash) => {
+            db.run('INSERT INTO users (id, age, gender, avgDegree, academicInstitution) VALUES (?, ?, ?, ?, ?)',
+                [userId, age, gender, avgDegree, college], (err) => {
+                    if (err) {
+                        console.error('Error inserting default data into users table:', err.message);
+                    }
+
+                    db.run('INSERT INTO authentication (userId, email, password, role, termsAgreement) VALUES (?, ?, ?, ?, ?)',
+                        [userId, email, hash, role, termsAgreement], (err) => {
+                            if (err) {
+                                console.error('Error inserting default data into authentication table:', err.message);
+                            }
+                        });
+
+                });
+        });
+
+    });
+}
+
+// endregion Database setup
+
+// region Helper functions
 function checkToken(req, res, next) {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: 'NoToken', redirect: '/login' });
@@ -184,7 +228,6 @@ async function getClassificationValuesDes(classificationDes) {
     }
 }
 
-
 function insertClassification(fileName, classificationSet, classificationSubSet) {
     const sql = `
         INSERT INTO imageClassification (photoName, classificationSet, classificationSubSet)
@@ -197,16 +240,38 @@ function insertClassification(fileName, classificationSet, classificationSubSet)
     });
 }
 
-// Serve static HTML files
+function checkUserExist(id) {
+    const sql = `SELECT id FROM users WHERE id = ?`;
+    db.get(sql, [id], (err, row) => {
+        if (err) {
+            console.error('Error querying the database:', err.message);
+            return false;
+        }
+        return row;
+    });
+}
+
+// endregion Helper functions
+
+// region Get endpoints
+// Login page
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'login.html')));
+
+// Register page
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'views', 'register.html')));
+
+// Terms text data
 app.get('/terms', (req, res) => {
     const terms = fs.readFileSync(path.join(__dirname, 'Terms.txt'), 'utf8');
     res.send(terms);
 });
+
+// Admin classified images page
 app.get('/classifiedImagesAdmin', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'classifiedImagesAdmin.html'));
 });
+
+// Main page
 app.get('/chooseModel', verifyToken, (req, res) => {
     if (req.cookies.token) {
         const decoded = jwt.verify(req.cookies.token, SECRET_KEY);
@@ -216,6 +281,8 @@ app.get('/chooseModel', verifyToken, (req, res) => {
     }
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModel.html'));
 });
+
+// Admin page
 app.get('/chooseModelAdmin', verifyToken, (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).send('Access Denied');
@@ -226,21 +293,29 @@ app.get('/chooseModelAdmin', verifyToken, (req, res) => {
         res.sendFile(path.join(__dirname, '..', 'public', 'views', 'chooseModelAdmin.html'));
     }
 });
+
+// Training page
 app.get('/training', checkToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'training.html'));
 });
+
+// Pre-test
+app.get('/pre-test', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'preTest.html'));
+});
+
+// Test page
 app.get('/test', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
 });
-app.get('/test-init', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'test.html'));
-});
+
+// User data page
 app.get('/info', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
 });
 
-
-// API endpoints
+// This endpoint is used to get the image path for the image classification task,
+// Those are not classified yet
 app.get('/random-image-classification', (req, res) => {
     const imagesDir = path.join(__dirname, '..', 'public', 'img', 'bankPhotos');
     fs.readdir(imagesDir, (err, files) => {
@@ -255,6 +330,9 @@ app.get('/random-image-classification', (req, res) => {
         res.json({ imagePath: `../img/bankPhotos/${imagePath}` });
     });
 });
+
+// Those images are already classified
+// Get random image for training and test
 app.get('/random-image', verifyToken, (req, res) => {
     const getClassifiedImagesQuery = `
         SELECT photoName FROM imageClassification
@@ -287,49 +365,71 @@ app.get('/random-image', verifyToken, (req, res) => {
             if (!row) {
                 return res.status(404).send('Image classification not found');
             }
-            let correctAns = row.classificationSubSet === '' ? row.classificationSet:row.classificationSubSet;
-            res.json({ imagePath: `../img/graded/${row.classificationSet}/${row.classificationSubSet || ''}/${randomImagePath}` ,correctAnswer:correctAns});
+            const correctAnswer = row.classificationSubSet === null ? row.classificationSet : row.classificationSubSet;
+            res.json({
+                imagePath: `../img/graded/${row.classificationSet}/${row.classificationSubSet || ''}/${randomImagePath}`,
+                correctAnswer: correctAnswer
+            });
         });
     });
 });
+
+// Main page, redirect to chooseModel or chooseModelAdmin
 app.get('/main', verifyToken, (req, res) => {
     if (req.user.role === 'admin') {
         return res.json({ redirect: '/chooseModelAdmin', message: 'redirect to main' });
     }
     res.json({ redirect: '/chooseModel', message: 'redirect to main' });
 });
+
+// User data page, redirect to info
 app.get('/user-data', verifyToken, (req, res) => {
     res.json({ redirect: '/info', message: 'redirect to user data' });
 });
 
-
-
+// Data for user info page
 app.get('/info/data', (req, res) => {
     const userId = req.cookies.userId;
-    const sql = "SELECT photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes,classificationSubSetDes, answerSubmitTime, helpActivated FROM answers WHERE userId = ?";
+    const sql = "SELECT photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, classificationSubSetDes, answerSubmitTime, helpActivated FROM answers WHERE userId = ?";
     db.all(sql, userId, (err, rows) => {
         if (err) {
-            res.status(400).json({"error": err.message});
+            res.status(400).json({ "error": err.message });
             return;
         }
         res.json(rows);
     });
 });
 
-// Serve images
+// Serve images for image user info page
 app.get('/img/graded/:set/:photo', (req, res) => {
     const set = req.params.set.toUpperCase()
     const photo = req.params.photo;
-    const imagePath = path.join(__dirname,'..', 'public', 'img', 'graded', set, photo);
+    const imagePath = path.join(__dirname, '..', 'public', 'img', 'graded', set, photo);
     res.sendFile(imagePath);
 });
+
+// Sign up, redirect to register
 app.get('/sign-up', (req, res) => {
     res.json({ redirect: '/register', message: 'redirect to sign-up' });
 });
+
+// Sign in, redirect to log in
 app.get('/sign-in', (req, res) => {
     res.json({ redirect: '/login', message: 'redirect to sign-in' });
 });
 
+// Serve post-test page
+app.get('/postTest', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'postTest.html'));
+});
+
+// Route to serve detailedResults.html
+app.get('/detailedResults', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'detailedResults.html'));
+});
+// endregion Get endpoints
+
+// region Post endpoints
 app.post('/register', async (req, res) => {
     const { email, password, age, gender, avgDegree, academicInstitution, termsAgreement } = req.body;
     if (!email || !password || !age || !gender || !avgDegree || !academicInstitution || termsAgreement === false) {
@@ -410,11 +510,43 @@ app.post('/chooseModel', verifyToken, (req, res) => {
             res.status(200).json({ redirect: '/training', message: 'Redirecting to training page' });
             break;
         case 'Test':
-            res.status(200).json({ redirect: '/test', message: 'Redirecting to test page' });
+            res.status(200).json({ redirect: '/pre-test', message: 'Redirecting to test page' });
             break;
         default:
             res.status(404).json({ message: 'Action not found' });
     }
+});
+
+app.post('/classify-image', verifyToken, (req, res) => {
+    const { fileName, classificationSet, classificationSubSet } = req.body;
+    const outDir = path.join(__dirname, '..', 'public', 'img', 'graded', classificationSet, classificationSubSet || '');
+    const filePath = path.join(outDir, fileName);
+    const gradedDir = path.join(__dirname, '..', 'public', 'img', 'graded');
+    if (!fs.existsSync(outDir)) {
+        fs.mkdirSync(outDir, { recursive: true });
+    }
+    fs.rename(path.join(__dirname, '..', 'public', 'img', 'bankPhotos', fileName), filePath, (err) => {
+        if (err) {
+            console.error('Error moving image:', err.message);
+            return res.status(500).json({ message: 'Error moving image' });
+        }
+        const checkSql = `
+            SELECT photoName
+            FROM imageClassification
+            WHERE photoName = ?
+        `;
+        db.get(checkSql, [fileName], (err, row) => {
+            if (err) {
+                console.error('Error checking image classification:', err.message);
+                return res.status(500).json({ message: 'Error checking image classification' });
+            }
+            if (row) {
+                return res.status(409).json({ message: 'Image already classified' });
+            }
+            insertClassification(fileName, classificationSet, classificationSubSet);
+        });
+    });
+    res.status(200).json({ message: 'Image classified successfully' });
 });
 
 app.post('/training', verifyToken, async (req, res) => {
@@ -479,20 +611,6 @@ app.post('/training', verifyToken, async (req, res) => {
                         console.error('Error updating totalAnswers:', err.message);
                     }
                 });
-
-                const updateAvgAnswersSql = `
-                    UPDATE users
-                    SET avgAnswers = (
-                        SELECT AVG(answerSubmitTime)
-                        FROM answers
-                        WHERE userId = ?
-                    )
-                    WHERE id = ?`;
-                db.run(updateAvgAnswersSql, [userId, userId], (err) => {
-                    if (err) {
-                        console.error('Error updating avgAnswers:', err.message);
-                    }
-                });
             });
 
             const updateTotalTrainTime = `
@@ -513,103 +631,325 @@ app.post('/training', verifyToken, async (req, res) => {
     }
 });
 
-
-
 app.post('/pre-test', verifyToken, (req, res) => {
-    res.json({ redirect: '/test', message: 'Redirecting to test page' });
-});
+    // Set the cookie exam number and answer number.
+    const questionCount = req.body.questionCount;
 
-app.post('/test', verifyToken, async (req, res) => {
-    const {
-        photoName,
-        classificationDes,
-        answerTime,
-        answerChange,
-        alertActivated,
-        helpButtonClicks,
-        examId,
-        answerNumber
-    } = req.body;
+    const examId = uuidv4();
+    const answerNumber = 1;
+    res.cookie('examId', examId, { httpOnly: true, secure: true });
+    res.cookie('questionCount', questionCount, { httpOnly: true, secure: true });
+    res.cookie('answerNumber', answerNumber, { httpOnly: true, secure: true });
+    res.status(200).json({ message: 'Pre-test initiated successfully', redirect: '/test' });
 
+    // Insert exam into database
     const userId = req.user.id;
     const date = new Date().toISOString();
+    const severalQuestions = questionCount;
+    const score = 0;
+    const totalExamTime = 0;
+    const type = 'binary';
 
     const sql = `
-        INSERT INTO examAnswers (
-            examId, userId, date, answerNumber, photoName, classificationSetSrc, classificationSubSetSrc,
-            classificationSetDes, classificationSubSetDes, answerSubmitTime, answerChange, alertActivated,
-            firstHelpActivated, secondHelpActivated, firstHelpTimeActivated, secondHelpTimeActivated
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO exam (
+            examId, userId, date, severalQuestions, score, totalExamTime, type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    try {
-        const classificationValuesSrc = await getClassificationValuesSrc(photoName);
-        const classificationValuesDes = await getClassificationValuesDes(classificationDes);
+    const params = [
+        examId,
+        userId,
+        date,
+        severalQuestions,
+        score,
+        totalExamTime,
+        type
+    ];
 
-        const params = [
-            examId,
-            userId,
-            date,
-            answerNumber,
-            photoName,
-            classificationValuesSrc.classificationSetSrc || null,
-            classificationValuesSrc.classificationSubSetSrc || null,
-            classificationValuesDes.classificationSetDes || null,
-            classificationValuesDes.classificationSubSetDes || null,
-            answerTime,
-            answerChange,
-            alertActivated,
-            helpButtonClicks.length > 0 ? 1 : 0,
-            helpButtonClicks.length > 1 ? 1 : 0,
-            helpButtonClicks[0] || 0,
-            helpButtonClicks[1] || 0
-        ];
+    db.run(sql, params, function (err) {
+        if (err) {
+            console.error('Error inserting exam into database:', err.message);
+        } else {
+            console.log('Exam inserted successfully');
+        }
+    });
+});
 
-        db.run(sql, params, function (err) {
-            if (err) {
-                console.error('Error inserting test answer into database:', err.message);
-                return res.status(500).json({ message: 'Error inserting test answer into database' });
+// Route to get the current question number
+app.get('/current-question-number', verifyToken, (req, res) => {
+    const answerNumber = req.cookies.answerNumber || 1;
+    res.json({ answerNumber: answerNumber });
+});
+
+// Ensure that the `submitClassification` route also updates the `answerNumber` in the cookie
+app.post('/test', verifyToken, async (req, res) => {
+    const { photoName, classificationDes, answerTime } = req.body;
+    const userId = req.user.id;
+    const date = new Date().toISOString();
+    const examId = req.cookies.examId;
+    let answerNumber = parseInt(req.cookies.answerNumber, 10) || 0;
+    const questionCountQuery = 'SELECT severalQuestions FROM exam WHERE examId = ?';
+
+    db.get(questionCountQuery, [examId], async (err, row) => {
+        if (err) {
+            console.error('Error querying the database:', err.message);
+            res.status(500).json({ message: 'Error querying the database' });
+            return;
+        }
+
+        if (row) {
+            const questionCount = parseInt(row.severalQuestions, 10);
+            console.log(`Number of questions: ${questionCount}`);
+
+            const sql = `
+                INSERT INTO examAnswers (
+                    examId, userId, date, answerNumber, photoName, classificationSetSrc, classificationSubSetSrc,
+                    classificationSetDes, answerSubmitTime
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+            try {
+                const classificationValuesSrc = await getClassificationValuesSrc(photoName);
+                const params = [
+                    examId,
+                    userId,
+                    date,
+                    answerNumber,
+                    photoName,
+                    classificationValuesSrc.classificationSetSrc || null,
+                    classificationValuesSrc.classificationSubSetSrc || null,
+                    classificationDes,
+                    answerTime,
+                ];
+
+                db.run(sql, params, (err) => {
+                    if (err) {
+                        console.error('Error inserting test answer into database:', err.message);
+                        return res.status(500).json({ message: 'Error inserting test answer into database' });
+                    }
+
+                    if (answerNumber === questionCount) {
+                        updateExamStats(examId, userId, questionCount, (updateErr) => {
+                            if (updateErr) {
+                                return res.status(500).json({ message: 'Error updating exam stats' });
+                            }
+
+                            res.clearCookie('answerNumber');
+                            res.status(200).json({
+                                message: 'Test completed successfully',
+                                redirect: '/postTest'
+                            });
+                        });
+                    } else {
+                        answerNumber++;
+                        res.cookie('answerNumber', answerNumber, { httpOnly: true, secure: true });
+                        res.status(200).json({
+                            message: 'Test answer recorded successfully',
+                            nextQuestionNumber: answerNumber
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error getting classification values:', error);
+                res.status(500).json({ message: 'Internal server error' });
             }
+        } else {
+            console.error('No exam found with the provided examId');
+            res.status(404).json({ message: 'No exam found' });
+        }
+    });
+});
 
-            res.status(200).json({ message: 'Test answer recorded successfully' });
+function updateExamStats(examId, userId, questionCount, callback) {
+    console.log(`Starting updateExamStats for examId: ${examId} and userId: ${userId}`);
+
+    const updateTotalExamTime = `
+        UPDATE exam
+        SET totalExamTime = (
+            SELECT SUM(answerSubmitTime)
+            FROM examAnswers
+            WHERE examId = ?
+        )
+        WHERE examId = ?`;
+
+    db.run(updateTotalExamTime, [examId, examId], (err) => {
+        if (err) {
+            console.error('Error updating totalExamTime:', err.message);
+            return callback(err);
+        }
+        console.log('Total exam time updated successfully.');
+
+        const updateTotalAnswers = `
+            UPDATE users
+            SET totalAnswers = totalAnswers + ?
+            WHERE id = ?`;
+
+        db.run(updateTotalAnswers, [questionCount, userId], (err) => {
+            if (err) {
+                console.error('Error updating totalAnswers:', err.message);
+                return callback(err);
+            }
+            console.log('Total answers count updated successfully.');
+
+            const updateTotalExams = `
+                UPDATE users
+                SET totalExams = totalExams + 1
+                WHERE id = ?`;
+
+            db.run(updateTotalExams, [userId], (err) => {
+                if (err) {
+                    console.error('Error updating totalExams:', err.message);
+                    return callback(err);
+                }
+                console.log('Total exams count updated successfully.');
+
+                // Calculate totalRate and scores
+                const calculateTotalRate = `
+                    SELECT SUM(rate) AS totalRate
+                    FROM imageClassification
+                    JOIN examAnswers ON imageClassification.photoName = examAnswers.photoName
+                    WHERE examAnswers.examId = ?`;
+
+                db.get(calculateTotalRate, [examId], (err, rateResult) => {
+                    if (err || !rateResult) {
+                        console.error('Error calculating total rate:', err ? err.message : "No rate result found");
+                        return callback(err);
+                    }
+                    const totalRate = rateResult.totalRate || 1; // Avoid division by zero
+                    console.log(`Total Rate calculated: ${totalRate}`);
+
+                    const calculateScore = `
+                        SELECT SUM(
+                            CASE
+                                WHEN INSTR(LOWER(TRIM(examAnswers.classificationSetDes)), LOWER(TRIM(imageClassification.classificationSet))) > 0
+                                    THEN (imageClassification.rate * 100.0 / ?)
+                                ELSE 0
+                            END
+                        ) AS calculatedScore
+                        FROM imageClassification
+                        JOIN examAnswers ON imageClassification.photoName = examAnswers.photoName
+                        WHERE examAnswers.examId = ?`;
+
+
+                    db.get(calculateScore, [totalRate, examId], (err, scoreResult) => {
+                        if (err) {
+                            console.error('Error calculating score:', err.message);
+                            return callback(err);
+                        }
+                        const score = scoreResult ? scoreResult.calculatedScore : 0;
+                        console.log(`Calculated Score before updating: ${score}`);
+
+                        const updateScore = `
+                            UPDATE exam
+                            SET score = ?
+                            WHERE examId = ?`;
+
+                        db.run(updateScore, [score, examId], (err) => {
+                            if (err) {
+                                console.error('Error updating score:', err.message);
+                                return callback(err);
+                            }
+                            console.log('Score updated successfully.');
+                            callback(null, 'Update complete'); // Assume callback accepts (error, successMessage)
+                        });
+                    });
+                });
+            });
         });
+    });
+}
+
+
+// Endpoint to handle post-test results
+app.get('/post-test-results', verifyToken, async (req, res) => {
+    const examId = req.cookies.examId; // Assume examId is stored in a cookie
+    const userId = req.user.id; // Retrieved from the verifyToken middleware
+
+    try {
+        const results = await getPostTestResults(examId, userId);
+        res.status(200).json(results);
     } catch (error) {
-        console.error('Error getting classification values:', error);
+        console.error('Error fetching post-test results:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 });
 
-app.post('/classify-image', verifyToken, (req, res) => {
-    const { fileName, classificationSet, classificationSubSet } = req.body;
-    const outDir = path.join(__dirname, '..', 'public', 'img', 'graded', classificationSet, classificationSubSet || '');
-    const filePath = path.join(outDir, fileName);
-    const gradedDir = path.join(__dirname, '..', 'public', 'img', 'graded');
-    if (!fs.existsSync(outDir)) {
-        fs.mkdirSync(outDir, { recursive: true });
-    }
-    fs.rename(path.join(__dirname, '..', 'public', 'img', 'bankPhotos', fileName), filePath, (err) => {
-        if (err) {
-            console.error('Error moving image:', err.message);
-            return res.status(500).json({ message: 'Error moving image' });
-        }
-        const checkSql = `
-            SELECT photoName
-            FROM imageClassification
-            WHERE photoName = ?
-        `;
-        db.get(checkSql, [fileName], (err, row) => {
+// Function to fetch post-test results from the database
+async function getPostTestResults(examId, userId) {
+    const sql = `
+        SELECT examAnswers.photoName, examAnswers.classificationSetSrc, examAnswers.classificationSetDes, examAnswers.answerSubmitTime,
+            imageClassification.rate,
+            CASE 
+                WHEN INSTR(LOWER(TRIM(examAnswers.classificationSetDes)), LOWER(TRIM(imageClassification.classificationSet))) > 0 
+                THEN (imageClassification.rate * 100.0 / 
+                      (SELECT SUM(rate) 
+                       FROM imageClassification 
+                       JOIN examAnswers 
+                       ON imageClassification.photoName = examAnswers.photoName 
+                       WHERE examAnswers.examId = ?))
+                ELSE 0 
+            END AS score
+        FROM examAnswers
+        JOIN imageClassification ON examAnswers.photoName = imageClassification.photoName
+        WHERE examAnswers.examId = ? AND examAnswers.userId = ?;
+    `;
+
+    return new Promise((resolve, reject) => {
+        db.all(sql, [examId, examId, userId], (err, rows) => {
             if (err) {
-                console.error('Error checking image classification:', err.message);
-                return res.status(500).json({ message: 'Error checking image classification' });
+                return reject(err);
             }
-            if (row) {
-                return res.status(409).json({ message: 'Image already classified' });
-            }
-            insertClassification(fileName, classificationSet, classificationSubSet);
+
+            // Log the data retrieved for debugging
+            console.log("Rows fetched:", rows);
+
+            let totalQuestions = rows.length;
+            let correctAnswers = rows.filter(row => {
+                // if SetSrc = SetDes = LOW RISK or if SetSrc = (STEMI or HIGH RISK) and SetDes = HIGH RISK/STEMI
+                return (row.classificationSetSrc === row.classificationSetDes && row.classificationSetDes === 'LOW RISK') ||
+                    (['STEMI', 'HIGH RISK'].includes(row.classificationSetSrc) && row.classificationSetDes === 'HIGH RISK/STEMI');
+            }).length;
+
+            let totalTime = rows.reduce((acc, row) => acc + row.answerSubmitTime, 0);
+            let grade = rows.reduce((acc, row) => acc + row.score, 0);
+
+            // Log results for debugging
+            console.log("Total Questions:", totalQuestions);
+            console.log("Correct Answers:", correctAnswers);
+            console.log("Total Time:", totalTime);
+            console.log("Grade:", grade);
+
+            resolve({
+                totalQuestions,
+                correctAnswers,
+                totalTime,
+                grade: grade.toFixed(2),
+                answers: rows
+            });
         });
     });
-    res.status(200).json({ message: 'Image classified successfully' });
+}
+
+// Route to serve detailedResults.html
+app.get('/detailedResults', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'detailedResults.html'));
 });
+
+// Endpoint to fetch detailed post-test results
+app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
+    const examId = req.cookies.examId;
+    const userId = req.user.id;
+
+    try {
+        const results = await getPostTestResults(examId, userId);
+        res.status(200).json(results);
+    } catch (error) {
+        console.error('Error fetching detailed post-test results:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// endregion Post endpoints
 
 // Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+

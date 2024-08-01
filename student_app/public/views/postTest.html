@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Post-Test Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .summary {
+            margin: 20px 0;
+        }
+        .summary p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            background-color: #4CAF50;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Post-Test Summary</h1>
+    <div class="summary">
+        <p>Total Questions: <span id="totalQuestions">undefined</span></p>
+        <p>Correct Answers: <span id="correctAnswers">undefined</span></p>
+        <p>Incorrect Answers: <span id="incorrectAnswers">NaN</span></p>
+        <p>Total Time: <span id="totalTime">undefined</span> seconds</p>
+        <p>Average Time per Question: <span id="avgTimePerQuestion">NaN</span> seconds</p>
+        <p>Grade: <span id="grade">undefined</span></p>
+    </div>
+    <div>
+        <button onclick="window.location.href='/chooseModel'">Back to Main Menu</button>
+        <button onclick="window.location.href='/detailedResults'">View Detailed Results</button>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/post-test-results')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('totalQuestions').textContent = data.totalQuestions;
+                document.getElementById('correctAnswers').textContent = data.correctAnswers;
+                document.getElementById('incorrectAnswers').textContent = data.totalQuestions - data.correctAnswers;
+                document.getElementById('totalTime').textContent = data.totalTime;
+                document.getElementById('avgTimePerQuestion').textContent = (data.totalTime / data.totalQuestions).toFixed(2);
+                document.getElementById('grade').textContent = data.grade;
+            })
+            .catch(error => console.error('Error fetching post-test results:', error));
+    });
+</script>
+</body>
+</html>

@@ -1,19 +1,8 @@
-# this script need to be run only once to insert images to the database
-# the structure of the database is defined in the graded dir in public/img/graded
-# the Set is the base dir HIGH RISK STEMI and LOW RISK
-# the sub dirs are the Subset
-# for LOW RISK not subset dirs
-
-
-# go on this dirs and if for each image if she not in the db by here name insert her to the db
-
-
 import os
 import sqlite3
 from sqlite3 import Error
-from PIL import Image
 
-# Phats
+# Paths
 current_dir = os.path.dirname(os.path.realpath(__file__))
 db_path = os.path.join(current_dir, "database.db")
 graded_path = os.path.join(current_dir, "..", "public", "img", "graded")
@@ -36,16 +25,36 @@ def create_connection(db_file):
 
 def insert_image(conn, image):
     """
-    Create a new image into the images table
+    Create a new image into the imageClassification table
     :param conn:
     :param image:
     :return: image id
     """
-    sql = ''' INSERT INTO imageClassification(photoName,classificationSet,classificationSubSet)
+    sql = ''' INSERT INTO imageClassification(photoName, classificationSet, classificationSubSet)
               VALUES(?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, image)
     return cur.lastrowid
+
+
+def update_missing_rates(conn):
+    """
+    Update the rate for each image in the imageClassification table to 1 if it's null or empty
+    :param conn:
+    :return:
+    """
+    sql_select = ''' SELECT imageId, rate FROM imageClassification WHERE rate IS NULL OR rate = '' OR rate = 0 '''
+
+    sql_update = ''' UPDATE imageClassification SET rate = 1 WHERE imageId = ? '''
+    cur = conn.cursor()
+    cur.execute(sql_select)
+    rows = cur.fetchall()
+
+    for row in rows:
+        imageId = row[0]
+        cur.execute(sql_update, (imageId,))
+        conn.commit()
+    print(f"Updated {len(rows)} images with default rate of 1.")
 
 
 def main():
@@ -67,6 +76,8 @@ def main():
                         if os.path.isfile(image_path):
                             image = (sub_dir, set_dir, None)
                             insert_image(conn, image)
+        # Update missing rates after inserting images
+        update_missing_rates(conn)
     conn.close()
 
 
