@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Post-Test Summary</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 700px; /* Wider box */
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .summary {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .summary ul {
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .summary li {
+            background-color: #f4f4f4;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .results-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .answer-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .answer-item img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .answer-item p {
+            margin: 0;
+        }
+
+        /* New styles for correct/incorrect answers */
+        .correct img {
+            border: 2px solid #4CAF50; /* Green border for correct answers */
+        }
+
+        .incorrect img {
+            border: 2px solid #F44336; /* Red border for incorrect answers */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Post-Test Summary</h1>
+    <div class="summary">
+        <p>Congratulations on completing the ECG Classification Test!</p>
+        <p>Here are your results:</p>
+        <ul id="resultsList">
+            <!-- Results will be populated here by JavaScript -->
+        </ul>
+    </div>
+
+    <div class="results-list" id="answersList">
+        <!-- Answers will be displayed here -->
+    </div>
+
+    <button onclick="goBack()">Back to Main Menu</button>
+    <button onclick="viewDetailedResults()">View Detailed Results</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/post-test-results', { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                const resultsList = document.getElementById('resultsList');
+                const answersList = document.getElementById('answersList');
+
+                const totalQuestions = data.totalQuestions;
+                const correctAnswers = data.correctAnswers;
+                const incorrectAnswers = totalQuestions - correctAnswers;
+                const totalTime = data.totalTime;
+                const avgTimePerQuestion = (totalTime / totalQuestions).toFixed(2);
+                const grade = data.grade;
+
+                resultsList.innerHTML = `
+                    <li><strong>Total Questions:</strong> ${totalQuestions}</li>
+                    <li><strong>Correct Answers:</strong> ${correctAnswers}</li>
+                    <li><strong>Incorrect Answers:</strong> ${incorrectAnswers}</li>
+                    <li><strong>Total Time:</strong> ${totalTime} seconds</li>
+                    <li><strong>Average Time per Question:</strong> ${avgTimePerQuestion} seconds</li>
+                    <li><strong>Grade:</strong> ${grade}</li>
+                `;
+
+                data.answers.forEach(answer => {
+                    const answerItem = document.createElement('div');
+                    answerItem.classList.add('answer-item');
+
+                    // Determine if the answer is correct or incorrect
+                    const isCorrect = answer.classificationSetSrc === answer.classificationSetDes;
+
+                    // Construct the image path and add the correct/incorrect class
+                    let photoPath, answerClass;
+                    if (answer.classificationSetSrc === 'LOW RISK') {
+                        photoPath = `/img/graded/LOW RISK/${answer.photoName}`;
+                        answerClass = isCorrect ? 'correct' : 'incorrect';
+                    } else if (answer.classificationSetSrc && answer.classificationSubSetSrc) {
+                        photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.classificationSubSetSrc}/${answer.photoName}`;
+                        answerClass = isCorrect ? 'correct' : 'incorrect';
+                    } else {
+                        photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.photoName}`;
+                        answerClass = isCorrect ? 'correct' : 'incorrect';
+                    }
+
+                    answerItem.classList.add(answerClass);
+                    answerItem.innerHTML = `
+                        <img src="${photoPath}" alt="${answer.photoName}">
+                        <p><strong>Your Answer:</strong> ${answer.classificationSetDes || 'N/A'}</p>
+                        <p><strong>Correct Answer:</strong> ${answer.classificationSetSrc || 'N/A'}</p>
+                    `;
+                    answersList.appendChild(answerItem);
+                });
+            })
+            .catch(error => console.error('Error fetching post-test results:', error));
+    });
+
+    function goBack() {
+        window.location.href = '/chooseModel';
+    }
+
+    function viewDetailedResults() {
+        window.location.href = '/detailedResults';
+    }
+</script>
+
+</body>
+</html>

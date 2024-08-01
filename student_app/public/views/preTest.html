@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pre-Test Instructions</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .instructions {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .input-group input[type="number"] {
+            width: 70px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+            text-align: center;
+            font-size: 16px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group input[type="range"] {
+            width: 100%;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Pre-Test Instructions</h1>
+    <div class="instructions">
+        <p>Welcome to the ECG Classification Test. In this test, you will be presented with a series of ECG images. Your task is to classify each image as either "LOW RISK" or "HIGH RISK / STEMI".</p>
+        <p>Please follow these guidelines:</p>
+        <ul>
+            <li>Review each image carefully before making your selection.</li>
+            <li>You have an unlimited amount of time for each question. Be sure to answer promptly.</li>
+            <li>You can choose the number of questions you'd like to answer, with a minimum of 10 and a maximum of 50.</li>
+            <li>Once you select a category, your answer will be submitted automatically.</li>
+        </ul>
+    </div>
+
+    <h2>Select the Number of Questions</h2>
+    <div class="input-group">
+        <input type="number" id="questionCountInput" min="10" max="50" value="10">
+        <input type="range" id="questionCountRange" min="10" max="50" value="10">
+    </div>
+
+    <button onclick="startTest()">Start Test</button>
+</div>
+
+<script>
+    document.getElementById('questionCountInput').addEventListener('input', function() {
+        let value = parseInt(this.value);
+        if (isNaN(value) || value < 10) {
+            this.value = 10;
+            value = 10;
+        } else if (value > 50) {
+            this.value = 50;
+            value = 50;
+        }
+        document.getElementById('questionCountRange').value = value;
+    });
+
+    document.getElementById('questionCountRange').addEventListener('input', function() {
+        document.getElementById('questionCountInput').value = this.value;
+    });
+
+    function startTest() {
+        const questionCount = document.getElementById('questionCountInput').value;
+
+        fetch('/pre-test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ questionCount: questionCount })
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                // Redirect to the test page or handle the response as needed
+                window.location.href = '/test';
+            })
+            .catch(error => console.error('Error starting test:', error));
+    }
+</script>
+
+</body>
+</html>
