@@ -137,6 +137,7 @@
                         <p><strong>Your Answer:</strong> ${answer.classificationSetDes || 'N/A'}</p>
                         <p><strong>Correct Answer:</strong> ${answer.classificationSetSrc || 'N/A'}</p>
                         <p><strong>Time Taken:</strong> ${answer.answerSubmitTime} seconds</p>
+                        <p><strong>Score:</strong> ${answer.score.toFixed(2)}%</p>
                     `;
                     answersList.appendChild(answerItem);
                 });

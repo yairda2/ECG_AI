@@ -760,6 +760,8 @@ app.post('/test', verifyToken, async (req, res) => {
 });
 
 function updateExamStats(examId, userId, questionCount, callback) {
+    console.log(`Starting updateExamStats for examId: ${examId} and userId: ${userId}`);
+
     const updateTotalExamTime = `
         UPDATE exam
         SET totalExamTime = (
@@ -774,6 +776,7 @@ function updateExamStats(examId, userId, questionCount, callback) {
             console.error('Error updating totalExamTime:', err.message);
             return callback(err);
         }
+        console.log('Total exam time updated successfully.');
 
         const updateTotalAnswers = `
             UPDATE users
@@ -785,6 +788,7 @@ function updateExamStats(examId, userId, questionCount, callback) {
                 console.error('Error updating totalAnswers:', err.message);
                 return callback(err);
             }
+            console.log('Total answers count updated successfully.');
 
             const updateTotalExams = `
                 UPDATE users
@@ -796,83 +800,64 @@ function updateExamStats(examId, userId, questionCount, callback) {
                     console.error('Error updating totalExams:', err.message);
                     return callback(err);
                 }
+                console.log('Total exams count updated successfully.');
 
-                const updateAvgExamTime = `
-                    UPDATE users
-                    SET avgExamTime = (
-                        SELECT AVG(totalExamTime)
-                        FROM exam
-                        WHERE userId = ?
-                    )
-                    WHERE id = ?`;
+                // Calculate totalRate and scores
+                const calculateTotalRate = `
+                    SELECT SUM(rate) AS totalRate
+                    FROM imageClassification
+                    JOIN examAnswers ON imageClassification.photoName = examAnswers.photoName
+                    WHERE examAnswers.examId = ?`;
 
-                db.run(updateAvgExamTime, [userId, userId], (err) => {
-                    if (err) {
-                        console.error('Error updating avgExamTime:', err.message);
+                db.get(calculateTotalRate, [examId], (err, rateResult) => {
+                    if (err || !rateResult) {
+                        console.error('Error calculating total rate:', err ? err.message : "No rate result found");
                         return callback(err);
                     }
+                    const totalRate = rateResult.totalRate || 1; // Avoid division by zero
+                    console.log(`Total Rate calculated: ${totalRate}`);
 
-                    const updateTotalTrainTime = `
-                        UPDATE users
-                        SET totalTrainTime = totalTrainTime + (
-                            SELECT SUM(answerSubmitTime)
-                            FROM examAnswers
-                            WHERE examId = ?
-                        )
-                        WHERE id = ?`;
+                    const calculateScore = `
+                        SELECT SUM(
+                            CASE
+                                WHEN INSTR(LOWER(TRIM(examAnswers.classificationSetDes)), LOWER(TRIM(imageClassification.classificationSet))) > 0
+                                    THEN (imageClassification.rate * 100.0 / ?)
+                                ELSE 0
+                            END
+                        ) AS calculatedScore
+                        FROM imageClassification
+                        JOIN examAnswers ON imageClassification.photoName = examAnswers.photoName
+                        WHERE examAnswers.examId = ?`;
 
-                    db.run(updateTotalTrainTime, [examId, userId], (err) => {
+
+                    db.get(calculateScore, [totalRate, examId], (err, scoreResult) => {
                         if (err) {
-                            console.error('Error updating totalTrainTime:', err.message);
+                            console.error('Error calculating score:', err.message);
                             return callback(err);
                         }
+                        const score = scoreResult ? scoreResult.calculatedScore : 0;
+                        console.log(`Calculated Score before updating: ${score}`);
 
-                        // TODO fix this function so she will insert to the db the score
-                        const calculateScore = `
-                            SELECT SUM(imageClassification.rate) as totalRate
-                            FROM examAnswers
-                            JOIN imageClassification ON examAnswers.photoName = imageClassification.photoName
-                            WHERE examAnswers.examId = ?`;
+                        const updateScore = `
+                            UPDATE exam
+                            SET score = ?
+                            WHERE examId = ?`;
 
-                        db.get(calculateScore, [examId], (err, row) => {
+                        db.run(updateScore, [score, examId], (err) => {
                             if (err) {
-                                console.error('Error calculating total rate:', err.message);
+                                console.error('Error updating score:', err.message);
                                 return callback(err);
                             }
-
-                            const totalRate = row.totalRate || 1;  // Ensure totalRate is not zero to avoid division by zero
-                            console.log('Total Rate:', totalRate);  // Debugging: Log totalRate value
-
-                            const totalRateSum = row.totalRate || 1;  // Correct the totalRateSum fetching
-                            console.log('Total Rate Sum:', totalRateSum);  // Debugging: Log totalRateSum value
-
-                            const updateScore = `
-                                UPDATE exam
-                                SET score = (
-                                    SELECT SUM((imageClassification.rate / ?) * 100)
-                                    FROM examAnswers
-                                    JOIN imageClassification ON examAnswers.photoName = imageClassification.photoName
-                                    WHERE examAnswers.examId = ?
-                                )
-                                WHERE examId = ?`;
-
-                            db.run(updateScore, [totalRateSum, examId, examId], (err) => {
-                                if (err) {
-                                    console.error('Error updating score:', err.message);
-                                    return callback(err);  // Handle the error appropriately
-                                }
-
-                                console.log('Score updated successfully');
-                                callback();  // Continue the flow of the program
-                            });
+                            console.log('Score updated successfully.');
+                            callback(null, 'Update complete'); // Assume callback accepts (error, successMessage)
                         });
-
                     });
                 });
             });
         });
     });
 }
+
 
 // Endpoint to handle post-test results
 app.get('/post-test-results', verifyToken, async (req, res) => {
@@ -891,13 +876,25 @@ app.get('/post-test-results', verifyToken, async (req, res) => {
 // Function to fetch post-test results from the database
 async function getPostTestResults(examId, userId) {
     const sql = `
-        SELECT photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, answerSubmitTime
+        SELECT examAnswers.photoName, examAnswers.classificationSetSrc, examAnswers.classificationSetDes, examAnswers.answerSubmitTime,
+            imageClassification.rate,
+            CASE 
+                WHEN INSTR(LOWER(TRIM(examAnswers.classificationSetDes)), LOWER(TRIM(imageClassification.classificationSet))) > 0 
+                THEN (imageClassification.rate * 100.0 / 
+                      (SELECT SUM(rate) 
+                       FROM imageClassification 
+                       JOIN examAnswers 
+                       ON imageClassification.photoName = examAnswers.photoName 
+                       WHERE examAnswers.examId = ?))
+                ELSE 0 
+            END AS score
         FROM examAnswers
-        WHERE examId = ? AND userId = ?
+        JOIN imageClassification ON examAnswers.photoName = imageClassification.photoName
+        WHERE examAnswers.examId = ? AND examAnswers.userId = ?;
     `;
 
     return new Promise((resolve, reject) => {
-        db.all(sql, [examId, userId], (err, rows) => {
+        db.all(sql, [examId, examId, userId], (err, rows) => {
             if (err) {
                 return reject(err);
             }
@@ -913,7 +910,7 @@ async function getPostTestResults(examId, userId) {
             }).length;
 
             let totalTime = rows.reduce((acc, row) => acc + row.answerSubmitTime, 0);
-            let grade = (correctAnswers / totalQuestions) * 100;
+            let grade = rows.reduce((acc, row) => acc + row.score, 0);
 
             // Log results for debugging
             console.log("Total Questions:", totalQuestions);
@@ -955,3 +952,4 @@ app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
 
 // Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
