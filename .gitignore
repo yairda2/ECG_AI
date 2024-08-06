@@ -208,3 +208,4 @@ dist
 
 # Serverless directories
 .serverless/
+*.zip
