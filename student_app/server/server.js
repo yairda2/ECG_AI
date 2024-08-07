@@ -563,16 +563,15 @@ app.post('/training', verifyToken, async (req, res) => {
 
     const userId = req.cookies.userId;
     const date = new Date().toISOString();
-    const submissionType = req.body.submissionType === 'automatic' ? 'automatic' : 'manual';
 
     const sql = `
         INSERT INTO answers (
             userId, date, photoName, classificationSetSrc, classificationSubSetSrc, classificationSetDes, classificationSubSetDes,
-            answerSubmitTime, submissionType, helpActivated, helpTimeActivated
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            answerSubmitTime, helpActivated, helpTimeActivated
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    async function setParams(userId, date, photoName, answerTime, alertActivated, submissionType, helpButtonClicks) {
+    async function setParams(userId, date, photoName, answerTime, alertActivated, helpButtonClicks) {
         try {
             const classificationValuesSrc = await getClassificationValuesSrc(photoName);
             const classificationValuesDes = req.body.classificationDes ? await getClassificationValuesDes(req.body.classificationDes) : {};
@@ -586,7 +585,6 @@ app.post('/training', verifyToken, async (req, res) => {
                 classificationValuesDes.classificationSetDes || null,
                 classificationValuesDes.classificationSubSetDes || null,
                 answerTime,
-                submissionType,
                 helpButtonClicks.length > 0 ? 1 : 0,
                 helpButtonClicks.length > 0 ? helpButtonClicks[0] : null
             ];
@@ -597,7 +595,7 @@ app.post('/training', verifyToken, async (req, res) => {
     }
 
     try {
-        const params = await setParams(userId, date, photoName, answerTime, alertActivated, submissionType, helpButtonClicks);
+        const params = await setParams(userId, date, photoName, answerTime, alertActivated, helpButtonClicks);
 
         db.run(sql, params, function (err) {
             if (err) {
