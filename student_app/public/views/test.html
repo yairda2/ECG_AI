@@ -218,7 +218,7 @@
                     clearSelection(); // Clear the selection after submission
                     questionNumber = result.nextQuestionNumber || questionNumber + 1; // Update from server response
                     updateQuestionNumber(); // Update the question number display
-                    setTimeout(fetchRandomImage, 2000); // Fetch next image after a delay
+                    setTimeout(fetchRandomImage, 10); // Fetch next image after a delay
                 })
                 .catch(error => console.error('Error submitting classification:', error));
         }, 300); // Adjust the debounce time as needed
@@ -247,7 +247,7 @@
 
         setTimeout(() => {
             customAlertBox.style.display = 'none';
-        }, 3000);
+        }, 1000);
     }
 </script>
 </body>
