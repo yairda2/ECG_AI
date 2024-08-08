@@ -6,51 +6,24 @@
     <link rel="stylesheet" href="../css/common.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
     <script src="../js/common.js"></script> <!-- Include common.js -->
-    <style>
-        /* Style for buttons */
-        button {
-            width: 40%; /* Smaller width */
-            padding: 5px; /* Less padding */
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-            font-size: 16px; /* Slightly smaller font size */
-            display: block;
-            margin: 10px auto;
-            text-align: center; /* Center the text inside the button */
-            font-family: 'Iceberg', cursive; /* Stylish font, ensure this font is loaded */
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        form {
-            text-align: center; /* Center the form content */
-        }
-
-        body {
-            font-family: 'Arial', sans-serif; /* Default body font */
-        }
-    </style>
 </head>
 
 <body>
 <!-- Main Page and Info Buttons -->
 <button id="mainpageButton" class="icon-button">Home</button>
-<button id="infoButton" class="icon-button">User Info</button>
+<button id="infoButton" class="icon-button">Info</button>
 
 <!-- Tooltip Container -->
 <div id="tooltip" class="tooltip"></div>
 
-<h2>Welcome to our learning model</h2>
-<h3>Choose your method</h3>
-<form id="modelChooseForm">
-    <button type="button" name="action" value="Single Training">Training</button>
-    <button type="button" name="action" value="Test">Test</button>
-</form>
+<div class="form-container">
+    <h2>Welcome to Our Learning Model</h2>
+    <h3>Choose Your Method</h3>
+    <form id="modelChooseForm">
+        <button type="button" name="action" value="Single Training">Training</button>
+        <button type="button" name="action" value="Test">Test</button>
+    </form>
+</div>
 
 <script>
     document.querySelectorAll('#modelChooseForm button').forEach(button => {
