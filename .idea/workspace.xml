@@ -4,8 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Downloading a timer, and a message about the elapsed time">
+    <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/css/common.css" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/css/common.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/test.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/test.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/training.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/training.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
     </list>
@@ -68,7 +74,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\WebStorm 2023.3.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -150,7 +156,7 @@
       <workItem from="1722937820281" duration="675000" />
       <workItem from="1722966928923" duration="430000" />
       <workItem from="1722980053025" duration="182000" />
-      <workItem from="1723061629670" duration="293000" />
+      <workItem from="1723061629670" duration="8725000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
@@ -176,7 +182,15 @@
       <option name="project" value="LOCAL‎" />
       <updated>1721829044994</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL‎-00004" summary="Correcting the insertion of the answers in the answers table, removing the submissionType field">
+      <option name="closed" value="true" />
+      <created>1723062182918</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL‎-00004" />
+      <option name="project" value="LOCAL‎" />
+      <updated>1723062182918</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,7 +210,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="pixed gender , list of uni , remove change ans" />
     <MESSAGE value="Downloading a timer, and a message about the elapsed time" />
-    <option name="LAST_COMMIT_MESSAGE" value="Downloading a timer, and a message about the elapsed time" />
+    <MESSAGE value="Correcting the insertion of the answers in the answers table, removing the submissionType field" />
+    <option name="LAST_COMMIT_MESSAGE" value="Correcting the insertion of the answers in the answers table, removing the submissionType field" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -210,6 +225,12 @@
           <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
           <line>25</line>
           <option name="timeStamp" value="113" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
+          <line>683</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="114" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

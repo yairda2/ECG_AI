@@ -1,5 +1,5 @@
 // Description: This file contains the server-side code for the ECG application.
-// Author: Yair Davidof & Eiasaf Sinuani.
+// Author: Yair Davidof & Elyasaf Sinvani.
 // region Imports
 const express = require('express');
 const bcrypt = require('bcrypt');
@@ -16,6 +16,12 @@ const verifyToken = require('./authMiddleware');
 const config = require('../config/config');
 const PORT = config.server.port || 3000;
 const SECRET_KEY = config.secret_key.key;
+const isSecure = process.env.NODE_ENV === 'production';
+
+const corsOptions = {
+    origin: ['http://localhost:3000', 'http://10.0.0.28:3000'],
+    credentials:true,
+};
 // endregion Imports
 
 // region Middleware setup
@@ -24,7 +30,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/img', express.static(path.join(__dirname, '..', 'public', 'img')));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Middleware to decode URL-encoded paths
 app.use((req, res, next) => {
@@ -478,8 +484,8 @@ app.post('/login', (req, res) => {
         }
         if (await bcrypt.compare(password, user.password)) {
             const token = jwt.sign({ id: user.userId, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
-            res.cookie('token', token, { httpOnly: true, secure: true });
-            res.cookie('userId', user.userId, { httpOnly: true, secure: true });
+            res.cookie('token', token, { httpOnly: true, secure: isSecure });
+            res.cookie('userId', user.userId, { httpOnly: true, secure: isSecure });
             res.status(200).json({ redirect: '/chooseModel', message: 'Login successful', role: user.role });
             db.run(updateEntries, [user.userId], async (err) => {
                 if (err) {
@@ -949,5 +955,6 @@ app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
 // endregion Post endpoints
 
 // Start the server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0',() => console.log(`Server running on port ${PORT}`));
+
 

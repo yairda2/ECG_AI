@@ -4,69 +4,60 @@ body {
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;
+    background-position: center;
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
 }
 
 /* Icon button styles */
 .icon-button {
     position: fixed;
-    top: 10px;
+    top: 5px;
     width: 90px;
     height: 40px;
-    background-color: red;
+    background-color: #ff0202;
     color: white;
-    border: 2px solid black;
+    border: 2px solid #ff0000;
     border-radius: 8px;
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 14px;
-    transition: transform 0.3s ease;
+    font-size: 20px;
+    transition: transform 0.3s ease, background-color 0.3s ease;
     margin-right: 10px;
     padding: 0 10px;
+    text-transform: uppercase;
+}
+
+.icon-button:hover {
+    transform: scale(1.1);
+    background-color: #ff0202;
 }
 
 #mainpageButton {
-    right: 0px; /* Adjust distance from the right as needed */
-}
-
-#mainpageButton:hover {
-    transform: scale(1.1);
-    transition: transform 0.5s;
-    /* add reverse transform on mouseout if needed */
-
+    right: 10px; /* Adjust distance from the right as needed */
 }
 
 #infoButton {
-    right: 100px; /* Adjust distance from the right as needed */
-}
-
-#infoButton:hover {
-    transform: scale(1.1);
-    transition: transform 0.5s;
-    /* add reverse transform on mouseout if needed */
+    right: 110px; /* Adjust distance from the right as needed */
 }
 
 #registerButton {
-    right: 200px; /* Adjust distance from the right as needed */
-}
-#registerButton:hover {
-    transform: scale(1.1);
-    transition: transform 0.5s;
-    /* add reverse transform on mouseout if needed */
+    right: 210px; /* Adjust distance from the right as needed */
 }
 
 #loginButton {
-    right: 200px; /* Adjust distance from the right as needed */
+    right: 210px; /* Adjust distance from the right as needed */
 }
-#loginButton:hover {
-    transform: scale(1.1);
-    transition: transform 0.5s;
-    /* add reverse transform on mouseout if needed */
-}
+
 /* Tooltip styles */
 .tooltip {
     display: none;
@@ -104,17 +95,17 @@ body {
     justify-content: center;
     width: 100%;
     max-width: 500px;
-    background-color: #f9f9f9;
+    background-color: rgba(255, 255, 255, 0.9);
     border: 2px solid #ddd;
     border-radius: 12px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin: auto;
-    margin-top: 50px;
+    margin-top: 100px;
 }
 
 /* Form Field Styles */
-.form-container input{
+.form-container input {
     width: 100%;
     padding: 10px;
     margin: 10px 0;
@@ -128,7 +119,7 @@ body {
     width: 100%;
     padding: 10px;
     margin-top: 20px;
-    background-color: red;
+    background-color: #ff0202;
     color: white;
     border: none;
     border-radius: 6px;
@@ -138,7 +129,7 @@ body {
 }
 
 .form-container button[type="submit"]:hover {
-    background-color: darkred;
+    background-color: #ff0202;
 }
 
 /* Radio Group Styling */
@@ -158,4 +149,77 @@ body {
     margin: 0;
     font-weight: normal;
     cursor: pointer; /* Changes cursor to pointer when hovering over label */
+}
+
+/* Additional styles for the "Choose Model" page */
+form#modelChooseForm {
+    text-align: center; /* Center the form content */
+    margin-top: 30px; /* Add some margin to the top */
+    width: 100%; /* Ensure form takes full width */
+    max-width: 400px; /* Max width for larger screens */
+}
+
+button {
+    width: 80%; /* Adjust width for better fit */
+    max-width: 300px; /* Max width for larger screens */
+    padding: 15px; /* More padding for better touch target */
+    border: none;
+    border-radius: 8px;
+    background-color: #ff0202;
+    color: white;
+    cursor: pointer;
+    font-size: 32px; /* Adjust font size for readability */
+    display: block;
+    margin: 20px auto; /* More margin for spacing */
+    text-align: center; /* Center the text inside the button */
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition effects */
+}
+
+button:hover {
+    background-color: #ff0202;
+    transform: scale(1.05); /* Slightly scale up on hover */
+}
+
+h2, h3 {
+    margin: 0 0 20px;
+}
+
+h2 {
+    font-size: 36px;
+    color: #333;
+}
+
+h3 {
+    font-size: 28px;
+    color: #666;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 600px) {
+    h2 {
+        font-size: 28px;
+    }
+
+    h3 {
+        font-size: 22px;
+    }
+
+    button {
+        width: 90%;
+        font-size: 20px;
+        padding: 12px;
+    }
+
+    .icon-button {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+
+    #mainpageButton {
+        top: 60px;
+    }
+
+    #infoButton {
+        top: 10px;
+    }
 }
