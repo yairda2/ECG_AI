@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Sessions</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .table-container {
+            width: 80%;
+            display: flex;
+            justify-content: center;
+        }
+
+        table {
+            width: 100%;
+            max-width: 800px;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        th {
+            background-color: #333;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #fff;
+        }
+
+        tr:hover {
+            background-color: #ccc;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h2>Test Sessions</h2>
+<div class="table-container">
+    <table>
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Grade</th>
+            <th>Number of Answers</th>
+            <th>Correct Answers</th>
+        </tr>
+        </thead>
+        <tbody id="sessionsList">
+        <!-- Rows will be added dynamically here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $.getJSON('/api/testSessions', function(data) {
+            if (data.length === 0) {
+                $('#sessionsList').append('<tr><td colspan="4">No test sessions found.</td></tr>');
+            } else {
+                data.forEach(session => {
+                    const formattedDate = new Date(session.date).toISOString().split('T')[0].replace(/-/g, '/');
+                    $('#sessionsList').append(`
+                            <tr data-exam-id="${session.examId}">
+                                <td>${formattedDate}</td>
+                                <td>${session.grade}</td>
+                                <td>${session.numberOfAnswers}</td>
+                                <td>${session.correctAnswers}</td>
+                            </tr>
+                        `);
+                });
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error("Failed to load test sessions: ", textStatus, errorThrown);
+            $('#sessionsList').append('<tr><td colspan="4">Failed to load test sessions.</td></tr>');
+        });
+
+        // Click event to open test details
+        $(document).on('click', 'tr[data-exam-id]', function() {
+            const examId = $(this).data('exam-id');
+            window.location.href = `/testDetails?examId=${examId}`;
+        });
+    });
+</script>
+</body>
+</html>

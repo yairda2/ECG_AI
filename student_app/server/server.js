@@ -105,7 +105,7 @@ function createTables() {
                 answerNumber INTEGER,
                 photoName TEXT,
                 classificationSetSrc TEXT,
-                classificationSubSetSrc TEXT,
+                classificationSubSetSrc,
                 classificationSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
                 PRIMARY KEY (examId, userId, answerNumber),
@@ -132,6 +132,26 @@ function createTables() {
                 classificationSet TEXT CHECK (classificationSet IN ('STEMI', 'HIGH RISK', 'LOW RISK')),
                 classificationSubSet TEXT,
                 rate INTEGER DEFAULT 0
+            )`);
+
+        // New table for groups
+        db.run(`
+            CREATE TABLE IF NOT EXISTS groups (
+                groupId TEXT PRIMARY KEY,
+                groupName TEXT,
+                createdDate TEXT,
+                userId TEXT,
+                FOREIGN KEY (userId) REFERENCES users(id)
+            )`);
+
+        // New table for users in groups
+        db.run(`
+            CREATE TABLE IF NOT EXISTS userGroups (
+                groupId TEXT,
+                userId TEXT,
+                FOREIGN KEY (groupId) REFERENCES groups(groupId),
+                FOREIGN KEY (userId) REFERENCES users(id),
+                PRIMARY KEY (groupId, userId)
             )`);
     });
 }
@@ -432,6 +452,75 @@ app.get('/postTest', verifyToken, (req, res) => {
 // Route to serve detailedResults.html
 app.get('/detailedResults', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'detailedResults.html'));
+});
+
+// Route to serve groupManagement.html
+app.get('/groupManagement', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'groupManagement.html'));
+});
+
+// Route to serve testSessions.html
+app.get('/testSessions', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'testSessions.html'));
+});
+
+// Route to serve trainingSessions.html
+app.get('/trainingSessions', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'trainingSessions.html'));
+});
+
+// Route to fetch test session data
+app.get('/api/testSessions', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    const sql = `
+        SELECT examId, date, score AS grade, severalQuestions AS numberOfAnswers, 
+        (SELECT COUNT(*) FROM examAnswers WHERE examAnswers.examId = exam.examId AND classificationSetSrc = classificationSetDes) AS correctAnswers
+        FROM exam
+        WHERE userId = ?`;
+
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching test sessions:', err.message);
+            return res.status(500).json({ message: 'Error fetching test sessions' });
+        }
+        if (rows.length === 0) {
+            console.log('No test sessions found for user:', userId);
+            return res.status(404).json({ message: 'No test sessions found' });
+        }
+        console.log('Fetched test sessions:', rows);
+        res.status(200).json(rows);
+    });
+});
+
+// Route to fetch training session data
+app.get('/api/trainingSessions', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    const sql = `
+        SELECT date, SUM(answerSubmitTime) AS timeSpent, COUNT(*) AS numberOfTasks
+        FROM answers
+        WHERE userId = ?
+        GROUP BY date
+        ORDER BY date DESC`;
+
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching training sessions:', err.message);
+            return res.status(500).json({ message: 'Error fetching training sessions' });
+        }
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'No training sessions found' });
+        }
+        console.log('Fetched training sessions:', rows);
+        res.status(200).json(rows);
+    });
+});
+
+
+
+
+// Route to serve testDetails.html
+app.get('/testDetails', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'testDetails.html'));
 });
 // endregion Get endpoints
 
@@ -952,9 +1041,66 @@ app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
     }
 });
 
+// New endpoints for group management
+app.post('/createGroup', verifyToken, (req, res) => {
+    const { groupName } = req.body;
+    const userId = req.user.id;
+    const groupId = uuidv4();
+    const createdDate = new Date().toISOString();
+
+    const sql = `INSERT INTO groups (groupId, groupName, createdDate, userId) VALUES (?, ?, ?, ?)`;
+    db.run(sql, [groupId, groupName, createdDate, userId], (err) => {
+        if (err) {
+            console.error('Error creating group:', err.message);
+            return res.status(500).json({ message: 'Error creating group' });
+        }
+        res.status(200).json({ message: 'Group created successfully', groupId });
+    });
+});
+
+app.post('/addUserToGroup', verifyToken, (req, res) => {
+    const { groupId, userId } = req.body;
+
+    const sql = `INSERT INTO userGroups (groupId, userId) VALUES (?, ?)`;
+    db.run(sql, [groupId, userId], (err) => {
+        if (err) {
+            console.error('Error adding user to group:', err.message);
+            return res.status(500).json({ message: 'Error adding user to group' });
+        }
+        res.status(200).json({ message: 'User added to group successfully' });
+    });
+});
+
+app.get('/groups', verifyToken, (req, res) => {
+    const userId = req.user.id;
+
+    const sql = `SELECT groupId, groupName, createdDate FROM groups WHERE userId = ?`;
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching groups:', err.message);
+            return res.status(500).json({ message: 'Error fetching groups' });
+        }
+        res.status(200).json(rows);
+    });
+});
+
+app.get('/groupDetails', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const sql = `SELECT users.id, users.age, users.gender, users.avgDegree, users.academicInstitution,
+                users.totalTrainTime, users.totalAnswers, users.totalExams, users.avgExamTime, users.userRate
+                FROM userGroups
+                JOIN users ON userGroups.userId = users.id
+                WHERE userGroups.groupId = ?`;
+    db.all(sql, [groupId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching group details:', err.message);
+            return res.status(500).json({ message: 'Error fetching group details' });
+        }
+        res.status(200).json(rows);
+    });
+});
 // endregion Post endpoints
 
 // Start the server
 app.listen(PORT, '0.0.0.0',() => console.log(`Server running on port ${PORT}`));
-
-

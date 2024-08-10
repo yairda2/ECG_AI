@@ -2,202 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>User Information</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-            text-align: center;
-        }
-
-        table {
-            width: 80%;
-            margin: 20px auto;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1; /* Sit on top */
-            padding-top: 60px; /* Location of the box */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgb(0,0,0); /* Fallback color */
-            background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
-        }
-
-        .modal-content {
-            position: relative;
-            margin: auto;
-            padding: 0;
-            width: 90%;
-            max-width: 1200px;
-        }
-
-        .modal-content img {
-            margin: auto;
-            display: block;
-            width: 100%;
-            max-width: 700px;
-        }
-
-        .modal-content .caption {
-            margin: auto;
-            display: block;
-            width: 100%;
-            max-width: 700px;
-            text-align: center;
-            color: #ccc;
-            padding: 10px 0;
-            height: 150px;
-        }
-
-        .modal-content .close {
-            position: absolute;
-            top: 15px;
-            right: 35px;
-            color: #f1f1f1;
-            font-size: 40px;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        .modal-content .close:hover,
-        .modal-content .close:focus {
-            color: #bbb;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .home-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background-color: #4CAF50; /* Green */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .home-button:hover {
-            background-color: #45a049; /* Darker green on hover */
-        }
-
-        .photo-cell.correct {
-            border: 2px solid #b2d8b2; /* Lighter green border for correct answers */
-        }
-
-        .photo-cell.incorrect {
-            border: 2px solid #f8b2b2; /* Lighter red border for incorrect answers */
-        }
-    </style>
+    <title>User Info</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../js/common.js"></script>
 </head>
 <body>
-<h1>User Information</h1>
-<button class="home-button" onclick="location.href='/chooseModel'">Home</button>
-<div id="userData">
-    <!-- Data will be loaded here -->
-</div>
+<!-- Main Page and Home Button -->
+<button id="mainpageButton" class="icon-button">Home</button>
 
-<!-- The Modal -->
-<div id="myModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <img id="modalImage" src="" alt="Photo">
-        <div class="caption" id="modalCaption"></div>
-    </div>
+<div class="form-container">
+    <h2>Your Information</h2>
+    <h3>View Your Sessions</h3>
+    <form id="sessionChooseForm">
+        <button type="button" id="trainingButton">Training Sessions</button>
+        <button type="button" id="testButton">Test Sessions</button>
+    </form>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        fetch('/info/data')
-            .then(response => response.json())
-            .then(data => {
-                if (!Array.isArray(data)) {
-                    document.getElementById('userData').innerHTML = `<p>No data available for the user.</p>`;
-                    return;
-                }
-
-                let html = '<table><tr><th>Photo</th><th>Correct Classification</th><th>Your Classification</th><th>Answer Submit Time</th><th>Help Button Clicks</th></tr>';
-                data.forEach(row => {
-                    let isCorrect;
-                    let photoPath;
-                    let correctAnswer;
-                    let userAnswer;
-                    let cellClass;
-                    if (row.classificationSetSrc === 'LOW RISK') {
-                        isCorrect = row.classificationSetSrc === row.classificationSetDes;
-                        photoPath = `/img/graded/${(row.classificationSetSrc)}/${(row.photoName)}`;
-                        correctAnswer = row.classificationSetSrc;
-                        userAnswer = row.classificationSetDes + (row.classificationSubSetDes ? ': ' + row.classificationSubSetDes : '');
-                    } else {
-                        isCorrect = row.classificationSetSrc === row.classificationSetDes && row.classificationSubSetSrc === row.classificationSubSetDes;
-                        photoPath = `/img/graded/${(row.classificationSetSrc)}/${(row.classificationSubSetSrc)}/${(row.photoName)}`;
-                        correctAnswer = row.classificationSetSrc + ': ' + row.classificationSubSetSrc;
-                        userAnswer =  row.classificationSetDes + (row.classificationSubSetDes ? ': ' + row.classificationSubSetDes : '');
-                    }
-                    cellClass = isCorrect ? 'photo-cell correct' : 'photo-cell incorrect';
-                    const helpButtonClicks = row.helpButtonClicks || 'X';
-
-                    html += `<tr>
-                                <td class="${cellClass}"><img src="${photoPath}" alt="${row.photoName}" style="width:50px;cursor:pointer" onclick="showModal('${photoPath}', '${row.classificationSetSrc}', '${row.classificationSetDes}', '${row.answerSubmitTime}')"></td>
-                                <td>${correctAnswer}</td>
-                                <td>${userAnswer}</td>
-                                <td>${row.answerSubmitTime}</td>
-                                <td>${helpButtonClicks}</td>
-                            </tr>`;
-                });
-                html += '</table>';
-
-                document.getElementById('userData').innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Error fetching user data:', error);
-                document.getElementById('userData').innerHTML = `<p>Error loading user data.</p>`;
-            });
+    document.getElementById('trainingButton').addEventListener('click', function() {
+        window.location.href = '/trainingSessions';
     });
 
-    function showModal(photoPath, classificationSetSrc, classificationSetDes, answerSubmitTime) {
-        const modal = document.getElementById('myModal');
-        const modalImg = document.getElementById('modalImage');
-        const captionText = document.getElementById('modalCaption');
-        modal.style.display = "block";
-        modalImg.src = photoPath;
-        captionText.innerHTML = `
-            Correct Classification: ${classificationSetSrc}<br>
-            Your Classification: ${classificationSetDes}<br>
-            Answer Submit Time: ${answerSubmitTime}
-        `;
-    }
-
-    document.querySelector('.close').onclick = function() {
-        const modal = document.getElementById('myModal');
-        modal.style.display = "none";
-    };
-
-    window.onclick = function(event) {
-        const modal = document.getElementById('myModal');
-        if (event.target === modal) {
-            modal.style.display = "none";
-        }
-    };
+    document.getElementById('testButton').addEventListener('click', function() {
+        window.location.href = '/testSessions';
+    });
 </script>
 </body>
 </html>

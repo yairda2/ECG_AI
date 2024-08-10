@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Group Management</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../js/common.js"></script>
+</head>
+<body>
+<button id="mainpageButton" class="icon-button">Home</button>
+<div class="form-container">
+    <h2>Group Management</h2>
+    <button id="createGroupButton">Create Group</button>
+    <div id="groupList"></div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#createGroupButton').on('click', function() {
+            window.location.href = '/createGroup';
+        });
+
+        $.getJSON('/groups', function(data) {
+            let groupHtml = '';
+            data.forEach(group => {
+                groupHtml += `<div>
+                        <p>Group Name: ${group.groupName}</p>
+                        <p>Created Date: ${group.createdDate}</p>
+                        <button class="viewGroup" data-groupId="${group.groupId}">View Group</button>
+                        <hr>
+                    </div>`;
+            });
+            $('#groupList').html(groupHtml);
+        });
+
+        $(document).on('click', '.viewGroup', function() {
+            const groupId = $(this).data('groupId');
+            window.location.href = `/groupDetails?groupId=${groupId}`;
+        });
+    });
+</script>
+</body>
+</html>

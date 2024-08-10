@@ -6,8 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/test.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/test.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analizer/feedback.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analizer/image_analysis.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analizer/scheduler.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analizer/train_model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModel.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/info.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/info.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/training.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/training.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,7 +75,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\WebStorm 2023.3.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "ts.external.directory.path": "C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -151,7 +158,7 @@
       <workItem from="1722966928923" duration="430000" />
       <workItem from="1722980053025" duration="182000" />
       <workItem from="1723061629670" duration="8725000" />
-      <workItem from="1723138176576" duration="415000" />
+      <workItem from="1723138176576" duration="6226000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
@@ -220,11 +227,6 @@
           <url>file://$PROJECT_DIR$/student_app/public/js/common.js</url>
           <line>25</line>
           <option name="timeStamp" value="113" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>687</line>
-          <option name="timeStamp" value="114" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
