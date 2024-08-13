@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Group Management</title>
+</head>
+<style>
+
+    {
+        font-family: Arial, sans-serif
+    ;
+        background-color: #f4f4f4
+    ;
+        margin: 0
+    ;
+        padding: 0
+    ;
+        display: flex
+    ;
+        justify-content: center
+    ;
+        align-items: center
+    ;
+        height: 100vh
+    ;
+    }
+
+    .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 600px;
+        text-align: center;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+    }
+
+    .group-management, .existing-groups, .search-users, .selected-students {
+        margin-bottom: 20px;
+    }
+
+    input, select, button {
+        padding: 10px;
+        margin: 5px 0;
+        width: 100%;
+        max-width: 400px;
+        box-sizing: border-box;
+    }
+
+    button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+<body>
+<div class="container">
+    <h1>Admin Panel - Group Management</h1>
+
+    <!-- Create or Manage Groups -->
+    <div class="group-management">
+        <input type="text" id="groupName" placeholder="Enter Group Name">
+        <button id="createGroupBtn">Create Group</button>
+    </div>
+
+    <!-- Existing Groups -->
+    <div class="existing-groups">
+        <select id="groupSelect">
+            <option value="" disabled selected>Select a Group to Manage</option>
+        </select>
+        <button id="updateGroupBtn">Update Group</button>
+    </div>
+
+    <!-- Search and Add Students -->
+    <div class="search-users">
+        <input type="text" id="searchInput" placeholder="Search Users (Name, Email, ID)">
+        <button id="searchBtn">Search</button>
+    </div>
+
+    <!-- Selected Students -->
+    <div class="selected-students">
+        <h2>Selected Students</h2>
+        <button id="submitStudentsBtn">Submit Selected Students</button>
+    </div>
+
+    <!-- Back Button -->
+    <button id="backBtn">Back</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const createGroupBtn = document.getElementById('createGroupBtn');
+        const updateGroupBtn = document.getElementById('updateGroupBtn');
+        const searchBtn = document.getElementById('searchBtn');
+        const submitStudentsBtn = document.getElementById('submitStudentsBtn');
+        const backBtn = document.getElementById('backBtn');
+        const groupSelect = document.getElementById('groupSelect');
+
+        // Load existing groups
+        fetch('/groups')
+            .then(response => response.json())
+            .then(groups => {
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.groupId;
+                    option.textContent = group.groupName;
+                    groupSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching groups:', error));
+
+        // Create new group
+        createGroupBtn.addEventListener('click', function() {
+            const groupName = document.getElementById('groupName').value;
+
+            fetch('/createGroup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ groupName }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload(); // Reload to update the groups list
+                })
+                .catch(error => console.error('Error creating group:', error));
+        });
+
+        // Update group
+        updateGroupBtn.addEventListener('click', function() {
+            const groupId = groupSelect.value;
+            // Implement logic for updating the group
+        });
+
+        // Search users
+        searchBtn.addEventListener('click', function() {
+            const query = document.getElementById('searchInput').value;
+
+            fetch(`/searchUsers?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(users => {
+                    // Display search results
+                })
+                .catch(error => console.error('Error searching users:', error));
+        });
+
+        // Submit selected students
+        submitStudentsBtn.addEventListener('click', function() {
+            const selectedGroupId = groupSelect.value;
+            // Implement logic to submit selected students to the group
+        });
+
+        // Back button
+        backBtn.addEventListener('click', function() {
+            window.history.back();
+        });
+    });
+
+</script>
+</body>
+</html>
