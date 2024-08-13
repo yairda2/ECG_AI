@@ -3,121 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <title>Training Sessions</title>
-    <link rel="stylesheet" href="../css/common.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+            background-color: #f4f4f4;
             text-align: center;
         }
-
-        h2 {
-            margin-bottom: 20px;
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        h1 {
             color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
         }
-
-        .table-container {
-            width: 80%;
-            display: flex;
-            justify-content: center;
-        }
-
         table {
             width: 100%;
-            max-width: 800px;
             border-collapse: collapse;
-            background-color: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
-
         th, td {
             padding: 12px;
-            border: 1px solid #ddd;
-            text-align: center;
-            cursor: pointer;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
         }
-
         th {
-            background-color: #333;
+            background-color: #555;
             color: white;
         }
-
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
+        .small-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
-
-        tr:nth-child(odd) {
-            background-color: #fff;
+        .small-image:hover {
+            transform: scale(1.1);
         }
-
-        tr:hover {
-            background-color: #ccc;
+        .status-icon {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 50%;
+            display: inline-block;
+            text-align: center;
+            line-height: 1.5;
         }
-
-        .back-button {
-            margin-top: 20px;
+        .correct {
+            color: green;
+            border: 2px solid green;
+        }
+        .incorrect {
+            color: red;
+            border: 2px solid red;
+            font-family: 'Courier New', Courier, monospace; /* More official-looking font */
+        }
+        .button-container {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        button {
             padding: 10px 20px;
-            background-color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #555;
             color: white;
             border: none;
             border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #777;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%; /* Adjust the size of the modal */
+            border-radius: 10px;
+            text-align: center;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
             cursor: pointer;
         }
-
-        .back-button:hover {
-            background-color: #555;
+        #trainingImage {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .border-correct {
+            border: 4px solid green;
+        }
+        .border-incorrect {
+            border: 4px solid red;
+        }
+        .details-container {
+            margin-top: 20px;
+            text-align: left;
+            font-size: 16px;
+            color: #555;
+        }
+        .details-container p {
+            margin: 10px 0;
+            line-height: 1.6;
         }
     </style>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-<h2>Training Sessions</h2>
-<div class="table-container">
-    <table>
+<div class="container">
+    <div class="button-container">
+        <button onclick="goBack()">Back</button>
+    </div>
+    <h1>Training Sessions</h1>
+    <table id="trainingSessionsTable">
         <thead>
         <tr>
+            <th>Image</th>
             <th>Date</th>
-            <th>Time Spent (ms)</th>
-            <th>Number of Tasks</th>
+            <th>Time Spent (s)</th>
+            <th>Correct/Incorrect</th>
         </tr>
         </thead>
-        <tbody id="sessionsList">
-        <!-- Rows will be added dynamically here -->
+        <tbody id="trainingSessionsBody">
         </tbody>
     </table>
 </div>
 
-<button class="back-button" onclick="history.back()">Back</button>
+<div id="trainingDetailsModal" class="modal">
+    <div id="modalContent" class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Training Session Details</h2>
+        <img id="trainingImage" src="" alt="ECG Image">
+        <div class="details-container" id="trainingDetails"></div>
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
 
 <script>
-    $(document).ready(function() {
-        $.getJSON('/api/trainingSessions', function(data) {
-            if (data.length === 0) {
-                $('#sessionsList').append('<tr><td colspan="3">No training sessions found.</td></tr>');
-            } else {
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/getTrainingSessions')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('trainingSessionsBody');
                 data.forEach(session => {
-                    const formattedDate = new Date(session.date).toISOString().split('T')[0].replace(/-/g, '/');
-                    $('#sessionsList').append(`
-                            <tr>
+                    fetch(`/getTrainingImage/${session.id}`)
+                        .then(response => response.json())
+                        .then(imageData => {
+                            const formattedDate = new Date(session.date).toLocaleString('en-GB', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                            }).replace(',', '');
+                            const statusIcon = session.correct
+                                ? '<span class="status-icon correct">✔</span>'
+                                : '<span class="status-icon incorrect">✘</span>';
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><img src="${imageData.imageUrl}" alt="ECG Image" class="small-image" onclick="showTrainingDetails('${session.id}', ${session.correct})"></td>
                                 <td>${formattedDate}</td>
                                 <td>${session.timeSpent}</td>
-                                <td>${session.numberOfTasks}</td>
-                            </tr>
-                        `);
+                                <td>${statusIcon}</td>
+                            `;
+                            tableBody.appendChild(row);
+                        })
+                        .catch(error => console.error('Error fetching image URL:', error));
                 });
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.error("Failed to load training sessions: ", textStatus, errorThrown);
-            $('#sessionsList').append('<tr><td colspan="3">Failed to load training sessions.</td></tr>');
-        });
+            })
+            .catch(error => console.error('Error fetching training sessions:', error));
     });
+
+    function showTrainingDetails(id, correct) {
+        fetch(`/getTrainingDetails?sessionId=${id}`)
+            .then(response => response.json())
+            .then(data => {
+                const formattedDate = new Date(data.date).toLocaleString('en-GB', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                }).replace(',', '');
+
+                document.getElementById('trainingImage').src = data.imageUrl;
+                document.getElementById('modalContent').classList.toggle('border-correct', correct);
+                document.getElementById('modalContent').classList.toggle('border-incorrect', !correct);
+                let details = `
+                    <p><strong>Date:</strong> ${formattedDate}</p>
+                    <p><strong>Classification Source:</strong> ${data.classificationSetSrc} - ${data.classificationSubSetSrc}</p>
+                    <p><strong>Classification Destination:</strong> ${data.classificationSetDes}</p>
+                    <p><strong>Time Spent:</strong> ${data.timeSpent} seconds</p>
+                    <p><strong>Help Activated:</strong> ${data.helpActivated ? 'Yes' : 'No'}</p>
+                `;
+                document.getElementById('trainingDetails').innerHTML = details;
+                const modal = document.getElementById('trainingDetailsModal');
+                modal.style.display = "block";
+            })
+            .catch(error => console.error('Error fetching training details:', error));
+    }
+
+    const modal = document.getElementById("trainingDetailsModal");
+    const span = document.getElementsByClassName("close")[0];
+
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    function goBack() {
+        window.history.back();
+    }
 </script>
 </body>
 </html>

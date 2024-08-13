@@ -9,16 +9,18 @@ function verifyToken(req, res, next) {
         res.redirect('/login?message=InvalidToken');
     }
 
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    jwt.verify(token.replace('Bearer ', ''), config.secret_key.key, (err, decoded) => {
         if (err) {
-            res.redirect('/login?message=InvalidToken');
+            return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
         }
-        // if the time over reLogin
-        if (Date.now() >= decoded.exp * 1000) {
-            res.redirect('/login?message=TokenExpired');
+
+        // Check if the token contains an 'exp' field
+        if (!decoded.exp) {
+            return res.status(500).send({ auth: false, message: 'Token does not have an expiration date.' });
         }
+
+        // If everything is good, save to request for use in other routes
         req.user = decoded;
-        // TODO Add here check if the id exists in the database
         next();
     });
 }

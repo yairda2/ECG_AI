@@ -142,7 +142,8 @@ function createTables() {
                 createdDate TEXT,
                 userId TEXT,
                 FOREIGN KEY (userId) REFERENCES users(id)
-            )`);
+            )
+        `);
 
         // New table for users in groups
         db.run(`
@@ -337,7 +338,13 @@ app.get('/test', verifyToken, (req, res) => {
 
 // User data page
 app.get('/info', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
+    // selction by user type
+    if (req.user.role === 'user') {
+        res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
+    }
+    else {
+        res.sendFile(path.join(__dirname, '..', 'public', 'views', 'infoAdmin.html'));
+    }
 });
 
 // This endpoint is used to get the image path for the image classification task,
@@ -459,69 +466,171 @@ app.get('/groupManagement', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'groupManagement.html'));
 });
 
-// Route to serve testSessions.html
+// Serve Test Sessions HTML Page
 app.get('/testSessions', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'testSessions.html'));
 });
 
-// Route to serve trainingSessions.html
+// Serve Training Sessions HTML Page
 app.get('/trainingSessions', verifyToken, (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'trainingSessions.html'));
 });
 
-// Route to fetch test session data
-app.get('/api/testSessions', verifyToken, (req, res) => {
+// Endpoint to get training sessions data
+app.get('/getTrainingSessions', verifyToken, (req, res) => {
     const userId = req.user.id;
     const sql = `
-        SELECT examId, date, score AS grade, severalQuestions AS numberOfAnswers, 
-        (SELECT COUNT(*) FROM examAnswers WHERE examAnswers.examId = exam.examId AND classificationSetSrc = classificationSetDes) AS correctAnswers
+        SELECT answerId AS id, 
+               date(datetime(date, 'localtime')) as date, 
+               answerSubmitTime AS timeSpent, 
+               COUNT(*) AS numberOfTasks,
+               photoName AS imageUrl
+        FROM answers
+        WHERE userId = ?
+        GROUP BY date, answerId
+        ORDER BY date DESC`;
+
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error fetching training sessions', error: err });
+        }
+        res.status(200).json(rows);
+    });
+});
+
+app.get('/getTrainingDetails', verifyToken, (req, res) => {
+    const sessionId = req.query.sessionId;
+    const sql = `
+        SELECT date, photoName AS imageUrl, classificationSetSrc, classificationSubSetSrc, 
+               classificationSetDes, answerSubmitTime AS timeSpent, helpActivated
+        FROM answers
+        WHERE answerId = ? AND userId = ?
+    `;
+
+    db.get(sql, [sessionId, req.user.id], (err, row) => {
+        if (err) {
+            console.error('Error fetching training details:', err.message);
+            return res.status(500).json({ message: 'Error fetching training details' });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Training session not found' });
+        }
+
+        // Ensure the correct format for the image URL
+        row.imageUrl = row.classificationSubSetSrc
+            ? `/img/graded/${row.classificationSetSrc}/${row.classificationSubSetSrc}/${row.imageUrl}`
+            : `/img/graded/${row.classificationSetSrc}/${row.imageUrl}`;
+
+        res.status(200).json(row);
+    });
+});
+
+
+
+// Endpoint to get detailed training results
+app.get('/detailedTrainingResult', verifyToken, (req, res) => {
+    const photoName = req.query.photoName;
+    const sql = `
+        SELECT * 
+        FROM answers
+        WHERE photoName = ? AND userId = ?
+    `;
+
+    db.get(sql, [photoName, req.user.id], (err, row) => {
+        if (err) {
+            console.error('Error fetching training result:', err.message);
+            return res.status(500).json({ message: 'Error fetching training result' });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Training result not found' });
+        }
+
+        res.render('detailedResults', {
+            photoName: row.photoName,
+            date: row.date,
+            classificationSetSrc: row.classificationSetSrc,
+            classificationSubSetSrc: row.classificationSubSetSrc,
+            classificationSetDes: row.classificationSetDes,
+            answerSubmitTime: row.answerSubmitTime,
+            helpActivated: row.helpActivated
+        });
+    });
+});
+
+// Endpoint to get training image by ID
+app.get('/getTrainingImage/:id', verifyToken, (req, res) => {
+    const answerId = req.params.id;
+    const sql = `
+        SELECT photoName, classificationSetSrc, classificationSubSetSrc
+        FROM answers
+        WHERE answerId = ?`;
+
+    db.get(sql, [answerId], (err, row) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error fetching image URL' });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Image not found' });
+        }
+
+        const imageUrl = row.classificationSubSetSrc
+            ? `/img/graded/${row.classificationSetSrc}/${row.classificationSubSetSrc}/${row.photoName}`
+            : `/img/graded/${row.classificationSetSrc}/${row.photoName}`;
+
+        res.status(200).json({ imageUrl });
+    });
+});
+
+// Serve Test Sessions HTML Page
+app.get('/testSessions', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'testSessions.html'));
+});
+
+// Endpoint to get test sessions
+app.get('/getTestSessions', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    const sql = `
+        SELECT examId, 
+               strftime('%Y-%m-%d', date) as date, 
+               score AS grade, 
+               severalQuestions AS numberOfAnswers, 
+               (SELECT COUNT(*) 
+                FROM examAnswers 
+                WHERE examAnswers.examId = exam.examId 
+                AND classificationSetSrc = classificationSetDes) AS correctAnswers
         FROM exam
         WHERE userId = ?`;
 
     db.all(sql, [userId], (err, rows) => {
         if (err) {
-            console.error('Error fetching test sessions:', err.message);
             return res.status(500).json({ message: 'Error fetching test sessions' });
         }
-        if (rows.length === 0) {
-            console.log('No test sessions found for user:', userId);
-            return res.status(404).json({ message: 'No test sessions found' });
-        }
-        console.log('Fetched test sessions:', rows);
         res.status(200).json(rows);
     });
 });
 
-// Route to fetch training session data
-app.get('/api/trainingSessions', verifyToken, (req, res) => {
-    const userId = req.user.id;
+// Endpoint to get test details
+app.get('/getTestDetails', verifyToken, (req, res) => {
+    const examId = req.query.examId;
     const sql = `
-        SELECT date, SUM(answerSubmitTime) AS timeSpent, COUNT(*) AS numberOfTasks
-        FROM answers
-        WHERE userId = ?
-        GROUP BY date
-        ORDER BY date DESC`;
+        SELECT date, score AS grade, severalQuestions AS numberOfAnswers, 
+        (SELECT COUNT(*) FROM examAnswers WHERE examAnswers.examId = exam.examId AND classificationSetSrc = classificationSetDes) AS correctAnswers
+        FROM exam
+        WHERE examId = ?`;
 
-    db.all(sql, [userId], (err, rows) => {
+    db.get(sql, [examId], (err, row) => {
         if (err) {
-            console.error('Error fetching training sessions:', err.message);
-            return res.status(500).json({ message: 'Error fetching training sessions' });
+            console.error('Error fetching test details:', err.message);
+            return res.status(500).json({ message: 'Error fetching test details' });
         }
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'No training sessions found' });
+        if (!row) {
+            return res.status(404).json({ message: 'Test session not found' });
         }
-        console.log('Fetched training sessions:', rows);
-        res.status(200).json(rows);
+        res.status(200).json(row);
     });
 });
 
 
-
-
-// Route to serve testDetails.html
-app.get('/testDetails', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'testDetails.html'));
-});
 // endregion Get endpoints
 
 // region Post endpoints
@@ -1061,13 +1170,25 @@ app.post('/createGroup', verifyToken, (req, res) => {
 app.post('/addUserToGroup', verifyToken, (req, res) => {
     const { groupId, userId } = req.body;
 
-    const sql = `INSERT INTO userGroups (groupId, userId) VALUES (?, ?)`;
-    db.run(sql, [groupId, userId], (err) => {
+    const checkSql = `SELECT * FROM userGroups WHERE groupId = ? AND userId = ?`;
+    db.get(checkSql, [groupId, userId], (err, row) => {
         if (err) {
-            console.error('Error adding user to group:', err.message);
-            return res.status(500).json({ message: 'Error adding user to group' });
+            console.error('Error checking user in group:', err.message);
+            return res.status(500).json({ message: 'Error checking user in group' });
         }
-        res.status(200).json({ message: 'User added to group successfully' });
+
+        if (row) {
+            return res.status(409).json({ message: 'User already in group' });
+        }
+
+        const insertSql = `INSERT INTO userGroups (groupId, userId) VALUES (?, ?)`;
+        db.run(insertSql, [groupId, userId], (err) => {
+            if (err) {
+                console.error('Error adding user to group:', err.message);
+                return res.status(500).json({ message: 'Error adding user to group' });
+            }
+            res.status(200).json({ message: 'User added to group successfully' });
+        });
     });
 });
 
@@ -1100,6 +1221,21 @@ app.get('/groupDetails', verifyToken, (req, res) => {
         res.status(200).json(rows);
     });
 });
+
+app.get('/searchUsers', verifyToken, (req, res) => {
+    const query = req.query.query;
+    const sql = `SELECT id, name, email FROM users WHERE name LIKE ? OR email LIKE ? OR academicInstitution LIKE ?`;
+    const param = `%${query}%`;
+
+    db.all(sql, [param, param, param], (err, rows) => {
+        if (err) {
+            console.error('Error searching users:', err.message);
+            return res.status(500).json({ message: 'Error searching users' });
+        }
+        res.status(200).json(rows);
+    });
+});
+
 // endregion Post endpoints
 
 // Start the server
