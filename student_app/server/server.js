@@ -343,7 +343,7 @@ app.get('/info', verifyToken, (req, res) => {
         res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
     }
     else {
-        res.sendFile(path.join(__dirname, '..', 'public', 'views', 'infoAdmin.html'));
+        res.sendFile(path.join(__dirname, '..', 'public', 'views', 'groupManagement.html'));
     }
 });
 
@@ -1151,68 +1151,68 @@ app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
 });
 
 // New endpoints for group management
+// Existing imports and middleware setup ...
+
+// Endpoint to create a new group
+// Endpoint to create a new group
 app.post('/createGroup', verifyToken, (req, res) => {
     const { groupName } = req.body;
     const userId = req.user.id;
-    const groupId = uuidv4();
-    const createdDate = new Date().toISOString();
 
-    const sql = `INSERT INTO groups (groupId, groupName, createdDate, userId) VALUES (?, ?, ?, ?)`;
-    db.run(sql, [groupId, groupName, createdDate, userId], (err) => {
+    // Check if the group name already exists for this user
+    const checkSql = `SELECT * FROM groups WHERE groupName = ? AND userId = ?`;
+    db.get(checkSql, [groupName, userId], (err, row) => {
         if (err) {
-            console.error('Error creating group:', err.message);
-            return res.status(500).json({ message: 'Error creating group' });
-        }
-        res.status(200).json({ message: 'Group created successfully', groupId });
-    });
-});
-
-app.post('/addUserToGroup', verifyToken, (req, res) => {
-    const { groupId, userId } = req.body;
-
-    const checkSql = `SELECT * FROM userGroups WHERE groupId = ? AND userId = ?`;
-    db.get(checkSql, [groupId, userId], (err, row) => {
-        if (err) {
-            console.error('Error checking user in group:', err.message);
-            return res.status(500).json({ message: 'Error checking user in group' });
+            console.error('Error checking group name:', err.message);
+            return res.status(500).json({ message: 'Server error checking group name' });
         }
 
         if (row) {
-            return res.status(409).json({ message: 'User already in group' });
+            // Group with the same name already exists
+            return res.status(400).json({ message: 'A group with this name already exists for your account' });
         }
 
-        const insertSql = `INSERT INTO userGroups (groupId, userId) VALUES (?, ?)`;
-        db.run(insertSql, [groupId, userId], (err) => {
+        // If no group with the same name exists, proceed to create the group
+        const groupId = uuidv4();
+        const createdDate = new Date().toISOString();
+        const insertSql = `INSERT INTO groups (groupId, groupName, createdDate, userId) VALUES (?, ?, ?, ?)`;
+
+        db.run(insertSql, [groupId, groupName, createdDate, userId], (err) => {
             if (err) {
-                console.error('Error adding user to group:', err.message);
-                return res.status(500).json({ message: 'Error adding user to group' });
+                console.error('Error creating group:', err.message);
+                return res.status(500).json({ message: 'Error creating group' });
             }
-            res.status(200).json({ message: 'User added to group successfully' });
+            res.status(200).json({ message: 'Group created successfully', groupId });
         });
     });
 });
 
+// Endpoint to get all groups
 app.get('/groups', verifyToken, (req, res) => {
-    const userId = req.user.id;
-
-    const sql = `SELECT groupId, groupName, createdDate FROM groups WHERE userId = ?`;
-    db.all(sql, [userId], (err, rows) => {
+    const sql = `SELECT g.groupId, g.groupName, g.createdDate, COUNT(ug.userId) as numberOfUsers
+                 FROM groups g
+                 LEFT JOIN userGroups ug ON g.groupId = ug.groupId
+                 GROUP BY g.groupId`;
+    db.all(sql, [], (err, rows) => {
         if (err) {
             console.error('Error fetching groups:', err.message);
             return res.status(500).json({ message: 'Error fetching groups' });
         }
-        res.status(200).json(rows);
+        res.json(rows);
     });
 });
 
+// Endpoint to get group details (users in the group)
 app.get('/groupDetails', verifyToken, (req, res) => {
     const groupId = req.query.groupId;
 
-    const sql = `SELECT users.id, users.age, users.gender, users.avgDegree, users.academicInstitution,
-                users.totalTrainTime, users.totalAnswers, users.totalExams, users.avgExamTime, users.userRate
-                FROM userGroups
-                JOIN users ON userGroups.userId = users.id
-                WHERE userGroups.groupId = ?`;
+    const sql = `
+    SELECT users.id, users.email
+    FROM userGroups
+    JOIN users ON userGroups.userId = users.id
+    WHERE userGroups.groupId = ?
+    `;
+
     db.all(sql, [groupId], (err, rows) => {
         if (err) {
             console.error('Error fetching group details:', err.message);
@@ -1222,21 +1222,123 @@ app.get('/groupDetails', verifyToken, (req, res) => {
     });
 });
 
-app.get('/searchUsers', verifyToken, (req, res) => {
-    const query = req.query.query;
-    const sql = `SELECT id, name, email FROM users WHERE name LIKE ? OR email LIKE ? OR academicInstitution LIKE ?`;
-    const param = `%${query}%`;
+// Endpoint to add a user to a group
+app.post('/addUserToGroup', verifyToken, (req, res) => {
+    const { groupId, selectedUsers } = req.body;
 
-    db.all(sql, [param, param, param], (err, rows) => {
+    selectedUsers.forEach(userId => {
+        const checkSql = `SELECT * FROM userGroups WHERE groupId = ? AND userId = ?`;
+        db.get(checkSql, [groupId, userId], (err, row) => {
+            if (err) {
+                console.error('Error checking user in group:', err.message);
+                return res.status(500).json({ message: 'Error checking user in group' });
+            }
+
+            if (!row) {
+                const insertSql = `INSERT INTO userGroups (groupId, userId) VALUES (?, ?)`;
+                db.run(insertSql, [groupId, userId], (err) => {
+                    if (err) {
+                        console.error('Error adding user to group:', err.message);
+                        return res.status(500).json({ message: 'Error adding user to group' });
+                    }
+                });
+            }
+        });
+    });
+
+    res.status(200).json({ message: 'Users added to group successfully' });
+});
+
+// Endpoint to remove a user from a group
+app.delete('/removeUserFromGroup', verifyToken, (req, res) => {
+    const { groupId, userId } = req.body;
+
+    const sql = `DELETE FROM userGroups WHERE groupId = ? AND userId = ?`;
+    db.run(sql, [groupId, userId], (err) => {
         if (err) {
-            console.error('Error searching users:', err.message);
-            return res.status(500).json({ message: 'Error searching users' });
+            console.error('Error removing user from group:', err.message);
+            return res.status(500).json({ message: 'Error removing user from group' });
         }
-        res.status(200).json(rows);
+        res.status(200).json({ message: 'User removed from group successfully' });
     });
 });
 
-// endregion Post endpoints
+// Endpoint to delete a group
+app.delete('/deleteGroup/:groupId', verifyToken, (req, res) => {
+    const groupId = req.params.groupId;
+
+    // Start a transaction to ensure all or nothing is deleted
+    db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        db.run('DELETE FROM userGroups WHERE groupId = ?', [groupId], (err) => {
+            if (err) {
+                db.run('ROLLBACK');
+                return res.status(500).json({ message: 'Error deleting users from group' });
+            }
+        });
+
+        db.run('DELETE FROM groups WHERE groupId = ?', [groupId], (err) => {
+            if (err) {
+                db.run('ROLLBACK');
+                return res.status(500).json({ message: 'Error deleting group' });
+            }
+        });
+
+        db.run('COMMIT', (err) => {
+            if (err) {
+                return res.status(500).json({ message: 'Error finalizing deletion' });
+            }
+            res.status(200).json({ message: 'Group and associated users deleted successfully' });
+        });
+    });
+});
+
+// Existing imports and middleware setup ...
+
+// Serve Create Group Page
+app.get('/createGroup', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'createGroup.html'));
+});
+
+// Serve Update Group Page
+app.get('/updateGroup', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'updateGroup.html'));
+});
+
+// Serve Delete Group Page
+app.get('/deleteGroup', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'deleteGroup.html'));
+});
+
+// Serve View Group Details Page
+app.get('/viewGroupDetails', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'viewGroupDetails.html'));
+});
+
+
+app.get('/checkGroupName', verifyToken, (req, res) => {
+    const groupName = req.query.groupName;
+    const userId = req.user.id;
+
+    const checkSql = `SELECT * FROM groups WHERE groupName = ? AND userId = ?`;
+    db.get(checkSql, [groupName, userId], (err, row) => {
+        if (err) {
+            console.error('Error checking group name:', err.message);
+            return res.status(500).json({ exists: false, message: 'Server error checking group name' });
+        }
+
+        if (row) {
+            // Group with the same name already exists
+            return res.status(200).json({ exists: true });
+        } else {
+            // No group with the same name exists
+            return res.status(200).json({ exists: false });
+        }
+    });
+});
+
+// Other CRUD endpoints and server setup ...
+
 
 // Start the server
 app.listen(PORT, '0.0.0.0',() => console.log(`Server running on port ${PORT}`));

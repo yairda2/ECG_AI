@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Group</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button.delete {
+            background-color: #dc3545;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Update Group</h1>
+    <table id="userTable">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Academic Institution</th>
+            <th>Average Training</th>
+            <th>Average Time</th>
+            <th>Average Score</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- User rows will be dynamically populated here -->
+        </tbody>
+    </table>
+    <button onclick="window.location.href='/groupManagement'">Back</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupId = urlParams.get('groupId');
+        const userTable = document.getElementById('userTable').querySelector('tbody');
+
+        // Fetch users in the group
+        fetch(`/groupDetails?groupId=${groupId}`)
+            .then(response => response.json())
+            .then(users => {
+                userTable.innerHTML = '';
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.academicInstitution}</td>
+                        <td>${user.avgTraining}</td>
+                        <td>${user.avgTime}</td>
+                        <td>${user.avgScore}</td>
+                        <td>
+                            <button class="delete" onclick="removeUserFromGroup('${groupId}', '${user.id}', this)">Remove</button>
+                        </td>
+                    `;
+                    userTable.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching group details:', error));
+
+        function removeUserFromGroup(groupId, userId, button) {
+            fetch('/removeUserFromGroup', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ groupId, userId }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    const row = button.closest('tr');
+                    row.remove();
+                })
+                .catch(error => console.error('Error removing user from group:', error));
+        }
+    });
+</script>
+</body>
+</html>
