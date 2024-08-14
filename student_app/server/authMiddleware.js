@@ -1,25 +1,31 @@
-// authMiddleware.js
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-const SECRET_KEY = config.secret_key.key;
 
 function verifyToken(req, res, next) {
-    const token = req.cookies.token;
+    // חפש את הטוקן בקוקיז וב- Authorization header
+    const token = req.cookies.token || (req.headers['authorization'] && req.headers['authorization'].replace('Bearer ', ''));
+
     if (!token) {
-        res.redirect('/login?message=InvalidToken');
+        // אם הטוקן לא קיים, נבצע הפניה לדף התחברות או נשלח תגובה של טוקן חסר
+        if (req.cookies.token) {
+            return res.redirect('/login?message=InvalidToken');
+        } else {
+            return res.status(403).json({ message: 'No token provided.' });
+        }
     }
 
-    jwt.verify(token.replace('Bearer ', ''), config.secret_key.key, (err, decoded) => {
+    // וודא את הטוקן
+    jwt.verify(token, config.secret_key.key, (err, decoded) => {
         if (err) {
-            return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
+            return res.status(500).json({ auth: false, message: 'Failed to authenticate token.' });
         }
 
-        // Check if the token contains an 'exp' field
+        // בדוק אם לטוקן יש שדה 'exp' (תאריך פקיעה)
         if (!decoded.exp) {
-            return res.status(500).send({ auth: false, message: 'Token does not have an expiration date.' });
+            return res.status(500).json({ auth: false, message: 'Token does not have an expiration date.' });
         }
 
-        // If everything is good, save to request for use in other routes
+        // אם הכל תקין, שמור את הנתונים לבקשה
         req.user = decoded;
         next();
     });

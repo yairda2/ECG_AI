@@ -62,20 +62,79 @@
         button:hover {
             opacity: 0.8;
         }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            padding: 10px;
+            width: calc(100% - 22px);
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin: 0 auto;
+            border: 8px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 8px solid #007bff;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .selected-students {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .selected-students div {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .selected-students div span {
+            cursor: pointer;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Update Group</h1>
+
+    <!-- Search functionality -->
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for students by email or academic institution">
+        <button id="searchButton">Search</button>
+        <div class="loading-spinner" id="loadingSpinner"></div>
+    </div>
+
+    <!-- Selected students -->
+    <div class="selected-students" id="selectedStudentsContainer">
+        <!-- Selected students will appear here -->
+    </div>
+
     <table id="userTable">
         <thead>
         <tr>
-            <th>Name</th>
+            <th>Select</th>
             <th>Email</th>
             <th>Academic Institution</th>
-            <th>Average Training</th>
-            <th>Average Time</th>
-            <th>Average Score</th>
             <th>Actions</th>
         </tr>
         </thead>
@@ -83,6 +142,7 @@
         <!-- User rows will be dynamically populated here -->
         </tbody>
     </table>
+    <button onclick="addSelectedStudentsToGroup()">Add to Group</button>
     <button onclick="window.location.href='/groupManagement'">Back</button>
 </div>
 
@@ -91,29 +151,111 @@
         const urlParams = new URLSearchParams(window.location.search);
         const groupId = urlParams.get('groupId');
         const userTable = document.getElementById('userTable').querySelector('tbody');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const selectedStudentsContainer = document.getElementById('selectedStudentsContainer');
+        let selectedStudents = {};
 
-        // Fetch users in the group
-        fetch(`/groupDetails?groupId=${groupId}`)
-            .then(response => response.json())
-            .then(users => {
+        searchInput.addEventListener('input', function() {
+            searchStudents(searchInput.value.trim());
+        });
+
+        searchButton.addEventListener('click', function() {
+            searchStudents(searchInput.value.trim());
+        });
+
+        function showLoading() {
+            loadingSpinner.style.display = 'block';
+        }
+
+        function hideLoading() {
+            loadingSpinner.style.display = 'none';
+        }
+
+        function searchStudents(query) {
+            if (query) {
+                showLoading();
+                fetch(`/searchStudents?query=${encodeURIComponent(query)}&groupId=${groupId}`)
+                    .then(response => response.json())
+                    .then(users => {
+                        hideLoading();
+                        populateUserTable(users);
+                    })
+                    .catch(error => {
+                        hideLoading();
+                        console.error('Error searching students:', error);
+                    });
+            } else {
                 userTable.innerHTML = '';
-                users.forEach(user => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${user.name}</td>
-                        <td>${user.email}</td>
-                        <td>${user.academicInstitution}</td>
-                        <td>${user.avgTraining}</td>
-                        <td>${user.avgTime}</td>
-                        <td>${user.avgScore}</td>
-                        <td>
-                            <button class="delete" onclick="removeUserFromGroup('${groupId}', '${user.id}', this)">Remove</button>
-                        </td>
-                    `;
-                    userTable.appendChild(row);
-                });
-            })
-            .catch(error => console.error('Error fetching group details:', error));
+            }
+        }
+
+        function populateUserTable(users) {
+            userTable.innerHTML = '';
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                const isChecked = selectedStudents[user.id] ? 'checked' : '';
+                row.innerHTML = `
+                    <td><input type="checkbox" ${isChecked} onchange="toggleStudentSelection('${user.id}', '${user.email}')"></td>
+                    <td>${user.email}</td>
+                    <td>${user.academicInstitution}</td>
+                    <td>
+                        <button class="delete" onclick="removeUserFromGroup('${groupId}', '${user.id}', this)">Remove</button>
+                    </td>
+                `;
+                userTable.appendChild(row);
+            });
+        }
+
+        window.toggleStudentSelection = function(studentId, studentEmail) {
+            if (selectedStudents[studentId]) {
+                delete selectedStudents[studentId];
+            } else {
+                selectedStudents[studentId] = studentEmail;
+            }
+            updateSelectedStudentsDisplay();
+        }
+
+        function updateSelectedStudentsDisplay() {
+            selectedStudentsContainer.innerHTML = '';
+            for (const [studentId, studentEmail] of Object.entries(selectedStudents)) {
+                const studentDiv = document.createElement('div');
+                studentDiv.textContent = studentEmail;
+                const removeSpan = document.createElement('span');
+                removeSpan.textContent = 'x';
+                removeSpan.onclick = function() {
+                    delete selectedStudents[studentId];
+                    updateSelectedStudentsDisplay();
+                    searchStudents(searchInput.value.trim());
+                };
+                studentDiv.appendChild(removeSpan);
+                selectedStudentsContainer.appendChild(studentDiv);
+            }
+        }
+
+        function addSelectedStudentsToGroup() {
+            const studentIds = Object.keys(selectedStudents);
+            if (studentIds.length > 0) {
+                fetch('/addUsersToGroup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ groupId, studentIds }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        selectedStudents = {};
+                        updateSelectedStudentsDisplay();
+                        searchStudents(searchInput.value.trim());
+                    })
+                    .catch(error => console.error('Error adding students to group:', error));
+            } else {
+                alert('No students selected.');
+            }
+        }
 
         function removeUserFromGroup(groupId, userId, button) {
             fetch('/removeUserFromGroup', {

@@ -1337,6 +1337,77 @@ app.get('/checkGroupName', verifyToken, (req, res) => {
     });
 });
 
+
+// Example of dynamic search by email and academic institution
+
+app.get('/searchStudents', verifyToken, (req, res) => {
+    const query = req.query.query;
+    const groupId = req.query.groupId;
+
+    const sql = `
+        SELECT users.id, authentication.email, users.academicInstitution
+        FROM users
+        JOIN authentication ON users.id = authentication.userId
+        LEFT JOIN userGroups ON users.id = userGroups.userId
+        WHERE userGroups.groupId = ? AND 
+              (authentication.email LIKE ? OR users.academicInstitution LIKE ?)
+    `;
+
+    const searchValue = `%${query}%`;
+
+    db.all(sql, [groupId, searchValue, searchValue], (err, rows) => {
+        if (err) {
+            console.error('Error searching students:', err.message);
+            return res.status(500).json({ message: 'Error searching students' });
+        }
+        res.status(200).json(rows);
+    });
+});
+
+
+app.post('/addUsersToGroup', verifyToken, (req, res) => {
+    const { groupId, studentIds } = req.body;
+
+    const placeholders = studentIds.map(() => '(?, ?)').join(', ');
+    const values = [];
+
+    studentIds.forEach(studentId => {
+        values.push(studentId, groupId);
+    });
+
+    const sql = `
+        INSERT INTO userGroups (userId, groupId)
+        VALUES ${placeholders}
+    `;
+
+    db.run(sql, values, function (err) {
+        if (err) {
+            console.error('Error adding users to group:', err.message);
+            return res.status(500).json({ message: 'Error adding users to group' });
+        }
+        res.status(200).json({ message: 'Users successfully added to the group.' });
+    });
+});
+
+
+app.delete('/removeUserFromGroup', verifyToken, (req, res) => {
+    const { groupId, userId } = req.body;
+
+    const sql = `
+        DELETE FROM userGroups
+        WHERE userId = ? AND groupId = ?
+    `;
+
+    db.run(sql, [userId, groupId], function (err) {
+        if (err) {
+            console.error('Error removing user from group:', err.message);
+            return res.status(500).json({ message: 'Error removing user from group' });
+        }
+        res.status(200).json({ message: 'User successfully removed from the group.' });
+    });
+});
+
+
 // Other CRUD endpoints and server setup ...
 
 
