@@ -26,6 +26,72 @@
             margin-bottom: 20px;
         }
 
+        .search-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-right: 10px;
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .search-container button:hover {
+            background-color: #218838;
+        }
+
+        .loading-spinner {
+            margin-left: 10px;
+            width: 20px;
+            height: 20px;
+            border: 4px solid #ddd;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .selected-students {
+            margin-bottom: 20px;
+        }
+
+        .selected-students div {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .selected-students div span {
+            margin-left: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -63,53 +129,11 @@
             opacity: 0.8;
         }
 
-        .search-container {
-            margin-bottom: 20px;
-        }
-
-        .search-container input {
-            padding: 10px;
-            width: calc(100% - 22px);
-            margin: 5px 0;
-            box-sizing: border-box;
-        }
-
-        .loading-spinner {
-            display: none;
-            margin: 0 auto;
-            border: 8px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 8px solid #007bff;
-            width: 60px;
-            height: 60px;
-            animation: spin 2s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .selected-students {
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #e9ecef;
-            border-radius: 5px;
-        }
-
-        .selected-students div {
-            display: inline-block;
-            margin: 5px;
-            padding: 5px 10px;
-            background-color: #007bff;
-            color: white;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .selected-students div span {
-            cursor: pointer;
-            margin-left: 10px;
+        .no-results {
+            text-align: center;
+            color: #999;
+            font-size: 18px;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -142,137 +166,134 @@
         <!-- User rows will be dynamically populated here -->
         </tbody>
     </table>
+
+    <div class="no-results" id="noResults" style="display: none;">No students found</div>
+
     <button onclick="addSelectedStudentsToGroup()">Add to Group</button>
     <button onclick="window.location.href='/groupManagement'">Back</button>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const groupId = urlParams.get('groupId');
-        const userTable = document.getElementById('userTable').querySelector('tbody');
+    document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('searchInput');
         const searchButton = document.getElementById('searchButton');
         const loadingSpinner = document.getElementById('loadingSpinner');
+        const userTable = document.getElementById('userTable').querySelector('tbody');
+        const noResults = document.getElementById('noResults');
         const selectedStudentsContainer = document.getElementById('selectedStudentsContainer');
-        let selectedStudents = {};
+        const selectedStudents = new Set();
 
-        searchInput.addEventListener('input', function() {
-            searchStudents(searchInput.value.trim());
-        });
+        searchInput.addEventListener('input', handleSearch);
+        searchButton.addEventListener('click', handleSearch);
 
-        searchButton.addEventListener('click', function() {
-            searchStudents(searchInput.value.trim());
-        });
+        function handleSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
 
-        function showLoading() {
             loadingSpinner.style.display = 'block';
-        }
+            userTable.innerHTML = ''; // Clear previous results
+            noResults.style.display = 'none';
 
-        function hideLoading() {
-            loadingSpinner.style.display = 'none';
-        }
-
-        function searchStudents(query) {
-            if (query) {
-                showLoading();
-                fetch(`/searchStudents?query=${encodeURIComponent(query)}&groupId=${groupId}`)
-                    .then(response => response.json())
-                    .then(users => {
-                        hideLoading();
-                        populateUserTable(users);
-                    })
-                    .catch(error => {
-                        hideLoading();
-                        console.error('Error searching students:', error);
-                    });
-            } else {
-                userTable.innerHTML = '';
-            }
+            fetch(`/searchStudents?query=${encodeURIComponent(query)}&groupId=${getGroupId()}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingSpinner.style.display = 'none';
+                    if (data.length > 0) {
+                        populateUserTable(data);
+                    } else {
+                        noResults.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    loadingSpinner.style.display = 'none';
+                    console.error('Error fetching students:', error);
+                });
         }
 
         function populateUserTable(users) {
-            userTable.innerHTML = '';
             users.forEach(user => {
                 const row = document.createElement('tr');
-                const isChecked = selectedStudents[user.id] ? 'checked' : '';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.addEventListener('change', () => handleSelectUser(user.id, user.email, checkbox.checked));
+
                 row.innerHTML = `
-                    <td><input type="checkbox" ${isChecked} onchange="toggleStudentSelection('${user.id}', '${user.email}')"></td>
+                    <td>${checkbox.outerHTML}</td>
                     <td>${user.email}</td>
                     <td>${user.academicInstitution}</td>
-                    <td>
-                        <button class="delete" onclick="removeUserFromGroup('${groupId}', '${user.id}', this)">Remove</button>
-                    </td>
+                    <td><button class="delete" onclick="removeUser('${user.id}')">Remove</button></td>
                 `;
+
                 userTable.appendChild(row);
             });
         }
 
-        window.toggleStudentSelection = function(studentId, studentEmail) {
-            if (selectedStudents[studentId]) {
-                delete selectedStudents[studentId];
-            } else {
-                selectedStudents[studentId] = studentEmail;
-            }
-            updateSelectedStudentsDisplay();
-        }
-
-        function updateSelectedStudentsDisplay() {
-            selectedStudentsContainer.innerHTML = '';
-            for (const [studentId, studentEmail] of Object.entries(selectedStudents)) {
+        function handleSelectUser(userId, email, isChecked) {
+            if (isChecked) {
+                selectedStudents.add(userId);
                 const studentDiv = document.createElement('div');
-                studentDiv.textContent = studentEmail;
-                const removeSpan = document.createElement('span');
-                removeSpan.textContent = 'x';
-                removeSpan.onclick = function() {
-                    delete selectedStudents[studentId];
-                    updateSelectedStudentsDisplay();
-                    searchStudents(searchInput.value.trim());
-                };
-                studentDiv.appendChild(removeSpan);
+                studentDiv.innerHTML = `${email} <span onclick="removeSelectedStudent('${userId}')">&times;</span>`;
+                studentDiv.setAttribute('data-id', userId);
                 selectedStudentsContainer.appendChild(studentDiv);
-            }
-        }
-
-        function addSelectedStudentsToGroup() {
-            const studentIds = Object.keys(selectedStudents);
-            if (studentIds.length > 0) {
-                fetch('/addUsersToGroup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ groupId, studentIds }),
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);
-                        selectedStudents = {};
-                        updateSelectedStudentsDisplay();
-                        searchStudents(searchInput.value.trim());
-                    })
-                    .catch(error => console.error('Error adding students to group:', error));
             } else {
-                alert('No students selected.');
+                selectedStudents.delete(userId);
+                document.querySelector(`div[data-id="${userId}"]`).remove();
             }
         }
 
-        function removeUserFromGroup(groupId, userId, button) {
+        window.removeSelectedStudent = function (userId) {
+            selectedStudents.delete(userId);
+            document.querySelector(`div[data-id="${userId}"]`).remove();
+            document.querySelector(`input[type="checkbox"][data-id="${userId}"]`).checked = false;
+        };
+
+        function getGroupId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('groupId');
+        }
+
+        window.addSelectedStudentsToGroup = function () {
+            if (selectedStudents.size === 0) {
+                alert('No students selected.');
+                return;
+            }
+
+            fetch('/addUsersToGroup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    groupId: getGroupId(),
+                    studentIds: Array.from(selectedStudents),
+                }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    selectedStudents.clear();
+                    selectedStudentsContainer.innerHTML = '';
+                    handleSearch(); // Refresh the table after adding students
+                })
+                .catch(error => console.error('Error adding students to group:', error));
+        };
+
+        window.removeUser = function (userId) {
             fetch('/removeUserFromGroup', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ groupId, userId }),
+                body: JSON.stringify({ groupId: getGroupId(), userId }),
             })
                 .then(response => response.json())
                 .then(data => {
                     alert(data.message);
-                    const row = button.closest('tr');
-                    row.remove();
+                    handleSearch(); // Refresh the table after removing the student
                 })
                 .catch(error => console.error('Error removing user from group:', error));
-        }
+        };
     });
 </script>
 </body>

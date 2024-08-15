@@ -1344,6 +1344,10 @@ app.get('/searchStudents', verifyToken, (req, res) => {
     const query = req.query.query;
     const groupId = req.query.groupId;
 
+    // מחלק את השאילתה למילים ומוסיף אחוזים כדי לבצע LIKE מתאים לכל מילה
+    const queryParts = query.split(' ').map(part => `%${part}%`);
+
+    // מכין את השאילתה שתכיל את המילים בשדה המייל והמוסד האקדמי
     const sql = `
         SELECT users.id, authentication.email, users.academicInstitution
         FROM users
@@ -1353,9 +1357,9 @@ app.get('/searchStudents', verifyToken, (req, res) => {
               (authentication.email LIKE ? OR users.academicInstitution LIKE ?)
     `;
 
-    const searchValue = `%${query}%`;
+    const searchValues = queryParts.flatMap(part => [part, part]);
 
-    db.all(sql, [groupId, searchValue, searchValue], (err, rows) => {
+    db.all(sql, [groupId, ...searchValues], (err, rows) => {
         if (err) {
             console.error('Error searching students:', err.message);
             return res.status(500).json({ message: 'Error searching students' });
