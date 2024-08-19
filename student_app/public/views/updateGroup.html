@@ -70,11 +70,16 @@
             100% { transform: rotate(360deg); }
         }
 
-        .selected-students {
+        .current-members, .selected-students {
             margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
         }
 
-        .selected-students div {
+        .current-members div, .selected-students div {
             display: inline-block;
             background-color: #007bff;
             color: white;
@@ -86,7 +91,11 @@
             cursor: pointer;
         }
 
-        .selected-students div span {
+        .current-members div {
+            background-color: #17a2b8;
+        }
+
+        .current-members div span, .selected-students div span {
             margin-left: 5px;
             font-weight: bold;
             cursor: pointer;
@@ -141,6 +150,12 @@
 <div class="container">
     <h1>Update Group</h1>
 
+    <!-- Current Group Members -->
+    <h3>Current Group Members</h3>
+    <div class="current-members" id="currentMembersContainer">
+        <!-- Current group members will be listed here -->
+    </div>
+
     <!-- Search functionality -->
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="Search for students by email or academic institution">
@@ -149,6 +164,7 @@
     </div>
 
     <!-- Selected students -->
+    <h3>Selected Students to Add</h3>
     <div class="selected-students" id="selectedStudentsContainer">
         <!-- Selected students will appear here -->
     </div>
@@ -214,38 +230,60 @@
             users.forEach(user => {
                 const row = document.createElement('tr');
 
+                // Add a green border if the user is already in the group
+                if (user.isInGroup) {
+                    row.style.border = '2px solid green';
+                }
+
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.addEventListener('change', () => handleSelectUser(user.id, user.email, checkbox.checked));
+                checkbox.checked = user.isInGroup; // Check the box if the user is in the group
+                checkbox.disabled = user.isInGroup; // Disable the checkbox if the user is in the group
+                checkbox.setAttribute('data-id', user.id); // Ensure data-id is set correctly
 
                 row.innerHTML = `
-                    <td>${checkbox.outerHTML}</td>
-                    <td>${user.email}</td>
-                    <td>${user.academicInstitution}</td>
-                    <td><button class="delete" onclick="removeUser('${user.id}')">Remove</button></td>
-                `;
+            <td>${checkbox.outerHTML}</td>
+            <td>${user.email}</td>
+            <td>${user.academicInstitution}</td>
+            <td>${user.isInGroup ? '<button class="delete" onclick="removeUser(\'' + user.id + '\')">Remove</button>' : ''}</td>
+        `;
 
                 userTable.appendChild(row);
+            });
+
+            // Add event listeners to the checkboxes after the rows have been added to the DOM
+            userTable.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', (event) => {
+                    const userId = event.target.getAttribute('data-id'); // Retrieve the correct user ID
+                    const email = event.target.closest('tr').querySelector('td:nth-child(2)').textContent;
+                    handleSelectUser(userId, email, event.target.checked);
+                });
             });
         }
 
         function handleSelectUser(userId, email, isChecked) {
+            console.log(`handleSelectUser called: ID=${userId}, Checked=${isChecked}`);
+
             if (isChecked) {
                 selectedStudents.add(userId);
+                console.log(`Added user ${userId} to selected students.`);
                 const studentDiv = document.createElement('div');
                 studentDiv.innerHTML = `${email} <span onclick="removeSelectedStudent('${userId}')">&times;</span>`;
                 studentDiv.setAttribute('data-id', userId);
                 selectedStudentsContainer.appendChild(studentDiv);
             } else {
                 selectedStudents.delete(userId);
+                console.log(`Removed user ${userId} from selected students.`);
                 document.querySelector(`div[data-id="${userId}"]`).remove();
             }
+
+            console.log("Current selected students set: ", Array.from(selectedStudents));
         }
 
         window.removeSelectedStudent = function (userId) {
             selectedStudents.delete(userId);
             document.querySelector(`div[data-id="${userId}"]`).remove();
-            document.querySelector(`input[type="checkbox"][data-id="${userId}"]`).checked = false;
+            document.querySelector(`input[data-user-id="${userId}"]`).checked = false;
         };
 
         function getGroupId() {
@@ -259,14 +297,27 @@
                 return;
             }
 
+            const studentIdsArray = Array.from(selectedStudents).filter(id => id && id.trim() !== '');
+
+            if (studentIdsArray.length === 0) {
+                alert('No valid students selected.');
+                return;
+            }
+
+            const groupId = getGroupId();
+            if (!groupId || groupId.trim() === '') {
+                alert('Invalid group ID.');
+                return;
+            }
+
             fetch('/addUsersToGroup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    groupId: getGroupId(),
-                    studentIds: Array.from(selectedStudents),
+                    groupId: groupId.trim(),
+                    studentIds: studentIdsArray, // Ensure only valid student IDs are sent
                 }),
             })
                 .then(response => response.json())
@@ -275,8 +326,11 @@
                     selectedStudents.clear();
                     selectedStudentsContainer.innerHTML = '';
                     handleSearch(); // Refresh the table after adding students
+                    loadCurrentGroupMembers(); // Reload current group members
                 })
-                .catch(error => console.error('Error adding students to group:', error));
+                .catch(error => {
+                    console.error('Error adding students to group:', error);
+                });
         };
 
         window.removeUser = function (userId) {
@@ -291,9 +345,33 @@
                 .then(data => {
                     alert(data.message);
                     handleSearch(); // Refresh the table after removing the student
+                    loadCurrentGroupMembers(); // Reload current group members
                 })
                 .catch(error => console.error('Error removing user from group:', error));
         };
+
+        function loadCurrentGroupMembers() {
+            fetch(`/groupDetails?groupId=${getGroupId()}`)
+                .then(response => response.json())
+                .then(members => {
+                    const currentMembersContainer = document.getElementById('currentMembersContainer');
+                    currentMembersContainer.innerHTML = ''; // Clear previous members
+
+                    if (members.length === 0) {
+                        currentMembersContainer.innerHTML = '<div>No members in this group.</div>';
+                    } else {
+                        members.forEach(member => {
+                            const memberDiv = document.createElement('div');
+                            memberDiv.textContent = member.email;
+                            currentMembersContainer.appendChild(memberDiv);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading current group members:', error));
+        }
+
+        // Initial load of current group members
+        loadCurrentGroupMembers();
     });
 </script>
 </body>

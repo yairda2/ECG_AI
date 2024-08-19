@@ -1207,9 +1207,10 @@ app.get('/groupDetails', verifyToken, (req, res) => {
     const groupId = req.query.groupId;
 
     const sql = `
-    SELECT users.id, users.email
+    SELECT users.id, authentication.email
     FROM userGroups
     JOIN users ON userGroups.userId = users.id
+    JOIN authentication ON users.id = authentication.userId
     WHERE userGroups.groupId = ?
     `;
 
@@ -1344,22 +1345,18 @@ app.get('/searchStudents', verifyToken, (req, res) => {
     const query = req.query.query;
     const groupId = req.query.groupId;
 
-    // מחלק את השאילתה למילים ומוסיף אחוזים כדי לבצע LIKE מתאים לכל מילה
-    const queryParts = query.split(' ').map(part => `%${part}%`);
-
-    // מכין את השאילתה שתכיל את המילים בשדה המייל והמוסד האקדמי
     const sql = `
-        SELECT users.id, authentication.email, users.academicInstitution
+        SELECT users.id, authentication.email, users.academicInstitution,
+        CASE WHEN userGroups.userId IS NOT NULL THEN 1 ELSE 0 END AS isInGroup
         FROM users
         JOIN authentication ON users.id = authentication.userId
-        LEFT JOIN userGroups ON users.id = userGroups.userId
-        WHERE userGroups.groupId = ? AND 
-              (authentication.email LIKE ? OR users.academicInstitution LIKE ?)
+        LEFT JOIN userGroups ON users.id = userGroups.userId AND userGroups.groupId = ?
+        WHERE authentication.email LIKE ? OR users.academicInstitution LIKE ?
     `;
 
-    const searchValues = queryParts.flatMap(part => [part, part]);
+    const searchValue = `%${query}%`;
 
-    db.all(sql, [groupId, ...searchValues], (err, rows) => {
+    db.all(sql, [groupId, searchValue, searchValue], (err, rows) => {
         if (err) {
             console.error('Error searching students:', err.message);
             return res.status(500).json({ message: 'Error searching students' });
@@ -1372,24 +1369,54 @@ app.get('/searchStudents', verifyToken, (req, res) => {
 app.post('/addUsersToGroup', verifyToken, (req, res) => {
     const { groupId, studentIds } = req.body;
 
-    const placeholders = studentIds.map(() => '(?, ?)').join(', ');
-    const values = [];
+    // Validate groupId and studentIds
+    if (!groupId || typeof groupId !== 'string' || groupId.trim() === '') {
+        return res.status(400).json({ message: 'Invalid group ID.' });
+    }
 
-    studentIds.forEach(studentId => {
-        values.push(studentId, groupId);
-    });
+    if (!Array.isArray(studentIds) || studentIds.length === 0 || studentIds.some(id => !id || id.trim() === '')) {
+        return res.status(400).json({ message: 'Invalid student IDs.' });
+    }
 
-    const sql = `
-        INSERT INTO userGroups (userId, groupId)
-        VALUES ${placeholders}
-    `;
+    const validStudentIds = studentIds.filter(id => id && id.trim() !== '');
 
-    db.run(sql, values, function (err) {
-        if (err) {
-            console.error('Error adding users to group:', err.message);
-            return res.status(500).json({ message: 'Error adding users to group' });
-        }
-        res.status(200).json({ message: 'Users successfully added to the group.' });
+    db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+
+        validStudentIds.forEach(studentId => {
+            const checkSql = `
+                SELECT * FROM userGroups WHERE groupId = ? AND userId = ?
+            `;
+            db.get(checkSql, [groupId, studentId], (err, row) => {
+                if (err) {
+                    console.error('Error checking if user is already in group:', err.message);
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ message: 'Error checking if user is already in group' });
+                }
+
+                if (!row) {
+                    const insertSql = `
+                        INSERT INTO userGroups (groupId, userId)
+                        VALUES (?, ?)
+                    `;
+                    db.run(insertSql, [groupId, studentId], (insertErr) => {
+                        if (insertErr) {
+                            console.error('Error adding user to group:', insertErr.message);
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ message: 'Error adding user to group' });
+                        }
+                    });
+                }
+            });
+        });
+
+        db.run('COMMIT', (commitErr) => {
+            if (commitErr) {
+                console.error('Error committing transaction:', commitErr.message);
+                return res.status(500).json({ message: 'Error committing transaction' });
+            }
+            res.status(200).json({ message: 'Users successfully added to the group.' });
+        });
     });
 });
 

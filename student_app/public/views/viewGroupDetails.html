@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Group Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flowfuse/1.0.0/ui-chart.css">
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 20px;
         }
 
         .container {
@@ -21,109 +18,70 @@
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 600px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
             text-align: center;
+            margin-bottom: 20px;
         }
 
-        select, button {
-            padding: 10px;
-            margin: 5px 0;
+        .chart-container {
             width: 100%;
-            max-width: 400px;
-            box-sizing: border-box;
+            height: 400px;
         }
 
-        table {
-            width: 100%;
-            margin-top: 20px;
-            border-collapse: collapse;
-        }
-
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            color: #777;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>View Group Details</h1>
-    <select id="groupSelect">
-        <option value="" disabled selected>Select a Group</option>
-    </select>
-    <table id="groupDetailsTable">
-        <thead>
-        <tr>
-            <th>User ID</th>
-            <th>Name</th>
-            <th>Email</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- User details will be inserted here -->
-        </tbody>
-    </table>
-    <button onclick="window.location.href='/groupManagement'">Back</button>
+    <h1>Group Statistics</h1>
+    <div id="chart" class="chart-container">
+        <div class="loading">Loading chart...</div>
+    </div>
 </div>
 
+<!-- ספרייה לצורך הצגת הגרפים -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowfuse/1.0.0/ui-chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const groupSelect = document.getElementById('groupSelect');
-        const groupDetailsTable = document.getElementById('groupDetailsTable').querySelector('tbody');
-
-        // Load existing groups
-        fetch('/groups')
+    document.addEventListener('DOMContentLoaded', function () {
+        // ביצוע בקשה לנתוני הסטטיסטיקות של הקבוצה מצד השרת
+        fetch(`/groupStatistics?groupId=${new URLSearchParams(window.location.search).get('groupId')}`)
             .then(response => response.json())
-            .then(groups => {
-                groups.forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group.groupId;
-                    option.textContent = group.groupName;
-                    groupSelect.appendChild(option);
-                });
+            .then(data => {
+                // מחיקת ההודעה המוצגת במהלך טעינת הנתונים
+                document.querySelector('.loading').remove();
+
+                // הכנת נתוני הגרף
+                const chartData = {
+                    labels: data.labels, // שמות הסטודנטים או חודשים
+                    datasets: [{
+                        label: 'Student Average Score',
+                        data: data.scores,
+                        fill: false,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                };
+
+                const config = {
+                    type: 'line', // סוג הגרף, ניתן לשנות לסוגים אחרים כמו bar, pie וכו'
+                    data: chartData,
+                };
+
+                // יצירת הגרף בתוך הדיב המתאים
+                const chart = new FlowFuse.UIChart(document.getElementById('chart'), config);
             })
-            .catch(error => console.error('Error fetching groups:', error));
-
-        groupSelect.addEventListener('change', function() {
-            const groupId = groupSelect.value;
-
-            fetch(`/groupDetails?groupId=${groupId}`)
-                .then(response => response.json())
-                .then(users => {
-                    groupDetailsTable.innerHTML = '';
-                    users.forEach(user => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${user.id}</td>
-                            <td>${user.name}</td>
-                            <td>${user.email}</td>
-                        `;
-                        groupDetailsTable.appendChild(row);
-                    });
-                })
-                .catch(error => console.error('Error fetching group details:', error));
-        });
+            .catch(error => {
+                console.error('Error fetching group statistics:', error);
+                document.querySelector('.loading').textContent = 'Error loading chart';
+            });
     });
 </script>
 </body>
