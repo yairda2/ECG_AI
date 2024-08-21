@@ -1439,6 +1439,45 @@ app.delete('/removeUserFromGroup', verifyToken, (req, res) => {
 });
 
 
+app.get('/groupOverallData', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    const groupId = req.query.groupId;
+
+    const overallDataQuery = `
+        SELECT 
+            (SELECT COUNT(*) FROM users) AS totalUsers,
+            (SELECT COUNT(*) FROM answers) AS totalTrainingSessions,
+            (SELECT COUNT(*) FROM exam) AS totalExams
+    `;
+
+    const groupDataQuery = `
+        SELECT 
+            (SELECT COUNT(*) FROM userGroups WHERE groupId = ?) AS groupUsers,
+            (SELECT COUNT(*) FROM answers WHERE userId IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS groupTrainingSessions,
+            (SELECT COUNT(*) FROM exam WHERE userId IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS groupExams
+    `;
+
+    db.get(overallDataQuery, [], (err, overallData) => {
+        if (err) {
+            console.error('Error fetching overall data:', err.message);
+            return res.status(500).json({ message: 'Error fetching overall data' });
+        }
+
+        db.get(groupDataQuery, [groupId, groupId, groupId], (err, groupData) => {
+            if (err) {
+                console.error('Error fetching group data:', err.message);
+                return res.status(500).json({ message: 'Error fetching group data' });
+            }
+
+            res.json({
+                overallData,
+                groupData
+            });
+        });
+    });
+});
+
+
 // Other CRUD endpoints and server setup ...
 
 

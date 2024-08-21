@@ -1,12 +1,16 @@
+# Authors: Yair Davidof, Elyasaf sivani
+# Date: 06/07/2024
+# Description: This script is responsible for training or updating the decision tree model using data from the database.
 import os
 import pickle
 import logging
 import datetime
 import sqlite3
-from config import DB_PATH, MODEL_PATH, TRACE_LOG, ERROR_LOG
-from sklearn.tree import DecisionTreeClassifier
+from config import DB_PATH, MODEL_PATH, TRACE_LOG, ERROR_LOG, BASE_DIR
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
+import graphviz
 
 # Setup logging
 logging.basicConfig(filename=TRACE_LOG, level=logging.INFO)
@@ -45,11 +49,13 @@ def train_or_update_model():
 
         # Fetch the training data
         cursor.execute("""
-            SELECT photoName, classificationSet, classificationSubSet, answerSubmitTime, 
-                   totalTrainTime, academicInstitution, rate 
+            SELECT imageClassification.photoName, imageClassification.classificationSet, 
+                   imageClassification.classificationSubSet, answers.answerSubmitTime, 
+                   users.totalTrainTime, users.academicInstitution, imageClassification.rate 
             FROM imageClassification
-            JOIN users ON imageClassification.imageId = users.id
-            WHERE rate IS NOT NULL
+            JOIN answers ON imageClassification.photoName = answers.photoName
+            JOIN users ON answers.userId = users.id
+            WHERE imageClassification.rate IS NOT NULL
         """)
         data = cursor.fetchall()
 
@@ -60,7 +66,7 @@ def train_or_update_model():
         # Prepare the dataset
         features = []
         labels = []
-        for photoName, classificationSet, classificationSubSet, answerSubmitTime, totalTrainTime, academicInstitution, rate in data:
+        for _, classificationSet, classificationSubSet, answerSubmitTime, totalTrainTime, academicInstitution, rate in data:
             features.append([classificationSet, classificationSubSet, answerSubmitTime, totalTrainTime, academicInstitution])
             labels.append(rate)
 
@@ -75,56 +81,27 @@ def train_or_update_model():
         model.fit(X, y)
         save_model(model)
 
-        log_trace("Model trained and updated successfully.")
+        # Visualize and save the decision tree
+        dot_data = export_graphviz(model, out_file=None,
+                                   feature_names=['ClassificationSetSrc', 'ClassificationSubSetSrc', 'AnswerSubmitTime', 'TotalTrainTime', 'AcademicInstitution'],
+                                   class_names=[str(i) for i in set(y)],
+                                   filled=True, rounded=True, special_characters=True)
+        graph = graphviz.Source(dot_data)
+        graph_path = os.path.join(BASE_DIR, 'decision_tree_visualization')
+        os.makedirs(graph_path, exist_ok=True)
+        graph.render(os.path.join(graph_path, f'decision_tree_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png'))
+
+        # Log feature importances (weights)
+        feature_importances = model.feature_importances_
+        for feature_name, importance in zip(['ClassificationSetSrc', 'ClassificationSubSetSrc', 'AnswerSubmitTime', 'TotalTrainTime', 'AcademicInstitution'], feature_importances):
+            log_trace(f"Feature '{feature_name}' has importance: {importance}")
+
+        log_trace("Model trained, updated, and decision tree saved successfully.")
     except Exception as e:
         log_error(f"Error in train_or_update_model: {str(e)}")
         raise
     finally:
         conn.close()
 
-def rate_image(photo_name, classification_set, classification_subset, answer_submit_time, total_train_time, academic_institution):
-    """Rate an image based on its classification set and subset using the trained decision tree model."""
-    try:
-        model = load_model()
-        label_encoder = LabelEncoder()
-        encoded_features = label_encoder.fit_transform([classification_set, classification_subset, answer_submit_time, total_train_time, academic_institution])
-        difficulty_score = model.predict([encoded_features])
-
-        log_trace(f"Image {photo_name} rated with difficulty score {difficulty_score[0]}")
-        return difficulty_score[0]
-    except Exception as e:
-        log_error(f"Error in rate_image: {str(e)}")
-        raise
-
-def update_image_ratings():
-    """Update the ratings of all images in the database based on the trained model."""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-
-        # Fetch all images that need to be rated
-        cursor.execute("""
-            SELECT photoName, classificationSet, classificationSubSet, answerSubmitTime, 
-                   totalTrainTime, academicInstitution 
-            FROM imageClassification
-            JOIN users ON imageClassification.imageId = users.id
-            WHERE rate IS NULL
-        """)
-        images = cursor.fetchall()
-
-        for photo_name, classification_set, classification_subset, answer_submit_time, total_train_time, academic_institution in images:
-            # Rate each image
-            difficulty_score = rate_image(photo_name, classification_set, classification_subset, answer_submit_time, total_train_time, academic_institution)
-            cursor.execute("UPDATE imageClassification SET rate = ? WHERE photoName = ?", (difficulty_score, photo_name))
-
-        conn.commit()
-        log_trace("Image ratings updated successfully.")
-    except Exception as e:
-        log_error(f"Error in update_image_ratings: {str(e)}")
-        raise
-    finally:
-        conn.close()
-
 if __name__ == "__main__":
     train_or_update_model()
-    update_image_ratings()
