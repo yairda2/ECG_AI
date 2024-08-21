@@ -669,6 +669,7 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
+    const redirectUrl = req.query.redirectUrl || '/chooseModel';
     const sql = `SELECT userId, password, role FROM authentication WHERE email = ?`;
     const updateEntries = `UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?`;
 
@@ -681,10 +682,10 @@ app.post('/login', (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
         if (await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({ id: user.userId, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+            const token = jwt.sign({ id: user.userId, role: user.role }, config.secret_key.key, { expiresIn: '1h' });
             res.cookie('token', token, { httpOnly: true, secure: isSecure });
             res.cookie('userId', user.userId, { httpOnly: true, secure: isSecure });
-            res.status(200).json({ redirect: '/chooseModel', message: 'Login successful', role: user.role });
+            res.status(200).json({ redirect: decodeURIComponent(redirectUrl), message: 'Login successful', role: user.role });
             db.run(updateEntries, [user.userId], async (err) => {
                 if (err) {
                     console.error('Error updating totalEntries:', err.message);
