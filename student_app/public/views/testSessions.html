@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Sessions</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+        }
+        th {
+            background-color: #333;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        .button-container {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .results-list {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 20px;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .answer-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            transition: background-color 0.3s ease;
+        }
+        .answer-item img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .answer-item.correct {
+            border-color: #4CAF50;
+        }
+        .answer-item.incorrect {
+            border-color: #f44336;
+        }
+        .details-container {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #555;
+        }
+        .details-container p {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="button-container">
+        <button onclick="goBack()">Back</button>
+    </div>
+    <h1>Test Sessions</h1>
+    <table id="testSessionsTable">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Grade</th>
+            <th>Number of Answers</th>
+            <th>Correct Answers</th>
+        </tr>
+        </thead>
+        <tbody id="testSessionsBody">
+        </tbody>
+    </table>
+</div>
+
+<div id="testDetailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Test Details</h2>
+        <div class="details-container" id="testDetails"></div>
+        <button onclick="viewDetailedResults()">View Detailed Results</button>
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<div id="detailedResultsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Detailed Test Results</h2>
+        <div class="results-list" id="detailedResults"></div>
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/getTestSessions')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('testSessionsBody');
+                data.forEach(session => {
+                    const formattedDate = new Date(session.date).toLocaleString('en-GB', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                    }).replace(',', '');
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td onclick="showTestDetails('${session.examId}')">${formattedDate}</td>
+                        <td>${session.grade.toFixed(2)}%</td>
+                        <td>${session.numberOfAnswers}</td>
+                        <td>${session.correctAnswers}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching test sessions:', error));
+    });
+
+    function showTestDetails(examId) {
+        fetch(`/getTestDetails?examId=${examId}`)
+            .then(response => response.json())
+            .then(data => {
+                const formattedDate = new Date(data.date).toLocaleString('en-GB', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                }).replace(',', '');
+                let details = `
+                    <p><strong>Date:</strong> ${formattedDate}</p>
+                    <p><strong>Grade:</strong> ${data.grade.toFixed(2)}%</p>
+                    <p><strong>Number of Answers:</strong> ${data.numberOfAnswers}</p>
+                    <p><strong>Correct Answers:</strong> ${data.correctAnswers}</p>
+                `;
+                document.getElementById('testDetails').innerHTML = details;
+                const modal = document.getElementById('testDetailsModal');
+                modal.style.display = "block";
+            })
+            .catch(error => console.error('Error fetching test details:', error));
+    }
+
+    function viewDetailedResults() {
+        fetch('/post-test-detailed-results', { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+                const detailedResults = document.getElementById('detailedResults');
+                detailedResults.innerHTML = ''; // clear previous results
+
+                data.answers.forEach(answer => {
+                    let photoPath;
+                    if (answer.classificationSetSrc === 'LOW RISK') {
+                        photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.photoName}`;
+                    } else {
+                        photoPath = `/img/graded/${answer.classificationSetSrc}/${answer.classificationSubSetSrc}/${answer.photoName}`;
+                    }
+
+                    const isCorrect = (answer.classificationSetSrc === 'LOW RISK' && answer.classificationSetDes === 'LOW RISK') ||
+                        (['STEMI', 'HIGH RISK'].includes(answer.classificationSetSrc) && answer.classificationSetDes === 'HIGH RISK/STEMI');
+
+                    const answerItem = document.createElement('div');
+                    answerItem.classList.add('answer-item');
+                    answerItem.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    answerItem.innerHTML = `
+                        <img src="${photoPath}" alt="${answer.photoName}">
+                        <p><strong>Your Answer:</strong> ${answer.classificationSetDes || 'N/A'}</p>
+                        <p><strong>Correct Answer:</strong> ${answer.classificationSetSrc || 'N/A'}</p>
+                        <p><strong>Time Taken:</strong> ${answer.answerSubmitTime} seconds</p>
+                        <p><strong>Score:</strong> ${answer.score.toFixed(2)}%</p>
+                    `;
+                    detailedResults.appendChild(answerItem);
+                });
+
+                const modal = document.getElementById('detailedResultsModal');
+                modal.style.display = "block";
+            })
+            .catch(error => console.error('Error fetching detailed test results:', error));
+    }
+
+    const modals = document.getElementsByClassName("modal");
+    const closeButtons = document.getElementsByClassName("close");
+
+    for (let i = 0; i < closeButtons.length; i++) {
+        closeButtons[i].onclick = function() {
+            for (let j = 0; j < modals.length; j++) {
+                modals[j].style.display = "none";
+            }
+        }
+    }
+
+    window.onclick = function(event) {
+        for (let i = 0; i < modals.length; i++) {
+            if (event.target === modals[i]) {
+                modals[i].style.display = "none";
+            }
+        }
+    }
+
+    function closeModal() {
+        for (let i = 0; i < modals.length; i++) {
+            modals[i].style.display = "none";
+        }
+    }
+
+    function goBack() {
+        // Redirect to the previous page
+        window.history.back();
+    }
+</script>
+</body>
+</html>

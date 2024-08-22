@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Group</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        select, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Delete Group</h1>
+    <select id="groupSelect">
+        <option value="" disabled selected>Select a Group to Delete</option>
+    </select>
+    <button id="deleteGroupBtn">Delete Group</button>
+    <button onclick="window.location.href='/groupManagement'">Back</button>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const groupSelect = document.getElementById('groupSelect');
+
+        // Load existing groups
+        fetch('/groups')
+            .then(response => response.json())
+            .then(groups => {
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.groupId;
+                    option.textContent = group.groupName;
+                    groupSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching groups:', error));
+
+        document.getElementById('deleteGroupBtn').addEventListener('click', function() {
+            const groupId = groupSelect.value;
+            if (confirm('Are you sure you want to delete this group?')) {
+                fetch(`/deleteGroup/${groupId}`, {
+                    method: 'DELETE',
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        window.location.href = '/groupManagement'; // Navigate back to group management
+                    })
+                    .catch(error => console.error('Error deleting group:', error));
+            }
+        });
+    });
+</script>
+</body>
+</html>

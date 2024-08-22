@@ -105,7 +105,7 @@ function createTables() {
                 answerNumber INTEGER,
                 photoName TEXT,
                 classificationSetSrc TEXT,
-                classificationSubSetSrc TEXT,
+                classificationSubSetSrc,
                 classificationSetDes TEXT,
                 answerSubmitTime INTEGER DEFAULT 0,
                 PRIMARY KEY (examId, userId, answerNumber),
@@ -132,6 +132,27 @@ function createTables() {
                 classificationSet TEXT CHECK (classificationSet IN ('STEMI', 'HIGH RISK', 'LOW RISK')),
                 classificationSubSet TEXT,
                 rate INTEGER DEFAULT 0
+            )`);
+
+        // New table for groups
+        db.run(`
+            CREATE TABLE IF NOT EXISTS groups (
+                groupId TEXT PRIMARY KEY,
+                groupName TEXT,
+                createdDate TEXT,
+                userId TEXT,
+                FOREIGN KEY (userId) REFERENCES users(id)
+            )
+        `);
+
+        // New table for users in groups
+        db.run(`
+            CREATE TABLE IF NOT EXISTS userGroups (
+                groupId TEXT,
+                userId TEXT,
+                FOREIGN KEY (groupId) REFERENCES groups(groupId),
+                FOREIGN KEY (userId) REFERENCES users(id),
+                PRIMARY KEY (groupId, userId)
             )`);
     });
 }
@@ -317,7 +338,13 @@ app.get('/test', verifyToken, (req, res) => {
 
 // User data page
 app.get('/info', verifyToken, (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
+    // selction by user type
+    if (req.user.role === 'user') {
+        res.sendFile(path.join(__dirname, '..', 'public', 'views', 'info.html'));
+    }
+    else {
+        res.sendFile(path.join(__dirname, '..', 'public', 'views', 'groupManagement.html'));
+    }
 });
 
 // This endpoint is used to get the image path for the image classification task,
@@ -433,6 +460,177 @@ app.get('/postTest', verifyToken, (req, res) => {
 app.get('/detailedResults', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'views', 'detailedResults.html'));
 });
+
+// Route to serve groupManagement.html
+app.get('/groupManagement', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'groupManagement.html'));
+});
+
+// Serve Test Sessions HTML Page
+app.get('/testSessions', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'testSessions.html'));
+});
+
+// Serve Training Sessions HTML Page
+app.get('/trainingSessions', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'trainingSessions.html'));
+});
+
+// Endpoint to get training sessions data
+app.get('/getTrainingSessions', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    const sql = `
+        SELECT answerId AS id, 
+               date(datetime(date, 'localtime')) as date, 
+               answerSubmitTime AS timeSpent, 
+               COUNT(*) AS numberOfTasks,
+               photoName AS imageUrl
+        FROM answers
+        WHERE userId = ?
+        GROUP BY date, answerId
+        ORDER BY date DESC`;
+
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error fetching training sessions', error: err });
+        }
+        res.status(200).json(rows);
+    });
+});
+
+app.get('/getTrainingDetails', verifyToken, (req, res) => {
+    const sessionId = req.query.sessionId;
+    const sql = `
+        SELECT date, photoName AS imageUrl, classificationSetSrc, classificationSubSetSrc, 
+               classificationSetDes, answerSubmitTime AS timeSpent, helpActivated
+        FROM answers
+        WHERE answerId = ? AND userId = ?
+    `;
+
+    db.get(sql, [sessionId, req.user.id], (err, row) => {
+        if (err) {
+            console.error('Error fetching training details:', err.message);
+            return res.status(500).json({ message: 'Error fetching training details' });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Training session not found' });
+        }
+
+        // Ensure the correct format for the image URL
+        row.imageUrl = row.classificationSubSetSrc
+            ? `/img/graded/${row.classificationSetSrc}/${row.classificationSubSetSrc}/${row.imageUrl}`
+            : `/img/graded/${row.classificationSetSrc}/${row.imageUrl}`;
+
+        res.status(200).json(row);
+    });
+});
+
+
+
+// Endpoint to get detailed training results
+app.get('/detailedTrainingResult', verifyToken, (req, res) => {
+    const photoName = req.query.photoName;
+    const sql = `
+        SELECT * 
+        FROM answers
+        WHERE photoName = ? AND userId = ?
+    `;
+
+    db.get(sql, [photoName, req.user.id], (err, row) => {
+        if (err) {
+            console.error('Error fetching training result:', err.message);
+            return res.status(500).json({ message: 'Error fetching training result' });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Training result not found' });
+        }
+
+        res.render('detailedResults', {
+            photoName: row.photoName,
+            date: row.date,
+            classificationSetSrc: row.classificationSetSrc,
+            classificationSubSetSrc: row.classificationSubSetSrc,
+            classificationSetDes: row.classificationSetDes,
+            answerSubmitTime: row.answerSubmitTime,
+            helpActivated: row.helpActivated
+        });
+    });
+});
+
+// Endpoint to get training image by ID
+app.get('/getTrainingImage/:id', verifyToken, (req, res) => {
+    const answerId = req.params.id;
+    const sql = `
+        SELECT photoName, classificationSetSrc, classificationSubSetSrc
+        FROM answers
+        WHERE answerId = ?`;
+
+    db.get(sql, [answerId], (err, row) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error fetching image URL' });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Image not found' });
+        }
+
+        const imageUrl = row.classificationSubSetSrc
+            ? `/img/graded/${row.classificationSetSrc}/${row.classificationSubSetSrc}/${row.photoName}`
+            : `/img/graded/${row.classificationSetSrc}/${row.photoName}`;
+
+        res.status(200).json({ imageUrl });
+    });
+});
+
+// Serve Test Sessions HTML Page
+app.get('/testSessions', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'testSessions.html'));
+});
+
+// Endpoint to get test sessions
+app.get('/getTestSessions', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    const sql = `
+        SELECT examId, 
+               strftime('%Y-%m-%d', date) as date, 
+               score AS grade, 
+               severalQuestions AS numberOfAnswers, 
+               (SELECT COUNT(*) 
+                FROM examAnswers 
+                WHERE examAnswers.examId = exam.examId 
+                AND classificationSetSrc = classificationSetDes) AS correctAnswers
+        FROM exam
+        WHERE userId = ?`;
+
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ message: 'Error fetching test sessions' });
+        }
+        res.status(200).json(rows);
+    });
+});
+
+// Endpoint to get test details
+app.get('/getTestDetails', verifyToken, (req, res) => {
+    const examId = req.query.examId;
+    const sql = `
+        SELECT date, score AS grade, severalQuestions AS numberOfAnswers, 
+        (SELECT COUNT(*) FROM examAnswers WHERE examAnswers.examId = exam.examId AND classificationSetSrc = classificationSetDes) AS correctAnswers
+        FROM exam
+        WHERE examId = ?`;
+
+    db.get(sql, [examId], (err, row) => {
+        if (err) {
+            console.error('Error fetching test details:', err.message);
+            return res.status(500).json({ message: 'Error fetching test details' });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Test session not found' });
+        }
+        res.status(200).json(row);
+    });
+});
+
+
 // endregion Get endpoints
 
 // region Post endpoints
@@ -471,6 +669,7 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
+    const redirectUrl = req.query.redirectUrl || '/chooseModel';
     const sql = `SELECT userId, password, role FROM authentication WHERE email = ?`;
     const updateEntries = `UPDATE users SET totalEntries = totalEntries + 1 WHERE id = ?`;
 
@@ -483,10 +682,10 @@ app.post('/login', (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
         if (await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({ id: user.userId, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+            const token = jwt.sign({ id: user.userId, role: user.role }, config.secret_key.key, { expiresIn: '1h' });
             res.cookie('token', token, { httpOnly: true, secure: isSecure });
             res.cookie('userId', user.userId, { httpOnly: true, secure: isSecure });
-            res.status(200).json({ redirect: '/chooseModel', message: 'Login successful', role: user.role });
+            res.status(200).json({ redirect: decodeURIComponent(redirectUrl), message: 'Login successful', role: user.role });
             db.run(updateEntries, [user.userId], async (err) => {
                 if (err) {
                     console.error('Error updating totalEntries:', err.message);
@@ -952,9 +1151,336 @@ app.get('/post-test-detailed-results', verifyToken, async (req, res) => {
     }
 });
 
-// endregion Post endpoints
+// New endpoints for group management
+// Existing imports and middleware setup ...
+
+// Endpoint to create a new group
+// Endpoint to create a new group
+app.post('/createGroup', verifyToken, (req, res) => {
+    const { groupName } = req.body;
+    const userId = req.user.id;
+
+    // Check if the group name already exists for this user
+    const checkSql = `SELECT * FROM groups WHERE groupName = ? AND userId = ?`;
+    db.get(checkSql, [groupName, userId], (err, row) => {
+        if (err) {
+            console.error('Error checking group name:', err.message);
+            return res.status(500).json({ message: 'Server error checking group name' });
+        }
+
+        if (row) {
+            // Group with the same name already exists
+            return res.status(400).json({ message: 'A group with this name already exists for your account' });
+        }
+
+        // If no group with the same name exists, proceed to create the group
+        const groupId = uuidv4();
+        const createdDate = new Date().toISOString();
+        const insertSql = `INSERT INTO groups (groupId, groupName, createdDate, userId) VALUES (?, ?, ?, ?)`;
+
+        db.run(insertSql, [groupId, groupName, createdDate, userId], (err) => {
+            if (err) {
+                console.error('Error creating group:', err.message);
+                return res.status(500).json({ message: 'Error creating group' });
+            }
+            res.status(200).json({ message: 'Group created successfully', groupId });
+        });
+    });
+});
+
+// Endpoint to get all groups
+app.get('/groups', verifyToken, (req, res) => {
+    const sql = `SELECT g.groupId, g.groupName, g.createdDate, COUNT(ug.userId) as numberOfUsers
+                 FROM groups g
+                 LEFT JOIN userGroups ug ON g.groupId = ug.groupId
+                 GROUP BY g.groupId`;
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching groups:', err.message);
+            return res.status(500).json({ message: 'Error fetching groups' });
+        }
+        res.json(rows);
+    });
+});
+
+// Endpoint to get group details (users in the group)
+app.get('/groupDetails', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const sql = `
+    SELECT users.id, authentication.email
+    FROM userGroups
+    JOIN users ON userGroups.userId = users.id
+    JOIN authentication ON users.id = authentication.userId
+    WHERE userGroups.groupId = ?
+    `;
+
+    db.all(sql, [groupId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching group details:', err.message);
+            return res.status(500).json({ message: 'Error fetching group details' });
+        }
+        res.status(200).json(rows);
+    });
+});
+
+// Endpoint to add a user to a group
+app.post('/addUserToGroup', verifyToken, (req, res) => {
+    const { groupId, selectedUsers } = req.body;
+
+    selectedUsers.forEach(userId => {
+        const checkSql = `SELECT * FROM userGroups WHERE groupId = ? AND userId = ?`;
+        db.get(checkSql, [groupId, userId], (err, row) => {
+            if (err) {
+                console.error('Error checking user in group:', err.message);
+                return res.status(500).json({ message: 'Error checking user in group' });
+            }
+
+            if (!row) {
+                const insertSql = `INSERT INTO userGroups (groupId, userId) VALUES (?, ?)`;
+                db.run(insertSql, [groupId, userId], (err) => {
+                    if (err) {
+                        console.error('Error adding user to group:', err.message);
+                        return res.status(500).json({ message: 'Error adding user to group' });
+                    }
+                });
+            }
+        });
+    });
+
+    res.status(200).json({ message: 'Users added to group successfully' });
+});
+
+// Endpoint to remove a user from a group
+app.delete('/removeUserFromGroup', verifyToken, (req, res) => {
+    const { groupId, userId } = req.body;
+
+    const sql = `DELETE FROM userGroups WHERE groupId = ? AND userId = ?`;
+    db.run(sql, [groupId, userId], (err) => {
+        if (err) {
+            console.error('Error removing user from group:', err.message);
+            return res.status(500).json({ message: 'Error removing user from group' });
+        }
+        res.status(200).json({ message: 'User removed from group successfully' });
+    });
+});
+
+// Endpoint to delete a group
+app.delete('/deleteGroup/:groupId', verifyToken, (req, res) => {
+    const groupId = req.params.groupId;
+
+    // Start a transaction to ensure all or nothing is deleted
+    db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        db.run('DELETE FROM userGroups WHERE groupId = ?', [groupId], (err) => {
+            if (err) {
+                db.run('ROLLBACK');
+                return res.status(500).json({ message: 'Error deleting users from group' });
+            }
+        });
+
+        db.run('DELETE FROM groups WHERE groupId = ?', [groupId], (err) => {
+            if (err) {
+                db.run('ROLLBACK');
+                return res.status(500).json({ message: 'Error deleting group' });
+            }
+        });
+
+        db.run('COMMIT', (err) => {
+            if (err) {
+                return res.status(500).json({ message: 'Error finalizing deletion' });
+            }
+            res.status(200).json({ message: 'Group and associated users deleted successfully' });
+        });
+    });
+});
+
+// Existing imports and middleware setup ...
+
+// Serve Create Group Page
+app.get('/createGroup', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'createGroup.html'));
+});
+
+// Serve Update Group Page
+app.get('/updateGroup', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'updateGroup.html'));
+});
+
+// Serve Delete Group Page
+app.get('/deleteGroup', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'deleteGroup.html'));
+});
+
+// Serve View Group Details Page
+app.get('/viewGroupDetails', verifyToken, (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'views', 'viewGroupDetails.html'));
+});
+
+
+app.get('/checkGroupName', verifyToken, (req, res) => {
+    const groupName = req.query.groupName;
+    const userId = req.user.id;
+
+    const checkSql = `SELECT * FROM groups WHERE groupName = ? AND userId = ?`;
+    db.get(checkSql, [groupName, userId], (err, row) => {
+        if (err) {
+            console.error('Error checking group name:', err.message);
+            return res.status(500).json({ exists: false, message: 'Server error checking group name' });
+        }
+
+        if (row) {
+            // Group with the same name already exists
+            return res.status(200).json({ exists: true });
+        } else {
+            // No group with the same name exists
+            return res.status(200).json({ exists: false });
+        }
+    });
+});
+
+
+// Example of dynamic search by email and academic institution
+
+app.get('/searchStudents', verifyToken, (req, res) => {
+    const query = req.query.query;
+    const groupId = req.query.groupId;
+
+    const sql = `
+        SELECT users.id, authentication.email, users.academicInstitution,
+        CASE WHEN userGroups.userId IS NOT NULL THEN 1 ELSE 0 END AS isInGroup
+        FROM users
+        JOIN authentication ON users.id = authentication.userId
+        LEFT JOIN userGroups ON users.id = userGroups.userId AND userGroups.groupId = ?
+        WHERE authentication.email LIKE ? OR users.academicInstitution LIKE ?
+    `;
+
+    const searchValue = `%${query}%`;
+
+    db.all(sql, [groupId, searchValue, searchValue], (err, rows) => {
+        if (err) {
+            console.error('Error searching students:', err.message);
+            return res.status(500).json({ message: 'Error searching students' });
+        }
+        res.status(200).json(rows);
+    });
+});
+
+
+app.post('/addUsersToGroup', verifyToken, (req, res) => {
+    const { groupId, studentIds } = req.body;
+
+    // Validate groupId and studentIds
+    if (!groupId || typeof groupId !== 'string' || groupId.trim() === '') {
+        return res.status(400).json({ message: 'Invalid group ID.' });
+    }
+
+    if (!Array.isArray(studentIds) || studentIds.length === 0 || studentIds.some(id => !id || id.trim() === '')) {
+        return res.status(400).json({ message: 'Invalid student IDs.' });
+    }
+
+    const validStudentIds = studentIds.filter(id => id && id.trim() !== '');
+
+    db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+
+        validStudentIds.forEach(studentId => {
+            const checkSql = `
+                SELECT * FROM userGroups WHERE groupId = ? AND userId = ?
+            `;
+            db.get(checkSql, [groupId, studentId], (err, row) => {
+                if (err) {
+                    console.error('Error checking if user is already in group:', err.message);
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ message: 'Error checking if user is already in group' });
+                }
+
+                if (!row) {
+                    const insertSql = `
+                        INSERT INTO userGroups (groupId, userId)
+                        VALUES (?, ?)
+                    `;
+                    db.run(insertSql, [groupId, studentId], (insertErr) => {
+                        if (insertErr) {
+                            console.error('Error adding user to group:', insertErr.message);
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ message: 'Error adding user to group' });
+                        }
+                    });
+                }
+            });
+        });
+
+        db.run('COMMIT', (commitErr) => {
+            if (commitErr) {
+                console.error('Error committing transaction:', commitErr.message);
+                return res.status(500).json({ message: 'Error committing transaction' });
+            }
+            res.status(200).json({ message: 'Users successfully added to the group.' });
+        });
+    });
+});
+
+
+app.delete('/removeUserFromGroup', verifyToken, (req, res) => {
+    const { groupId, userId } = req.body;
+
+    const sql = `
+        DELETE FROM userGroups
+        WHERE userId = ? AND groupId = ?
+    `;
+
+    db.run(sql, [userId, groupId], function (err) {
+        if (err) {
+            console.error('Error removing user from group:', err.message);
+            return res.status(500).json({ message: 'Error removing user from group' });
+        }
+        res.status(200).json({ message: 'User successfully removed from the group.' });
+    });
+});
+
+
+app.get('/groupOverallData', verifyToken, (req, res) => {
+    const userId = req.user.id;
+    const groupId = req.query.groupId;
+
+    const overallDataQuery = `
+        SELECT 
+            (SELECT COUNT(*) FROM users) AS totalUsers,
+            (SELECT COUNT(*) FROM answers) AS totalTrainingSessions,
+            (SELECT COUNT(*) FROM exam) AS totalExams
+    `;
+
+    const groupDataQuery = `
+        SELECT 
+            (SELECT COUNT(*) FROM userGroups WHERE groupId = ?) AS groupUsers,
+            (SELECT COUNT(*) FROM answers WHERE userId IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS groupTrainingSessions,
+            (SELECT COUNT(*) FROM exam WHERE userId IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS groupExams
+    `;
+
+    db.get(overallDataQuery, [], (err, overallData) => {
+        if (err) {
+            console.error('Error fetching overall data:', err.message);
+            return res.status(500).json({ message: 'Error fetching overall data' });
+        }
+
+        db.get(groupDataQuery, [groupId, groupId, groupId], (err, groupData) => {
+            if (err) {
+                console.error('Error fetching group data:', err.message);
+                return res.status(500).json({ message: 'Error fetching group data' });
+            }
+
+            res.json({
+                overallData,
+                groupData
+            });
+        });
+    });
+});
+
+
+// Other CRUD endpoints and server setup ...
+
 
 // Start the server
 app.listen(PORT, '0.0.0.0',() => console.log(`Server running on port ${PORT}`));
-
-

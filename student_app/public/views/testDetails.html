@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Details</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .table-container {
+            width: 80%;
+            display: flex;
+            justify-content: center;
+        }
+
+        table {
+            width: 100%;
+            max-width: 800px;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background-color: #333;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #fff;
+        }
+
+        tr:hover {
+            background-color: #ccc;
+        }
+
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background-color: #555;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h2>Test Details</h2>
+<div class="table-container">
+    <table>
+        <thead>
+        <tr>
+            <th>Image Name</th>
+            <th>Your Answer</th>
+            <th>Correct Answer</th>
+            <th>Time Taken (ms)</th>
+        </tr>
+        </thead>
+        <tbody id="detailsList">
+        <!-- Rows will be added dynamically here -->
+        </tbody>
+    </table>
+</div>
+
+<button class="back-button" onclick="history.back()">Back</button>
+
+<script>
+    $(document).ready(function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const examId = urlParams.get('examId');
+
+        $.getJSON(`/api/testDetails?examId=${examId}`, function(data) {
+            if (data.length === 0) {
+                $('#detailsList').append('<tr><td colspan="4">No details found for this session.</td></tr>');
+            } else {
+                data.answers.forEach(detail => {
+                    $('#detailsList').append(`
+                            <tr>
+                                <td>${detail.photoName}</td>
+                                <td>${detail.classificationSetDes}</td>
+                                <td>${detail.correctAnswer}</td>
+                                <td>${detail.answerSubmitTime}</td>
+                            </tr>
+                        `);
+                });
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error("Failed to load test details: ", textStatus, errorThrown);
+            $('#detailsList').append('<tr><td colspan="4">Failed to load test details.</td></tr>');
+        });
+    });
+</script>
+</body>
+</html>

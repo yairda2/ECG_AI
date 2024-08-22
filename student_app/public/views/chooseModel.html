@@ -4,21 +4,28 @@
     <meta charset="UTF-8">
     <title>Choose Model</title>
     <link rel="stylesheet" href="../css/common.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
-    <script src="../js/common.js"></script> <!-- Include common.js -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../js/common.js"></script>
 </head>
-
 <body>
-<!-- Main Page and Info Buttons -->
 <button id="mainpageButton" class="icon-button">Home</button>
 <button id="infoButton" class="icon-button">Info</button>
-
-<!-- Tooltip Container -->
-<div id="tooltip" class="tooltip"></div>
 
 <div class="form-container">
     <h2>Welcome to Our Learning Model</h2>
     <h3>Choose Your Method</h3>
+
+    <div class="instructions">
+        <p>Welcome to Our Learning Model. Here, you can choose between different methods of learning and testing your knowledge. Please follow these steps:</p>
+        <ul>
+            <li>Choose "Training" if you want to practice on ECG scans. This mode allows you to review the material and get feedback as you go.</li>
+            <li>Select "Test" if you're ready to evaluate your knowledge. This mode will record your answers and update your progress.</li>
+            <li>In both modes, you'll be guided through a series of tasks designed to enhance your learning experience.</li>
+            <li>Ensure you are in a distraction-free environment to maximize your focus and performance.</li>
+        </ul>
+        <p>Remember, the goal is to learn and improve, so take your time and review your answers carefully.</p>
+    </div>
+
     <form id="modelChooseForm">
         <button type="button" name="action" value="Single Training">Training</button>
         <button type="button" name="action" value="Test">Test</button>

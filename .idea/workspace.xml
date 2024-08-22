@@ -6,8 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/test.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/test.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_model.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/analyzer/decision_tree_model.pkl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_024553.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_024553.png.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100732.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100732.png.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100755.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100755.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/rate_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/analyzer/rate_images.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,10 +60,11 @@
     "JavaScript Debug.train.html.executor": "Run",
     "JavaScript Debug.training.html (1).executor": "Debug",
     "JavaScript Debug.training.html.executor": "Debug",
+    "JavaScript Debug.updateGroup.html.executor": "Run",
     "Node.js.authMiddleware.js.executor": "Debug",
     "Node.js.common.js.executor": "Debug",
     "Node.js.server -sqlite.js.executor": "Run",
-    "Node.js.server.js.executor": "Run",
+    "Node.js.server.js.executor": "Debug",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "yair__dev",
     "ignore.virus.scanning.warn.message": "true",
@@ -68,7 +75,7 @@
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\WebStorm 2023.3.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "ts.external.directory.path": "C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -87,7 +94,7 @@
     <configuration name="training.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/EEG_AI_firsst_collect/student_app/public/views/training.html" useBuiltInWebServerPort="true">
       <method v="2" />
     </configuration>
-    <configuration name="server -sqlite.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/server -sqlite.js" working-dir="$PROJECT_DIR$/student_app/server">
+    <configuration name="updateGroup.html" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63343/EEG_AI_firsst_collect/student_app/public/views/updateGroup.html" useBuiltInWebServerPort="true">
       <method v="2" />
     </configuration>
     <configuration name="server.js" type="NodeJSConfigurationType" temporary="true" nameIsGenerated="true" path-to-js-file="$PROJECT_DIR$/student_app/server/server.js" working-dir="$PROJECT_DIR$/student_app/server">
@@ -96,17 +103,17 @@
     <recent_temporary>
       <list>
         <item itemvalue="Node.js.server.js" />
+        <item itemvalue="JavaScript Debug.updateGroup.html" />
         <item itemvalue="JavaScript Debug.training.html (1)" />
         <item itemvalue="JavaScript Debug.index.html" />
         <item itemvalue="JavaScript Debug.training.html" />
-        <item itemvalue="Node.js.server -sqlite.js" />
       </list>
     </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-WS-241.18034.50" />
+        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-WS-242.20224.342" />
       </set>
     </attachedChunks>
   </component>
@@ -151,7 +158,8 @@
       <workItem from="1722966928923" duration="430000" />
       <workItem from="1722980053025" duration="182000" />
       <workItem from="1723061629670" duration="8725000" />
-      <workItem from="1723138176576" duration="415000" />
+      <workItem from="1723138176576" duration="29813000" />
+      <workItem from="1723967618919" duration="18959000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
@@ -222,9 +230,16 @@
           <option name="timeStamp" value="113" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>687</line>
-          <option name="timeStamp" value="114" />
+          <url>file://$PROJECT_DIR$/student_app/public/views/updateGroup.html</url>
+          <line>280</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="119" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/server/authMiddleware.js</url>
+          <line>16</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="126" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -2,65 +2,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Choose Model Admin</title>
-    <link rel="stylesheet" href="../css/common.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery -->
-    <script src="../js/common.js"></script> <!-- Include common.js -->
+    <title>Choose Learning Method - Admin Panel</title>
     <style>
-        /* Style for buttons */
-        button {
-            width: 40%; /* Smaller width */
-            padding: 5px; /* Less padding */
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-            font-size: 16px; /* Slightly smaller font size */
-            display: block;
-            margin: 10px auto;
-            text-align: center; /* Center the text inside the button */
-            font-family: 'Iceberg', cursive; /* Stylish font, ensure this font is loaded */
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        form {
-            text-align: center; /* Center the form content */
-        }
-
         body {
-            font-family: 'Arial', sans-serif; /* Default body font */
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #f2f2f2;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333333;
+            margin-bottom: 30px;
+        }
+
+        p {
+            font-size: 18px;
+            color: #555555;
+            margin-bottom: 40px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            width: 200px;
+            padding: 15px 0;
+            font-size: 16px;
+            color: white;
+            background-color: #cf0000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #cf0000;
+        }
+
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .header button {
+            margin-left: 10px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .header button:hover {
+            background-color: #c82333;
         }
     </style>
 </head>
-
 <body>
-<!-- Main Page and Info Buttons -->
-<button id="mainpageButton" class="icon-button">Home</button>
-<button id="infoButton" class="icon-button">User Info</button>
-
-<!-- Tooltip Container -->
-<div id="tooltip" class="tooltip"></div>
-
-<h2>Welcome to our learning model</h2>
-<h3>Choose your method</h3>
-<form id="modelChooseForm">
-    <button type="button" name="action" value="classifiedImages">Classified Images</button>
-    <button type="button" name="action" value="Single Training">Training</button>
-    <button type="button" name="action" value="Test">Test</button>
-</form>
-
-<script>
-    document.querySelectorAll('#modelChooseForm button').forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const actionValue = e.target.value;
-            handlePageAction('/chooseModel', 'POST', { action: actionValue });
-        });
-    });
-</script>
+<div class="container">
+    <div class="header">
+        <button onclick="window.location.href='/home'">Home</button>
+        <button onclick="window.location.href='/info'">Admin Panel</button>
+    </div>
+    <h1>Welcome to our Learning Model</h1>
+    <p>Choose your method</p>
+    <div class="btn-group">
+        <button class="btn" onclick="window.location.href='/classifiedImagesAdmin'">Classified Images</button>
+        <button class="btn" onclick="window.location.href='/training'">Training</button>
+        <button class="btn" onclick="window.location.href='/test'">Test</button>
+    </div>
+</div>
 </body>
 </html>

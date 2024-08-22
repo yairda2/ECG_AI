@@ -1,24 +1,31 @@
-// authMiddleware.js
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
-const SECRET_KEY = config.secret_key.key;
+const url = require('url');
 
 function verifyToken(req, res, next) {
-    const token = req.cookies.token;
+    const token = req.cookies.token || (req.headers['authorization'] && req.headers['authorization'].replace('Bearer ', ''));
+
     if (!token) {
-        res.redirect('/login?message=InvalidToken');
+        const currentUrl = encodeURIComponent(req.originalUrl);
+        return res.redirect(`/login?message=NoToken&redirectUrl=${currentUrl}`);
     }
 
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    jwt.verify(token, config.secret_key.key, (err, decoded) => {
         if (err) {
-            res.redirect('/login?message=InvalidToken');
+            const currentUrl = encodeURIComponent(req.originalUrl);
+
+            if (err.name === 'TokenExpiredError') {
+                return res.redirect(`/login?message=TokenExpired&redirectUrl=${currentUrl}`);
+            }
+
+            return res.status(500).json({ auth: false, message: 'Failed to authenticate token.' });
         }
-        // if the time over reLogin
-        if (Date.now() >= decoded.exp * 1000) {
-            res.redirect('/login?message=TokenExpired');
+
+        if (!decoded.exp) {
+            return res.status(500).json({ auth: false, message: 'Token does not have an expiration date.' });
         }
+
         req.user = decoded;
-        // TODO Add here check if the id exists in the database
         next();
     });
 }
