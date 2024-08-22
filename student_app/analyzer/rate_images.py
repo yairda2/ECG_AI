@@ -1,6 +1,3 @@
-# Authors: Yair Davidof, Elyasaf sivani
-# Date: 06/07/2024
-# Description: This script is responsible for training or updating the decision tree model using data from the database.
 import os
 import pickle
 import logging
@@ -28,18 +25,23 @@ def load_model():
     """Load the decision tree model from the saved file."""
     if os.path.exists(MODEL_PATH):
         with open(MODEL_PATH, 'rb') as model_file:
-            model = pickle.load(model_file)
+            loaded_data = pickle.load(model_file)
+            if isinstance(loaded_data, tuple) and len(loaded_data) == 2:
+                model, feature_importances = loaded_data
+            else:
+                model = loaded_data
+                feature_importances = None
         log_trace("Decision tree model loaded successfully.")
-        return model
+        return model, feature_importances
     else:
         log_trace("No existing model found. A new model will be trained.")
-        return DecisionTreeClassifier()
+        return DecisionTreeClassifier(), None
 
-def save_model(model):
-    """Save the decision tree model to a file."""
+def save_model(model, feature_importances):
+    """Save the decision tree model and its feature importances to a file."""
     with open(MODEL_PATH, 'wb') as model_file:
-        pickle.dump(model, model_file)
-    log_trace("Decision tree model saved successfully.")
+        pickle.dump((model, feature_importances), model_file)
+    log_trace("Decision tree model and feature importances saved successfully.")
 
 def train_or_update_model():
     """Train or update the decision tree model using data from the database."""
@@ -49,12 +51,14 @@ def train_or_update_model():
 
         # Fetch the training data
         cursor.execute("""
-            SELECT imageClassification.photoName, imageClassification.classificationSet, 
-                   imageClassification.classificationSubSet, answers.answerSubmitTime, 
-                   users.totalTrainTime, users.academicInstitution, imageClassification.rate 
-            FROM imageClassification
-            JOIN answers ON imageClassification.photoName = answers.photoName
-            JOIN users ON answers.userId = users.id
+            SELECT users.age, users.gender, users.avgDegree, users.totalTrainTime, 
+                   users.totalExams, users.totalEntries, users.academicInstitution, 
+                   answers.answerSubmitTime, answers.helpActivated, 
+                   imageClassification.rate, answers.classificationSetDes, answers.classificationSubSetDes, 
+                   answers.classificationSetSrc, answers.classificationSubSetSrc, answers.photoName
+            FROM users
+            JOIN answers ON users.id = answers.userId
+            JOIN imageClassification ON answers.photoName = imageClassification.photoName
             WHERE imageClassification.rate IS NOT NULL
         """)
         data = cursor.fetchall()
@@ -66,8 +70,12 @@ def train_or_update_model():
         # Prepare the dataset
         features = []
         labels = []
-        for _, classificationSet, classificationSubSet, answerSubmitTime, totalTrainTime, academicInstitution, rate in data:
-            features.append([classificationSet, classificationSubSet, answerSubmitTime, totalTrainTime, academicInstitution])
+        for (age, gender, avgDegree, totalTrainTime, totalExams, totalEntries, academicInstitution,
+             answerSubmitTime, helpActivated, rate, classificationSetDes, classificationSubSetDes,
+             classificationSetSrc, classificationSubSetSrc, photoName) in data:
+            features.append([age, gender, avgDegree, totalTrainTime, totalExams, totalEntries,
+                             academicInstitution, answerSubmitTime, helpActivated,
+                             classificationSetSrc, classificationSubSetSrc])
             labels.append(rate)
 
         # Encode categorical features into numerical values
@@ -77,13 +85,29 @@ def train_or_update_model():
         y = np.array(labels)
 
         # Train the decision tree model
-        model = load_model()
+        model, previous_feature_importances = load_model()
         model.fit(X, y)
-        save_model(model)
+        save_model(model, model.feature_importances_)
+
+        # Log feature importances (weights)
+        feature_importances = model.feature_importances_
+        for feature_name, importance in zip(['age', 'gender', 'avgDegree', 'totalTrainTime', 'totalExams', 'totalEntries',
+                                             'academicInstitution', 'answerSubmitTime', 'helpActivated',
+                                             'classificationSetSrc', 'classificationSubSetSrc'], feature_importances):
+            log_trace(f"Feature '{feature_name}' has importance: {importance}")
+
+        # Compare current feature importances with the previous ones
+        if previous_feature_importances is not None:
+            if not np.array_equal(previous_feature_importances, feature_importances):
+                log_trace("Feature importances have changed since the last model update.")
+            else:
+                log_trace("Feature importances remain the same as the last model update.")
 
         # Visualize and save the decision tree
         dot_data = export_graphviz(model, out_file=None,
-                                   feature_names=['ClassificationSetSrc', 'ClassificationSubSetSrc', 'AnswerSubmitTime', 'TotalTrainTime', 'AcademicInstitution'],
+                                   feature_names=['age', 'gender', 'avgDegree', 'totalTrainTime', 'totalExams', 'totalEntries',
+                                                  'academicInstitution', 'answerSubmitTime', 'helpActivated',
+                                                  'classificationSetSrc', 'classificationSubSetSrc'],
                                    class_names=[str(i) for i in set(y)],
                                    filled=True, rounded=True, special_characters=True)
         graph = graphviz.Source(dot_data)
@@ -91,17 +115,13 @@ def train_or_update_model():
         os.makedirs(graph_path, exist_ok=True)
         graph.render(os.path.join(graph_path, f'decision_tree_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png'))
 
-        # Log feature importances (weights)
-        feature_importances = model.feature_importances_
-        for feature_name, importance in zip(['ClassificationSetSrc', 'ClassificationSubSetSrc', 'AnswerSubmitTime', 'TotalTrainTime', 'AcademicInstitution'], feature_importances):
-            log_trace(f"Feature '{feature_name}' has importance: {importance}")
-
         log_trace("Model trained, updated, and decision tree saved successfully.")
     except Exception as e:
         log_error(f"Error in train_or_update_model: {str(e)}")
         raise
     finally:
         conn.close()
+
 
 if __name__ == "__main__":
     train_or_update_model()

@@ -6,7 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/authMiddleware.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/authMiddleware.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_model.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/analyzer/decision_tree_model.pkl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_024553.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_024553.png.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100732.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100732.png.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100755.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100755.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/rate_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/analyzer/rate_images.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +64,7 @@
     "Node.js.authMiddleware.js.executor": "Debug",
     "Node.js.common.js.executor": "Debug",
     "Node.js.server -sqlite.js.executor": "Run",
-    "Node.js.server.js.executor": "Run",
+    "Node.js.server.js.executor": "Debug",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "yair__dev",
     "ignore.virus.scanning.warn.message": "true",
@@ -152,7 +159,7 @@
       <workItem from="1722980053025" duration="182000" />
       <workItem from="1723061629670" duration="8725000" />
       <workItem from="1723138176576" duration="29813000" />
-      <workItem from="1723967618919" duration="17757000" />
+      <workItem from="1723967618919" duration="18959000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
@@ -227,6 +234,12 @@
           <line>280</line>
           <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="119" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/server/authMiddleware.js</url>
+          <line>16</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="126" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
