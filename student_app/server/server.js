@@ -1479,6 +1479,73 @@ app.get('/groupOverallData', verifyToken, (req, res) => {
 });
 
 
+// Endpoint to get overall group data (group vs non-group)
+app.get('/groupOverallData', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const overallDataQuery = `
+        SELECT 
+            (SELECT COUNT(*) FROM users) AS totalUsers,
+            (SELECT COUNT(*) FROM answers) AS totalTrainingSessions,
+            (SELECT COUNT(*) FROM exam) AS totalExams
+    `;
+
+    const groupDataQuery = `
+        SELECT 
+            (SELECT COUNT(*) FROM userGroups WHERE groupId = ?) AS groupUsers,
+            (SELECT SUM(totalTrainTime) FROM users WHERE id IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS totalTrainingTime,
+            (SELECT COUNT(*) FROM exam WHERE userId IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS groupExams
+    `;
+
+    db.get(overallDataQuery, [], (err, overallData) => {
+        if (err) {
+            console.error('Error fetching overall data:', err.message);
+            return res.status(500).json({ message: 'Error fetching overall data' });
+        }
+
+        db.get(groupDataQuery, [groupId, groupId, groupId], (err, groupData) => {
+            if (err) {
+                console.error('Error fetching group data:', err.message);
+                return res.status(500).json({ message: 'Error fetching group data' });
+            }
+
+            res.json({
+                overallData,
+                groupData
+            });
+        });
+    });
+});
+
+// Endpoint to get group details (users in the group)
+app.get('/groupDetails', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const sql = `
+    SELECT 
+        users.id,
+        authentication.email,
+        users.totalTrainTime AS totalTrainingTime,
+        (SELECT COUNT(*) FROM exam WHERE exam.userId = users.id) AS examCount,
+        (SELECT AVG(score) FROM exam WHERE exam.userId = users.id) AS avgScore
+    FROM userGroups
+    JOIN users ON userGroups.userId = users.id
+    JOIN authentication ON users.id = authentication.userId
+    WHERE userGroups.groupId = ?
+    `;
+
+    db.all(sql, [groupId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching group details:', err.message);
+            return res.status(500).json({ message: 'Error fetching group details' });
+        }
+        console.log(rows); // בדיקה אם הנתונים מתקבלים
+        res.status(200).json(rows);
+    });
+});
+
+
+
 // Other CRUD endpoints and server setup ...
 
 

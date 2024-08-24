@@ -7,7 +7,7 @@ function verifyToken(req, res, next) {
 
     if (!token) {
         const currentUrl = encodeURIComponent(req.originalUrl);
-        window.location.href = `/login?message=TokenNotFound&redirectUrl=${currentUrl}`;
+        return res.redirect(`/login?message=TokenNotFound&redirectUrl=${currentUrl}`);
     }
 
     jwt.verify(token, config.secret_key.key, (err, decoded) => {
@@ -15,19 +15,14 @@ function verifyToken(req, res, next) {
             const currentUrl = encodeURIComponent(req.originalUrl);
 
             if (err.name === 'TokenExpiredError') {
-                window
-                    .location.href = `/login?message=TokenExpired&redirectUrl=${currentUrl}`;
+                return res.redirect(`/login?message=TokenExpired&redirectUrl=${currentUrl}`);
             }
 
-            window
-                .location
-                .href = `/login?message=InvalidToken&redirectUrl=${currentUrl}`;
+            return res.redirect(`/login?message=InvalidToken&redirectUrl=${currentUrl}`);
         }
 
         if (!decoded.exp) {
-            window
-                .location
-                .href = `/login?message=InvalidToken&redirectUrl=${currentUrl}`;
+            return res.redirect(`/login?message=InvalidToken&redirectUrl=${currentUrl}`);
         }
 
         req.user = decoded;
