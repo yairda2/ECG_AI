@@ -6,14 +6,14 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 
-root_dir = os.path.dirname(os.path.dirname(__file__),'..')
+root_dir = os.path.join(os.path.dirname(__file__), '..')
 server_dir = os.path.join(root_dir, 'server')
 
 # region Constants and Configuration
 NUM_PROFILES = 10  # Number of profiles to create
 
 
-PROFILE_DIR = os.path.dirname(os.path.dirname(__file__),'profiles')  # Path to save profiles
+PROFILE_DIR = os.path.join(os.path.dirname(__file__),'profiles')  # Path to save profiles
 DB_PATH = os.path.join(server_dir, 'database.db')  # Path to the SQLite database
 GRAPH_DIR = os.path.join(server_dir, 'graphs')  # Path to save graphs
 
