@@ -14,6 +14,8 @@ const app = express();
 const cors = require('cors');
 const verifyToken = require('./authMiddleware');
 const config = require('../config/config');
+const { exec } = require('child_process'); // Import child_process module
+
 const PORT = config.server.port || 3000;
 const SECRET_KEY = config.secret_key.key;
 const isSecure = process.env.NODE_ENV === 'production';
@@ -54,21 +56,6 @@ const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite
 function createTables() {
     db.serialize(() => {
         db.run(`
-            CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
-                age INTEGER DEFAULT 0,
-                gender TEXT,
-                avgDegree INTEGER DEFAULT 0,
-                academicInstitution TEXT,
-                totalEntries INTEGER DEFAULT 0,
-                totalExams INTEGER DEFAULT 0,
-                avgExamTime INTEGER DEFAULT 0,
-                totalAnswers INTEGER DEFAULT 0,
-                totalTrainTime INTEGER DEFAULT 0,
-                userRate INTEGER DEFAULT 0
-            )`);
-
-        db.run(`
             CREATE TABLE IF NOT EXISTS authentication (
                 userId TEXT PRIMARY KEY,
                 email TEXT UNIQUE,
@@ -80,6 +67,29 @@ function createTables() {
                 notification BOOLEAN DEFAULT TRUE,
                 FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
             )`);
+
+        db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            age INTEGER DEFAULT 0,
+            gender TEXT,
+            avgDegree INTEGER DEFAULT 0,
+            academicInstitution TEXT,
+            totalEntries INTEGER DEFAULT 0,
+            totalExams INTEGER DEFAULT 0,
+            avgExamTime INTEGER DEFAULT 0,
+            totalAnswers INTEGER DEFAULT 0,
+            totalTrainTime INTEGER DEFAULT 0,
+            userRate INTEGER DEFAULT 0,
+            rank TEXT,  -- Rank of the user ban-choler or master)
+            source TEXT,  -- How the user heard about the app
+            ecgKnowledge BOOLEAN DEFAULT 0,  -- Does the user have knowledge in ECG
+            knowledgeLevel TEXT , -- The level of knowledge in ECG
+            feedback TEXT
+
+        )`);
+
+
 
         db.run(`
             CREATE TABLE IF NOT EXISTS answers (
@@ -634,9 +644,10 @@ app.get('/getTestDetails', verifyToken, (req, res) => {
 // endregion Get endpoints
 
 // region Post endpoints
+// region Post endpoints
 app.post('/register', async (req, res) => {
-    const { email, password, age, gender, avgDegree, academicInstitution, termsAgreement } = req.body;
-    if (!email || !password || !age || !gender || !avgDegree || !academicInstitution || termsAgreement === false) {
+    const { email, password, age, gender, avgDegree, academicInstitution, termsAgreement, rank, source, ecgKnowledge, knowledgeLevel } = req.body;
+    if (!email || !password || !age || !gender || !avgDegree || !academicInstitution || termsAgreement === false || !rank || !source || !knowledgeLevel) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -653,17 +664,18 @@ app.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const userId = uuidv4();
 
-        db.run('INSERT INTO users (id, age, gender, avgDegree, academicInstitution) VALUES (?, ?, ?, ?, ?)', [userId, age, gender, avgDegree, academicInstitution], (err) => {
-            if (err) {
-                return res.status(500).json({ message: 'Error registering new user in Users table: ' + err.message });
-            }
-            db.run('INSERT INTO authentication (userId, email, password, termsAgreement, role) VALUES (?, ?, ?, ?, "user")', [userId, email, hashedPassword, termsAgreement], (authErr) => {
-                if (authErr) {
-                    return res.status(500).json({ message: 'Error registering new user in Authentication table: ' + authErr.message });
+        db.run('INSERT INTO users (id, age, gender, avgDegree, academicInstitution, rank, source, ecgKnowledge, knowledgeLevel) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [userId, age, gender, avgDegree, academicInstitution, rank, source, ecgKnowledge, knowledgeLevel], (err) => {
+                if (err) {
+                    return res.status(500).json({ message: 'Error registering new user in Users table: ' + err.message });
                 }
-                res.status(200).json({ message: 'User registered successfully', redirect: '/login' });
+                db.run('INSERT INTO authentication (userId, email, password, termsAgreement, role) VALUES (?, ?, ?, ?, "user")', [userId, email, hashedPassword, termsAgreement], (authErr) => {
+                    if (authErr) {
+                        return res.status(500).json({ message: 'Error registering new user in Authentication table: ' + authErr.message });
+                    }
+                    res.status(200).json({ message: 'User registered successfully', redirect: '/login' });
+                });
             });
-        });
     });
 });
 
@@ -1479,8 +1491,88 @@ app.get('/groupOverallData', verifyToken, (req, res) => {
 });
 
 
+// Endpoint to get overall group data (group vs non-group)
+app.get('/groupOverallData', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const overallDataQuery = `
+        SELECT 
+            (SELECT COUNT(*) FROM users) AS totalUsers,
+            (SELECT COUNT(*) FROM answers) AS totalTrainingSessions,
+            (SELECT COUNT(*) FROM exam) AS totalExams
+    `;
+
+    const groupDataQuery = `
+        SELECT 
+            (SELECT COUNT(*) FROM userGroups WHERE groupId = ?) AS groupUsers,
+            (SELECT SUM(totalTrainTime) FROM users WHERE id IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS totalTrainingTime,
+            (SELECT COUNT(*) FROM exam WHERE userId IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS groupExams
+    `;
+
+    db.get(overallDataQuery, [], (err, overallData) => {
+        if (err) {
+            console.error('Error fetching overall data:', err.message);
+            return res.status(500).json({ message: 'Error fetching overall data' });
+        }
+
+        db.get(groupDataQuery, [groupId, groupId, groupId], (err, groupData) => {
+            if (err) {
+                console.error('Error fetching group data:', err.message);
+                return res.status(500).json({ message: 'Error fetching group data' });
+            }
+
+            res.json({
+                overallData,
+                groupData
+            });
+        });
+    });
+});
+
+// Endpoint to get group details (users in the group)
+app.get('/groupDetails', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const sql = `
+    SELECT 
+        users.id,
+        authentication.email,
+        users.totalTrainTime AS totalTrainingTime,
+        (SELECT COUNT(*) FROM exam WHERE exam.userId = users.id) AS examCount,
+        (SELECT AVG(score) FROM exam WHERE exam.userId = users.id) AS avgScore
+    FROM userGroups
+    JOIN users ON userGroups.userId = users.id
+    JOIN authentication ON users.id = authentication.userId
+    WHERE userGroups.groupId = ?
+    `;
+
+    db.all(sql, [groupId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching group details:', err.message);
+            return res.status(500).json({ message: 'Error fetching group details' });
+        }
+        console.log(rows); // בדיקה אם הנתונים מתקבלים
+        res.status(200).json(rows);
+    });
+});
+
+
+
 // Other CRUD endpoints and server setup ...
 
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 
-// Start the server
-app.listen(PORT, '0.0.0.0',() => console.log(`Server running on port ${PORT}`));
+    // הרצת סקריפט פייתון לאחר שהשרת מתחיל לפעול
+    exec(`python ${path.join(__dirname, 'insert_images_to_db.py')}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing script: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`Script error: ${stderr}`);
+            return;
+        }
+        console.log(`Script output: ${stdout}`);
+    });
+});

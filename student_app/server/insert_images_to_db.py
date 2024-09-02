@@ -7,6 +7,12 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 db_path = os.path.join(current_dir, "database.db")
 graded_path = os.path.join(current_dir, "..", "public", "img", "graded")
 
+# Define rate mapping based on directory name
+rate_mapping = {
+    'LOW RISK': 1,
+    'STEMI': 2,
+    'HIGH RISK': 3
+}
 
 def create_connection(db_file):
     """ create a database connection to the SQLite database
@@ -22,6 +28,17 @@ def create_connection(db_file):
         print(e)
     return conn
 
+def image_exists(conn, image_name):
+    """
+    Check if an image already exists in the database
+    :param conn: the Connection object
+    :param image_name: the name of the image to check
+    :return: True if the image exists, False otherwise
+    """
+    sql = ''' SELECT 1 FROM imageClassification WHERE photoName = ? '''
+    cur = conn.cursor()
+    cur.execute(sql, (image_name,))
+    return cur.fetchone() is not None
 
 def insert_image(conn, image):
     """
@@ -30,12 +47,11 @@ def insert_image(conn, image):
     :param image:
     :return: image id
     """
-    sql = ''' INSERT INTO imageClassification(photoName, classificationSet, classificationSubSet)
-              VALUES(?,?,?) '''
+    sql = ''' INSERT INTO imageClassification(photoName, classificationSet, classificationSubSet, rate)
+              VALUES(?,?,?,?) '''
     cur = conn.cursor()
     cur.execute(sql, image)
     return cur.lastrowid
-
 
 def update_missing_rates(conn):
     """
@@ -56,7 +72,6 @@ def update_missing_rates(conn):
         conn.commit()
     print(f"Updated {len(rows)} images with default rate of 1.")
 
-
 def main():
     conn = create_connection(db_path)
     with conn:
@@ -65,21 +80,24 @@ def main():
             if os.path.isdir(set_path):
                 for sub_dir in os.listdir(set_path):
                     sub_path = os.path.join(set_path, sub_dir)
+                    rate = rate_mapping.get(set_dir, 1)  # Default rate to 1 if not in the mapping
+                    print(f"Processing images from {set_dir} with rate {rate}")
                     if os.path.isdir(sub_path):
                         for image_name in os.listdir(sub_path):
                             image_path = os.path.join(sub_path, image_name)
-                            if os.path.isfile(image_path):
-                                image = (image_name, set_dir, sub_dir)
+                            if os.path.isfile(image_path) and not image_exists(conn, image_name):
+                                print(f"Inserting image {image_name} with rate {rate}")
+                                image = (image_name, set_dir, sub_dir, rate)
                                 insert_image(conn, image)
                     else:
                         image_path = os.path.join(set_path, sub_dir)
-                        if os.path.isfile(image_path):
-                            image = (sub_dir, set_dir, None)
+                        if os.path.isfile(image_path) and not image_exists(conn, sub_dir):
+                            print(f"Inserting image {sub_dir} with rate {rate}")
+                            image = (sub_dir, set_dir, None, rate)
                             insert_image(conn, image)
         # Update missing rates after inserting images
         update_missing_rates(conn)
     conn.close()
-
 
 if __name__ == '__main__':
     main()

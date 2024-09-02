@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Group Details</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -37,135 +37,263 @@
             margin: 20px 0;
         }
 
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
         canvas {
             max-width: 100%;
             height: 300px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>Admin Dashboard</h1>
+    <h1>Group Details</h1>
 
     <div class="chart-container">
         <div class="chart-box">
-            <h3>Users Registered Under You</h3>
-            <canvas id="userChart"></canvas>
-        </div>
-
-        <div class="chart-box">
-            <h3>Overall User Statistics</h3>
-            <canvas id="overallUserChart"></canvas>
+            <h3>Group vs Non-Group Users</h3>
+            <canvas id="groupVsNonGroupChart"></canvas>
         </div>
     </div>
 
     <div class="chart-container">
         <div class="chart-box">
-            <h3>Training Session Summary</h3>
-            <canvas id="trainingChart"></canvas>
+            <h3>Total Training Time</h3>
+            <canvas id="trainingTimeChart"></canvas>
         </div>
 
         <div class="chart-box">
-            <h3>Exam Results Summary</h3>
-            <canvas id="examChart"></canvas>
+            <h3>Exam Count</h3>
+            <canvas id="examCountChart"></canvas>
         </div>
     </div>
+
+    <div class="chart-container">
+        <div class="chart-box">
+            <h3>Average Score vs. Others</h3>
+            <canvas id="avgScoreComparisonChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+            <h3>Progress Over Time</h3>
+            <canvas id="progressChart"></canvas>
+        </div>
+    </div>
+
+    <h2>User List in Group</h2>
+    <table id="userListTable">
+        <thead>
+        <tr>
+            <th>Email</th>
+            <th>Total Training Time</th>
+            <th>Exam Count</th>
+            <th>Average Score</th>
+            <th>Details</th>
+        </tr>
+        </thead>
+        <tbody id="userListBody">
+        <!-- Rows dynamically added here -->
+        </tbody>
+    </table>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Example chart data
-    const userChartCtx = document.getElementById('userChart').getContext('2d');
-    const overallUserChartCtx = document.getElementById('overallUserChart').getContext('2d');
-    const trainingChartCtx = document.getElementById('trainingChart').getContext('2d');
-    const examChartCtx = document.getElementById('examChart').getContext('2d');
+    document.addEventListener('DOMContentLoaded', function() {
+        const groupId = new URLSearchParams(window.location.search).get('groupId');
 
-    // Users registered under admin chart
-    const userChart = new Chart(userChartCtx, {
-        type: 'bar',
-        data: {
-            labels: ['User1', 'User2', 'User3'],
-            datasets: [{
-                label: 'Users Registered',
-                data: [10, 20, 30],
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+        if (!groupId) {
+            alert('Group ID not found');
+            return;
         }
-    });
 
-    // Overall user statistics chart
-    const overallUserChart = new Chart(overallUserChartCtx, {
-        type: 'line',
-        data: {
-            labels: ['January', 'February', 'March'],
-            datasets: [{
-                label: 'Total Users',
-                data: [100, 200, 300],
-                backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+        // Fetch and display the group vs non-group data
+        fetch(`/groupOverallData?groupId=${groupId}`)
+            .then(response => response.json())
+            .then(data => {
+                new Chart(document.getElementById('groupVsNonGroupChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Group', 'Non-Group'],
+                        datasets: [{
+                            label: 'Users',
+                            data: [data.groupData.groupUsers, data.overallData.totalUsers - data.groupData.groupUsers],
+                            backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
+                            borderColor: ['rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching group vs non-group data:', error));
 
-    // Training session summary chart
-    const trainingChart = new Chart(trainingChartCtx, {
-        type: 'pie',
-        data: {
-            labels: ['Session 1', 'Session 2', 'Session 3'],
-            datasets: [{
-                label: 'Training Summary',
-                data: [50, 100, 150],
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)'
-                ],
-                borderWidth: 1
-            }]
-        }
-    });
+        // Fetch and display the user list
+        fetch(`/groupDetails?groupId=${groupId}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('userListBody');
+                const emails = data.map(user => user.email);
+                const trainingTimes = data.map(user => user.totalTrainingTime || 0);
+                const examCounts = data.map(user => user.examCount);
+                const avgScores = data.map(user => user.avgScore || 0);
+                const avgGroupScore = avgScores.reduce((a, b) => a + b, 0) / avgScores.length;
 
-    // Exam results summary chart
-    const examChart = new Chart(examChartCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Pass', 'Fail'],
-            datasets: [{
-                label: 'Exam Results',
-                data: [70, 30],
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(255, 99, 132, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 1
-            }]
-        }
+                data.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.email}</td>
+                        <td>${user.totalTrainingTime || 0} ms</td>
+                        <td>${user.examCount}</td>
+                        <td>${user.avgScore ? user.avgScore.toFixed(2) : 'N/A'}</td>
+                        <td><button onclick="showUserDetails('${user.id}')">Details</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // Total Training Time chart
+                new Chart(document.getElementById('trainingTimeChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: emails,
+                        datasets: [{
+                            label: 'Total Training Time (ms)',
+                            data: trainingTimes,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                // Exam Count chart
+                new Chart(document.getElementById('examCountChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: emails,
+                        datasets: [{
+                            label: 'Exam Count',
+                            data: examCounts,
+                            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                            borderColor: 'rgba(255, 159, 64, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                // Average Score vs Others chart
+                new Chart(document.getElementById('avgScoreComparisonChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: emails,
+                        datasets: [{
+                            label: 'Average Score',
+                            data: avgScores,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Group Average',
+                            data: Array(avgScores.length).fill(avgGroupScore),
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+
+                // Progress Over Time chart (sample data, replace with real data)
+                new Chart(document.getElementById('progressChart').getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],  // Replace with actual time labels
+                        datasets: [{
+                            label: 'User Progress',
+                            data: [10, 15, 25, 35],  // Replace with actual user progress data
+                            fill: false,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            tension: 0.1
+                        }, {
+                            label: 'Group Progress',
+                            data: [8, 12, 20, 30],  // Replace with actual group progress data
+                            fill: false,
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching user list:', error));
+
+        // Show detailed user info in a modal or a separate page
+        window.showUserDetails = function(userId) {
+            // Replace this with the actual logic to show user details
+            window.location.href = `/userDetails?userId=${userId}`;
+        };
     });
 </script>
 </body>

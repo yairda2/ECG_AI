@@ -6,14 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_model.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/analyzer/decision_tree_model.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_024553.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_024553.png.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100732.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100732.png.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100755.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/decision_tree_visualization/decision_tree_20240821_100755.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/rate_images.py" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/analyzer/rate_images.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/planingAI/AIdoc.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/planingAI/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/planingAI/generate_feedback.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/planingAI/install_requirements.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/planingAI/install_requirements.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/planingAI/process_images.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/planingAI/rate_images.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/planingAI/run_all.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/public/views/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/insert_images_to_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/insert_images_to_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,35 +55,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "JavaScript Debug.chooseModel.html.executor": "Run",
-    "JavaScript Debug.classifiedImagesAdmin.html.executor": "Run",
-    "JavaScript Debug.index.html.executor": "Run",
-    "JavaScript Debug.login.html.executor": "Run",
-    "JavaScript Debug.preTraining.html.executor": "Run",
-    "JavaScript Debug.train.html.executor": "Run",
-    "JavaScript Debug.training.html (1).executor": "Debug",
-    "JavaScript Debug.training.html.executor": "Debug",
-    "JavaScript Debug.updateGroup.html.executor": "Run",
-    "Node.js.authMiddleware.js.executor": "Debug",
-    "Node.js.common.js.executor": "Debug",
-    "Node.js.server -sqlite.js.executor": "Run",
-    "Node.js.server.js.executor": "Debug",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "yair__dev",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/yair/Documents/GitHub/EEG_AI_firsst_collect/student_app/public/views",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;JavaScript Debug.chooseModel.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.classifiedImagesAdmin.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.index.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.login.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.preTraining.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.train.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.training.html (1).executor&quot;: &quot;Debug&quot;,
+    &quot;JavaScript Debug.training.html.executor&quot;: &quot;Debug&quot;,
+    &quot;JavaScript Debug.updateGroup.html.executor&quot;: &quot;Run&quot;,
+    &quot;Node.js.authMiddleware.js.executor&quot;: &quot;Debug&quot;,
+    &quot;Node.js.common.js.executor&quot;: &quot;Debug&quot;,
+    &quot;Node.js.server -sqlite.js.executor&quot;: &quot;Run&quot;,
+    &quot;Node.js.server.js.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;yair__dev&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/yair/Documents/GitHub/EEG_AI_firsst_collect/student_app/public/views&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\yair\Documents\GitHub\EEG_AI_firsst_collect\student_app\public\views" />
@@ -113,7 +118,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-WS-242.20224.342" />
+        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-WS-242.20224.426" />
       </set>
     </attachedChunks>
   </component>
@@ -159,7 +164,9 @@
       <workItem from="1722980053025" duration="182000" />
       <workItem from="1723061629670" duration="8725000" />
       <workItem from="1723138176576" duration="29813000" />
-      <workItem from="1723967618919" duration="18959000" />
+      <workItem from="1723967618919" duration="19551000" />
+      <workItem from="1724529150064" duration="14351000" />
+      <workItem from="1725127079116" duration="1239000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
@@ -232,14 +239,17 @@
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/public/views/updateGroup.html</url>
           <line>280</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="119" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/authMiddleware.js</url>
-          <line>16</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="126" />
+          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
+          <line>55</line>
+          <option name="timeStamp" value="127" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
+          <line>647</line>
+          <option name="timeStamp" value="129" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

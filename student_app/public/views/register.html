@@ -187,6 +187,50 @@
         </div>
 
         <div class="form-group">
+            <label for="rank">Rank:</label>
+            <select id="rank" name="rank" required>
+                <option value="">Select your rank</option>
+                <option value="Student">Student</option>
+                <option value="Intern">Intern</option>
+                <option value="Doctor">Doctor</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="source">How did you hear about us?</label>
+            <select id="source" name="source" required>
+                <option value="">Select a source</option>
+                <option value="Internet">Internet</option>
+                <option value="Friend">Friend</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Do you have prior knowledge of ECG tests?</label>
+            <div class="radio-group">
+                <label for="ecgYes">Yes</label>
+                <input type="radio" id="ecgYes" name="ecgKnowledge" value="1" required>
+                <label for="ecgNo">No</label>
+                <input type="radio" id="ecgNo" name="ecgKnowledge" value="0" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="knowledgeLevel">How would you rate your knowledge level?</label>
+            <select id="knowledgeLevel" name="knowledgeLevel" required>
+                <option value="">Select knowledge level</option>
+                <option value="Very good">Very good</option>
+                <option value="Good">Good</option>
+                <option value="Medium">Medium</option>
+                <option value="Weak">Weak</option>
+                <option value="Very weak">Very weak</option>
+            </select>
+        </div>
+
+
+        <div class="form-group">
             <button type="button" id="showTermsButton">Show Terms of Use</button> <!-- Changed to type="button" -->
             <label for="termsAgreeCheckbox">I agree to the terms and conditions</label>
             <input type="checkbox" id="termsAgreeCheckbox" name="termsAgreement" required>
@@ -323,6 +367,10 @@
         const age = parseInt(document.getElementById('age').value);
         const academicInstitution = document.getElementById('academicInstitution').value === 'Other' ? document.getElementById('otherInstitution').value : document.getElementById('academicInstitution').value;
         const termsAgreement = document.getElementById('termsAgreeCheckbox').checked;
+        const rank = document.getElementById('rank').value;
+        const source = document.getElementById('source').value;
+        const ecgKnowledge = document.querySelector('input[name="ecgKnowledge"]:checked').value;
+        const knowledgeLevel = document.getElementById('knowledgeLevel').value;
 
         if (age < 0) {
             document.getElementById('ageError').style.display = 'block';
@@ -337,7 +385,7 @@
         fetch('/register', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({email, password, age, gender, avgDegree, academicInstitution, termsAgreement})
+            body: JSON.stringify({email, password, age, gender, avgDegree, academicInstitution, termsAgreement, rank, source, ecgKnowledge, knowledgeLevel})
         })
             .then(response => {
                 if (response.status === 409) {
