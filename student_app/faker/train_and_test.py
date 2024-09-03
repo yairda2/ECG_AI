@@ -1,8 +1,17 @@
 import sqlite3
 import random
 from datetime import datetime
-from directory_structure import DB_PATH
+from create_profiles import DB_PATH
 from uuid import uuid4  # Import the uuid module to use uuid4
+
+# צריך להוסיף ריצה בלולאה של כל פרופיל מתקיית faker/profiles
+# ולהפעיל את הפונקציות train_profile ו- test_profile על כל פרופיל
+# כל פרופיל יקבל סט תמונות רנדומלי וישלים אימון ובדיקה עליהן
+# כל פעם ישמרו התוצאות במסד הנתונים
+# חשוב! יש להוסיף מודל עיבוד תמונה שמשתמש בפרמטרים של כל פרופיל לצורך עיבוד התמונה, אדם חכם הרבה זמן עיבוד אדם יהיר פחות פיצ'רים
+# כל פעם יש להכניס את התוצאות למסד הנתונים
+# יש לשים לב שכל השורות במסד הנתונים נכנסות כמו שצריך.
+# יש להתחקות אחרי בקשות הAPI של מהערכת.
 
 # Connect to the SQLite database
 db = sqlite3.connect(DB_PATH)

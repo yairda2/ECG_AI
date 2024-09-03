@@ -1,5 +1,8 @@
 # directory_structure.py
+# יש ליצור פידבק לא חייב דינאמי, הפידבק ירשם לשדה FEADBACK בטבלת USERS.
+# לאחר רישום הפידבק יש להריץ את המודל ולראות שהוא משתפר או יורד בביצועים לאחר מכן.#
 import os
+
 
 # Define directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
