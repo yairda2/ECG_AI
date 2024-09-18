@@ -6,11 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/chooseModelAdmin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/public/views/viewGroupDetails.html" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/public/views/viewGroupDetails.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/authMiddleware.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/authMiddleware.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/.idea/student_app.iml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/student_app.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/analyzer/~$AIdoc.docx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,7 +59,7 @@
     &quot;Node.js.authMiddleware.js.executor&quot;: &quot;Debug&quot;,
     &quot;Node.js.common.js.executor&quot;: &quot;Debug&quot;,
     &quot;Node.js.server -sqlite.js.executor&quot;: &quot;Run&quot;,
-    &quot;Node.js.server.js.executor&quot;: &quot;Debug&quot;,
+    &quot;Node.js.server.js.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;yair__dev&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
@@ -110,7 +108,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-WS-242.20224.426" />
+        <option value="bundled-js-predefined-d6986cc7102b-7c0b70fcd90d-JavaScript-WS-242.21829.149" />
       </set>
     </attachedChunks>
   </component>
@@ -157,7 +155,11 @@
       <workItem from="1723061629670" duration="8725000" />
       <workItem from="1723138176576" duration="29813000" />
       <workItem from="1723967618919" duration="19551000" />
-      <workItem from="1724529150064" duration="2849000" />
+      <workItem from="1724529150064" duration="14351000" />
+      <workItem from="1725127079116" duration="5233000" />
+      <workItem from="1725310746433" duration="2665000" />
+      <workItem from="1726053139400" duration="640000" />
+      <workItem from="1726137189379" duration="1344000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
@@ -231,6 +233,16 @@
           <url>file://$PROJECT_DIR$/student_app/public/views/updateGroup.html</url>
           <line>280</line>
           <option name="timeStamp" value="119" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
+          <line>55</line>
+          <option name="timeStamp" value="127" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
+          <line>647</line>
+          <option name="timeStamp" value="129" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
