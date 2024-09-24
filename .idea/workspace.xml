@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/student_app.iml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/student_app.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/~$AIdoc.docx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,7 +157,7 @@
       <workItem from="1725127079116" duration="5233000" />
       <workItem from="1725310746433" duration="2665000" />
       <workItem from="1726053139400" duration="640000" />
-      <workItem from="1726137189379" duration="1344000" />
+      <workItem from="1726137189379" duration="2837000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
