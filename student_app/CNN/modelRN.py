@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from torchcam.methods import SmoothGradCAMpp
 from torchcam.utils import overlay_mask
+import  numpy as np
+
 
 def main():
     # בדיקה אם יש GPU
@@ -261,10 +263,27 @@ def main():
         cams = cam_extractor(class_idx=preds[0].item(), scores=outputs)
 
         # קבלת המפה של השכבה האחרונה
-        activation_map = cams[0].cpu()
+        activation_map = cams[0].cpu().numpy()
+
+        # בדיקת צורת המפה
+        print(f'Activation map shape: {activation_map.shape}')
+
+        # אם המפה היא תלת-ממדית, נסיר את המימד הנוסף
+        if activation_map.ndim == 3:
+            activation_map = activation_map[0]
+
+        # התאמת המפה לגודל התמונה המקורית
+        activation_map = Image.fromarray(activation_map)
+        activation_map = activation_map.resize(image.size, resample=Image.BILINEAR)
+
+        # המרה למערך NumPy
+        activation_map = np.array(activation_map)
+
+        # נרמול המפה לערכים בין 0 ל-1
+        activation_map = (activation_map - activation_map.min()) / (activation_map.max() - activation_map.min())
 
         # חפיפה של המפה על התמונה המקורית
-        result = overlay_mask(image, Image.fromarray(activation_map.numpy(), mode='F'), alpha=0.5)
+        result = overlay_mask(image, Image.fromarray(np.uint8(activation_map * 255), mode='L'), alpha=0.5)
 
         # הצגת התמונה עם ההסבר
         plt.figure(figsize=(8, 8))
