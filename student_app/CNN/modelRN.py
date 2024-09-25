@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from torchcam.methods import SmoothGradCAMpp
 from torchcam.utils import overlay_mask
-import  numpy as np
+import numpy as np
 
 
 def main():

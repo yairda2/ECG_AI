@@ -5,22 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/analyze_image.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/labeled_images/person/0001_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/labeled_images/person/0098_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/labeled_images/person/0279_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/labeled_images/person/0379_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/labeled_images/tennis racket/0032_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/labeled_images/tennis racket/0725_patient.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/saved_graphs/accuracy_graph.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/saved_graphs/loss_graph.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/self_evaluation.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/semi_supervised_training.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/yolov8n.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/CNN/yolov8s.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/server/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/server/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/CNN/ecg_classifier_model.pth" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/CNN/ecg_classifier_model.pth" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -171,7 +156,7 @@
       <workItem from="1725127079116" duration="5233000" />
       <workItem from="1725310746433" duration="2665000" />
       <workItem from="1726053139400" duration="640000" />
-      <workItem from="1726137189379" duration="4267000" />
+      <workItem from="1726137189379" duration="4862000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
