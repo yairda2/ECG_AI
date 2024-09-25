@@ -209,3 +209,6 @@ dist
 # Serverless directories
 .serverless/
 *.zip
+
+# files type
+*.jpg
