@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <!-- Data Layer -->
+  <rect x="50" y="50" width="700" height="100" fill="#ADD8E6" stroke="#000" stroke-width="2" rx="10"/>
+  <text x="400" y="100" font-size="20" font-family="Arial" text-anchor="middle" fill="#000">Data Layer</text>
+  <text x="400" y="130" font-size="16" font-family="Arial" text-anchor="middle" fill="#000">Labeled & Unlabeled Images, Transformations</text>
+  
+  <!-- Storage Layer -->
+  <rect x="50" y="200" width="700" height="100" fill="#DDA0DD" stroke="#000" stroke-width="2" rx="10"/>
+  <text x="400" y="250" font-size="20" font-family="Arial" text-anchor="middle" fill="#000">Storage Layer</text>
+  <text x="400" y="280" font-size="16" font-family="Arial" text-anchor="middle" fill="#000">Data Split (Train/Val/Test), DataLoader</text>
+  
+  <!-- Model Layer -->
+  <rect x="50" y="350" width="700" height="100" fill="#FFA07A" stroke="#000" stroke-width="2" rx="10"/>
+  <text x="400" y="400" font-size="20" font-family="Arial" text-anchor="middle" fill="#000">Model Layer</text>
+  <text x="400" y="430" font-size="16" font-family="Arial" text-anchor="middle" fill="#000">ResNet18 Model, Training, Custom FC Layer</text>
+  
+  <!-- Visualization Layer -->
+  <rect x="50" y="500" width="700" height="100" fill="#90EE90" stroke="#000" stroke-width="2" rx="10"/>
+  <text x="400" y="550" font-size="20" font-family="Arial" text-anchor="middle" fill="#000">Visualization Layer</text>
+  <text x="400" y="580" font-size="16" font-family="Arial" text-anchor="middle" fill="#000">SmoothGradCAMpp Activation Map, Overlay</text>
+  
+  <!-- Classification Layer -->
+  <rect x="50" y="650" width="700" height="100" fill="#FFD700" stroke="#000" stroke-width="2" rx="10"/>
+  <text x="400" y="700" font-size="20" font-family="Arial" text-anchor="middle" fill="#000">Classification Layer</text>
+  <text x="400" y="730" font-size="16" font-family="Arial" text-anchor="middle" fill="#000">Classify Unlabeled Images, Display Results</text>
+  
+  <!-- Evaluation Layer -->
+  <rect x="50" y="800" width="700" height="100" fill="#FA8072" stroke="#000" stroke-width="2" rx="10"/>
+  <text x="400" y="850" font-size="20" font-family="Arial" text-anchor="middle" fill="#000">Evaluation Layer</text>
+  <text x="400" y="880" font-size="16" font-family="Arial" text-anchor="middle" fill="#000">Test Dataset Evaluation, Performance Metrics</text>
+  
+  <!-- Arrows -->
+  <line x1="400" y1="150" x2="400" y2="200" stroke="#000" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="400" y1="300" x2="400" y2="350" stroke="#000" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="400" y1="450" x2="400" y2="500" stroke="#000" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="400" y1="600" x2="400" y2="650" stroke="#000" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="400" y1="750" x2="400" y2="800" stroke="#000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Arrow Marker -->
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#000" />
+    </marker>
+  </defs>
+</svg>

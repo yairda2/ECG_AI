@@ -1557,6 +1557,59 @@ app.get('/groupDetails', verifyToken, (req, res) => {
 });
 
 
+const multer = require('multer');
+
+// Multer setup for handling file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, 'uploads')); // Directory for uploads
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname); // Get file extension
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + ext); // Save with unique filename and correct extension
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Endpoint to handle image upload
+app.post('/upload-image', upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    }
+
+    const uploadedImagePath = path.join(__dirname, 'uploads', req.file.filename);
+
+    // Example of how you might run a Python script that classifies the image using a model
+    const pythonScript = path.join(__dirname, '..', 'CNN', 'classify_image.py');
+    const command = `python ${pythonScript} ${uploadedImagePath}`;
+
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing Python script: ${error.message}`);
+            return res.status(500).json({ success: false, message: 'Error processing image.' });
+        }
+
+        if (stderr) {
+            console.error(`Script error: ${stderr}`);
+            return res.status(500).json({ success: false, message: 'Error processing image.' });
+        }
+
+        // Example: the Python script could return a JSON object with classification results and graph URL
+        const result = JSON.parse(stdout);
+
+        // Send the result back to the client
+        res.status(200).json({
+            success: true,
+            result: result.classification, // e.g., 'Normal' or 'Abnormal'
+            graphUrl: result.graphUrl // URL to the graph image created by the model
+        });
+    });
+});
+
+
+
 
 // Other CRUD endpoints and server setup ...
 
@@ -1565,6 +1618,19 @@ app.listen(PORT, '0.0.0.0', () => {
 
     // הרצת סקריפט פייתון לאחר שהשרת מתחיל לפעול
     exec(`python ${path.join(__dirname, 'insert_images_to_db.py')}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing script: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`Script error: ${stderr}`);
+            return;
+        }
+        console.log(`Script output: ${stdout}`);
+    });
+
+    // הרצת סקריפט פייתון לאחר שהשרת מתחיל לפעול
+    exec(`python ${path.join(__dirname,"..", "analyzer", "rate_images.py")}`, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing script: ${error.message}`);
             return;

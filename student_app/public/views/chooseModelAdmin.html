@@ -79,6 +79,20 @@
         .header button:hover {
             background-color: #c82333;
         }
+
+        .upload-container {
+            margin-top: 40px;
+        }
+
+        #resultContainer {
+            margin-top: 30px;
+            display: none;
+        }
+
+        #resultContainer img {
+            max-width: 100%;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -93,6 +107,56 @@
         <button class="btn" onclick="window.location.href='/training'">Training</button>
         <button class="btn" onclick="window.location.href='/pre-test'">Test</button>
     </div>
+
+    <!-- הוספת כפתור להעלאת תמונה -->
+    <div class="upload-container">
+        <h3>Upload an Image to Check</h3>
+        <input type="file" id="imageUpload" accept="image/*">
+        <button type="button" id="submitImage">Check Image</button>
+    </div>
+
+    <!-- אזור לתצוגת תוצאה וגרף -->
+    <div id="resultContainer">
+        <h3>Classification Result</h3>
+        <p id="classificationResult"></p>
+        <h3>Model Explanation</h3>
+        <img id="modelGraph" src="" alt="Model Decision Graph"/>
+    </div>
 </div>
+
+<script>
+    // מטפל בהעלאת תמונה
+    // Handle image upload
+    document.getElementById('submitImage').addEventListener('click', function () {
+        const imageFile = document.getElementById('imageUpload').files[0];
+
+        if (!imageFile) {
+            alert("Please upload an image first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        fetch('/upload-image', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display the classification result
+                    document.getElementById('classificationResult').innerText = `The image was classified as: ${data.result}`;
+                    document.getElementById('modelGraph').src = data.graphUrl; // Display the graph created by the model
+                    document.getElementById('resultContainer').style.display = 'block';
+                } else {
+                    alert('There was an error processing your image.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error uploading the image.');
+            });
+    });</script>
 </body>
 </html>

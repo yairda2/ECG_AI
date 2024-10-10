@@ -30,9 +30,25 @@
         <button type="button" name="action" value="Single Training">Training</button>
         <button type="button" name="action" value="Test">Test</button>
     </form>
+
+    <!-- הוספת כפתור להעלאת תמונה -->
+    <div class="upload-container">
+        <h3>Upload an Image to Check</h3>
+        <input type="file" id="imageUpload" accept="image/*">
+        <button type="button" id="submitImage">Check Image</button>
+    </div>
+
+    <!-- אזור לתצוגת תוצאה וגרף -->
+    <div id="resultContainer" style="display: none;">
+        <h3>Classification Result</h3>
+        <p id="classificationResult"></p>
+        <h3>Model Explanation</h3>
+        <img id="modelGraph" src="" alt="Model Decision Graph" style="max-width: 100%;"/>
+    </div>
 </div>
 
 <script>
+    // מטפל בבחירה של אימון או מבחן
     document.querySelectorAll('#modelChooseForm button').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -40,6 +56,39 @@
             handlePageAction('/chooseModel', 'POST', { action: actionValue });
         });
     });
-</script>
+
+    // מטפל בהעלאת תמונה
+    // Handle image upload
+    document.getElementById('submitImage').addEventListener('click', function () {
+        const imageFile = document.getElementById('imageUpload').files[0];
+
+        if (!imageFile) {
+            alert("Please upload an image first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        fetch('/upload-image', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display the classification result
+                    document.getElementById('classificationResult').innerText = `The image was classified as: ${data.result}`;
+                    document.getElementById('modelGraph').src = data.graphUrl; // Display the graph created by the model
+                    document.getElementById('resultContainer').style.display = 'block';
+                } else {
+                    alert('There was an error processing your image.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error uploading the image.');
+            });
+    });</script>
 </body>
 </html>
