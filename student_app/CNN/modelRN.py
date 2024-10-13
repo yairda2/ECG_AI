@@ -1,3 +1,5 @@
+# CNN/modelRN.py
+
 import os
 import torch
 import torch.nn as nn
@@ -6,16 +8,14 @@ from torchvision import datasets, transforms, models
 from torch.utils.data import DataLoader, random_split
 from PIL import Image
 import matplotlib.pyplot as plt
-import seaborn as sns
 from torchcam.methods import SmoothGradCAMpp
 from torchcam.utils import overlay_mask
 import numpy as np
 
-
 def main():
-    # בדיקה אם יש GPU
+    # בדיקה אם יש GPU זמין
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'מכשיר בשימוש: {device}')
+    print(f'Device in use: {device}')
 
     # הגדרת נתיבים
     data_dir = 'callsifi_images'  # נתיב לתמונות המסווגות
@@ -24,21 +24,25 @@ def main():
 
     # רשימת שמות הקטגוריות
     class_names = ['Avrste', 'DeWinters', 'Hyperacute', 'LossOfBalance',
-                   'TInversion', 'Wellens', 'LOW RISK', 'STEMI']
+                   'TInversion', 'Wellens', 'LOW RISK', 'Anterior', 'Inferior', 'Lateral', 'Septal']
 
     # טרנספורמציות על הנתונים
     data_transforms = {
         'train': transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(10),
-            transforms.ColorJitter(brightness=0.2, contrast=0.2,
-                                   saturation=0.2, hue=0.2),
+            transforms.RandomRotation(15),
+            transforms.ColorJitter(brightness=0.3, contrast=0.3,
+                                   saturation=0.3, hue=0.2),
+            transforms.RandomAffine(degrees=0, shear=10, scale=(0.8, 1.2)),
+            transforms.RandomPerspective(distortion_scale=0.2, p=0.5),
             transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ]),
         'val': transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ]),
     }
 
@@ -108,19 +112,22 @@ def main():
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    # טעינת מודל ResNet18 עם המשקלים המעודכנים
+    # טעינת מודל ResNet18 עם Dropout ו-L2 Regularization
     from torchvision.models import resnet18, ResNet18_Weights
     model = resnet18(weights=ResNet18_Weights.DEFAULT)
 
-    # התאמת השכבה הסופית
+    # התאמת השכבה הסופית והוספת Dropout
     num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, len(class_names))
+    model.fc = nn.Sequential(
+        nn.Dropout(0.5),  # Dropout של 50%
+        nn.Linear(num_ftrs, len(class_names))
+    )
 
     model = model.to(device)
 
-    # פונקציית הפסד ואופטימייזר
+    # פונקציית הפסד עם רגולריזציה (L2 Regularization)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)  # weight_decay = L2 Regularization
 
     # אימון המודל
     num_epochs = 20
@@ -133,6 +140,7 @@ def main():
 
     def train_model(model, criterion, optimizer, num_epochs=10):
         best_acc = 0.0
+        best_model_wts = model.state_dict()
 
         for epoch in range(num_epochs):
             print(f'Epoch {epoch+1}/{num_epochs}')
@@ -199,7 +207,7 @@ def main():
 
         print(f'Best Validation Accuracy: {best_acc:.4f}')
 
-        # טעינת המודל הטוב ביותר
+        # טעינת משקלי המודל הטוב ביותר
         model.load_state_dict(best_model_wts)
 
         return model
@@ -209,7 +217,7 @@ def main():
 
     # שמירת המודל
     torch.save(model.state_dict(), model_save_path)
-    print(f'מודל נשמר ב-{model_save_path}')
+    print(f'Model saved at {model_save_path}')
 
     # יצירת גרפים של הפסד ודיוק
     epochs = range(1, num_epochs + 1)
@@ -236,93 +244,6 @@ def main():
 
     plt.tight_layout()
     plt.show()
-
-    # פונקציה לסיווג תמונה חדשה עם Grad-CAM
-    def classify_image_with_explanation(model, image_path):
-        model.eval()
-        transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-        ])
-
-        image = Image.open(image_path).convert('RGB')
-        input_tensor = transform(image).unsqueeze(0).to(device)
-
-        # יצירת Grad-CAM לפני ה-forward pass
-        cam_extractor = SmoothGradCAMpp(model, target_layer='layer4')
-
-        # ביצוע forward pass
-        outputs = model(input_tensor)
-        probabilities = nn.functional.softmax(outputs, dim=1)
-        confidence, preds = torch.max(probabilities, 1)
-        predicted_class = class_names[preds[0].item()]
-        confidence_percent = confidence[0].item() * 100
-        print(f'קובץ: {os.path.basename(image_path)}, סווג כ: {predicted_class} ({confidence_percent:.2f}%)')
-
-        # יצירת CAM
-        cams = cam_extractor(class_idx=preds[0].item(), scores=outputs)
-
-        # קבלת המפה של השכבה האחרונה
-        activation_map = cams[0].cpu().numpy()
-
-        # בדיקת צורת המפה
-        print(f'Activation map shape: {activation_map.shape}')
-
-        # אם המפה היא תלת-ממדית, נסיר את המימד הנוסף
-        if activation_map.ndim == 3:
-            activation_map = activation_map[0]
-
-        # התאמת המפה לגודל התמונה המקורית
-        activation_map = Image.fromarray(activation_map)
-        activation_map = activation_map.resize(image.size, resample=Image.BILINEAR)
-
-        # המרה למערך NumPy
-        activation_map = np.array(activation_map)
-
-        # נרמול המפה לערכים בין 0 ל-1
-        activation_map = (activation_map - activation_map.min()) / (activation_map.max() - activation_map.min())
-
-        # חפיפה של המפה על התמונה המקורית
-        result = overlay_mask(image, Image.fromarray(np.uint8(activation_map * 255), mode='L'), alpha=0.5)
-
-        # הצגת התמונה עם ההסבר
-        plt.figure(figsize=(8, 8))
-        plt.imshow(result)
-        plt.title(f'{predicted_class} ({confidence_percent:.2f}%)')
-        plt.axis('off')
-        plt.show()
-
-        # הסבר על ההחלטה
-        explanation = f"התמונה סווגה כ-{predicted_class} עם ביטחון של {confidence_percent:.2f}%"
-        return predicted_class, confidence_percent, explanation
-
-    # סיווג התמונות הלא מסווגות עם הסברים
-    for root, _, files in os.walk(unlabeled_dir):
-        for file in files:
-            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                img_path = os.path.join(root, file)
-                predicted_class, confidence, explanation = classify_image_with_explanation(model, img_path)
-                # ניתן להעביר את התמונה לתיקייה לפי הסיווג או לבצע פעולה אחרת
-
-    # בדיקת המודל על סט המבחן
-    def evaluate_model(model, test_loader):
-        model.eval()
-        running_corrects = 0
-
-        with torch.no_grad():
-            for inputs, labels in test_loader:
-                inputs = inputs.to(device)
-                labels = labels.to(device)
-
-                outputs = model(inputs)
-                _, preds = torch.max(outputs, 1)
-
-                running_corrects += torch.sum(preds == labels.data)
-
-        test_acc = running_corrects.double() / len(test_dataset)
-        print(f'Test Accuracy: {test_acc:.4f}')
-
-    evaluate_model(model, test_loader)
 
 if __name__ == '__main__':
     main()
