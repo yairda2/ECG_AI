@@ -6,6 +6,29 @@
     <link rel="stylesheet" href="../css/common.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../js/common.js"></script>
+    <style>
+        /* Spinner styles */
+        .spinner {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            margin-left: -25px;
+            margin-top: -25px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #ff0000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
 <button id="mainpageButton" class="icon-button">Home</button>
@@ -30,15 +53,76 @@
         <button type="button" name="action" value="Single Training">Training</button>
         <button type="button" name="action" value="Test">Test</button>
     </form>
+
+    <!-- הוספת כפתור להעלאת תמונה -->
+    <div class="upload-container">
+        <h3>Upload an Image to Check</h3>
+        <input type="file" id="imageUpload" accept="image/*">
+        <button type="button" id="submitImage">Check Image</button>
+    </div>
+
+    <!-- אזור לתצוגת תוצאה וגרף -->
+    <div id="resultContainer" style="display: none;">
+        <h3>Classification Result</h3>
+        <p id="classificationResult"></p>
+        <h3>Model Explanation</h3>
+        <img id="modelGraph" src="" alt="Model Decision Graph" style="max-width: 100%;"/>
+    </div>
+
+    <!-- Spinner -->
+    <div id="spinner" class="spinner"></div>
 </div>
 
 <script>
+    // מטפל בבחירה של אימון או מבחן
     document.querySelectorAll('#modelChooseForm button').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             const actionValue = e.target.value;
             handlePageAction('/chooseModel', 'POST', { action: actionValue });
         });
+    });
+
+    // מטפל בהעלאת תמונה
+    // Handle image upload
+    document.getElementById('submitImage').addEventListener('click', function () {
+        const imageFile = document.getElementById('imageUpload').files[0];
+
+        if (!imageFile) {
+            alert("Please upload an image first.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        // Show the spinner while waiting for the result
+        document.getElementById('spinner').style.display = 'block';
+
+        fetch('/upload-image', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                // Hide the spinner once the response is received
+                document.getElementById('spinner').style.display = 'none';
+
+                if (data.success) {
+                    // Display the classification result
+                    document.getElementById('classificationResult').innerText = `The image was classified as: ${data.result}`;
+                    document.getElementById('modelGraph').src = data.graphUrl; // Display the graph created by the model
+                    document.getElementById('resultContainer').style.display = 'block';
+                } else {
+                    alert('There was an error processing your image.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error uploading the image.');
+                // Hide the spinner in case of an error
+                document.getElementById('spinner').style.display = 'none';
+            });
     });
 </script>
 </body>

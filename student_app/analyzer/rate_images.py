@@ -4,10 +4,10 @@ import logging
 import datetime
 import sqlite3
 from config import DB_PATH, MODEL_PATH, TRACE_LOG, ERROR_LOG, BASE_DIR
-from sklearn.tree import DecisionTreeClassifier, export_graphviz
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
-import graphviz
+import matplotlib.pyplot as plt
 
 # Setup logging
 logging.basicConfig(filename=TRACE_LOG, level=logging.INFO)
@@ -22,7 +22,7 @@ def log_error(message):
         f.write(f"{timestamp} - ERROR: {message}\n")
 
 def load_model():
-    """Load the decision tree model from the saved file."""
+    """Load the random forest model from the saved file."""
     if os.path.exists(MODEL_PATH):
         with open(MODEL_PATH, 'rb') as model_file:
             loaded_data = pickle.load(model_file)
@@ -31,20 +31,55 @@ def load_model():
             else:
                 model = loaded_data
                 feature_importances = None
-        log_trace("Decision tree model loaded successfully.")
+        log_trace("Random forest model loaded successfully.")
         return model, feature_importances
     else:
         log_trace("No existing model found. A new model will be trained.")
-        return DecisionTreeClassifier(), None
+        return RandomForestClassifier(n_estimators=100, random_state=42), None
 
 def save_model(model, feature_importances):
-    """Save the decision tree model and its feature importances to a file."""
+    """Save the random forest model and its feature importances to a file."""
     with open(MODEL_PATH, 'wb') as model_file:
         pickle.dump((model, feature_importances), model_file)
-    log_trace("Decision tree model and feature importances saved successfully.")
+    log_trace("Random forest model and feature importances saved successfully.")
+
+def plot_feature_importances(feature_names, importances):
+    """Plot and save a graph of feature importances."""
+    indices = np.argsort(importances)
+    plt.figure(figsize=(10, 6))
+    plt.title("Feature Importances")
+    plt.barh(range(len(indices)), importances[indices], align='center')
+    plt.yticks(range(len(indices)), [feature_names[i] for i in indices])
+    plt.xlabel("Relative Importance")
+    plt.tight_layout()
+
+    # Save the plot
+    graph_path = os.path.join(BASE_DIR, 'graphs')
+    os.makedirs(graph_path, exist_ok=True)
+    plt.savefig(
+        os.path.join(graph_path, f'feature_importances_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png'))
+    plt.close()
+    log_trace("Feature importances graph saved.")
+
+def plot_training_metrics(metric_values, metric_name):
+    """Plot and save a graph of training metrics like accuracy."""
+    plt.figure(figsize=(10, 6))
+    plt.plot(metric_values, marker='o')
+    plt.title(f"{metric_name} Over Time")
+    plt.xlabel("Training Session")
+    plt.ylabel(metric_name)
+    plt.tight_layout()
+
+    # Save the plot
+    graph_path = os.path.join(BASE_DIR, 'graphs')
+    os.makedirs(graph_path, exist_ok=True)
+    plt.savefig(
+        os.path.join(graph_path, f'{metric_name.lower()}_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png'))
+    plt.close()
+    log_trace(f"{metric_name} graph saved.")
 
 def train_or_update_model():
-    """Train or update the decision tree model using data from the database."""
+    """Train or update the random forest model using data from the database."""
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -84,16 +119,19 @@ def train_or_update_model():
         X = np.array(encoded_features).T
         y = np.array(labels)
 
-        # Train the decision tree model
+        # Train the random forest model
         model, previous_feature_importances = load_model()
         model.fit(X, y)
         save_model(model, model.feature_importances_)
 
-        # Log feature importances (weights)
+        # Log feature importances (weights) and plot them
         feature_importances = model.feature_importances_
-        for feature_name, importance in zip(['age', 'gender', 'avgDegree', 'totalTrainTime', 'totalExams', 'totalEntries',
-                                             'academicInstitution', 'answerSubmitTime', 'helpActivated',
-                                             'classificationSetSrc', 'classificationSubSetSrc'], feature_importances):
+        feature_names = ['age', 'gender', 'avgDegree', 'totalTrainTime', 'totalExams', 'totalEntries',
+                         'academicInstitution', 'answerSubmitTime', 'helpActivated',
+                         'classificationSetSrc', 'classificationSubSetSrc']
+        plot_feature_importances(feature_names, feature_importances)
+
+        for feature_name, importance in zip(feature_names, feature_importances):
             log_trace(f"Feature '{feature_name}' has importance: {importance}")
 
         # Compare current feature importances with the previous ones
@@ -103,25 +141,12 @@ def train_or_update_model():
             else:
                 log_trace("Feature importances remain the same as the last model update.")
 
-        # Visualize and save the decision tree
-        dot_data = export_graphviz(model, out_file=None,
-                                   feature_names=['age', 'gender', 'avgDegree', 'totalTrainTime', 'totalExams', 'totalEntries',
-                                                  'academicInstitution', 'answerSubmitTime', 'helpActivated',
-                                                  'classificationSetSrc', 'classificationSubSetSrc'],
-                                   class_names=[str(i) for i in set(y)],
-                                   filled=True, rounded=True, special_characters=True)
-        graph = graphviz.Source(dot_data)
-        graph_path = os.path.join(BASE_DIR, 'decision_tree_visualization')
-        os.makedirs(graph_path, exist_ok=True)
-        graph.render(os.path.join(graph_path, f'decision_tree_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.png'))
-
-        log_trace("Model trained, updated, and decision tree saved successfully.")
+        log_trace("Model trained and updated successfully.")
     except Exception as e:
         log_error(f"Error in train_or_update_model: {str(e)}")
         raise
     finally:
         conn.close()
-
 
 if __name__ == "__main__":
     train_or_update_model()

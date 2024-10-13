@@ -5,10 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ebdd448b-bb7c-4f1a-bb82-f0af752fd7b4" name="Changes" comment="Correcting the insertion of the answers in the answers table, removing the submissionType field">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/.idea/student_app.iml" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/.idea/student_app.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/student_app/analyzer/~$AIdoc.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/CNN/ecg_classifier_model.pth" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/CNN/ecg_classifier_model.pth" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/student_app/CNN/modelRN.py" beforeDir="false" afterPath="$PROJECT_DIR$/student_app/CNN/modelRN.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,7 +69,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
     &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\yair\\AppData\\Local\\Programs\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -159,7 +159,9 @@
       <workItem from="1725127079116" duration="5233000" />
       <workItem from="1725310746433" duration="2665000" />
       <workItem from="1726053139400" duration="640000" />
-      <workItem from="1726137189379" duration="1344000" />
+      <workItem from="1726137189379" duration="18597000" />
+      <workItem from="1728842982629" duration="627000" />
+      <workItem from="1728854617800" duration="1697000" />
     </task>
     <task id="LOCAL‎-00001" summary="pixed gender , list of uni , remove change ans">
       <option name="closed" value="true" />
@@ -236,13 +238,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>55</line>
-          <option name="timeStamp" value="127" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/student_app/server/server.js</url>
-          <line>647</line>
-          <option name="timeStamp" value="129" />
+          <line>1575</line>
+          <option name="timeStamp" value="136" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

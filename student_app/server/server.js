@@ -30,6 +30,8 @@ const corsOptions = {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/img', express.static(path.join(__dirname, '..', 'public', 'img')));
+// give the user access to the graphs and dir
+app.use('/graphs', express.static(path.join(__dirname, 'graphs')));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors(corsOptions));
@@ -1556,6 +1558,62 @@ app.get('/groupDetails', verifyToken, (req, res) => {
     });
 });
 
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+const { execFile } = require('child_process');
+
+// POST route to handle image uploads
+app.post('/upload-image', upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No image uploaded' });
+    }
+
+    const imagePath = path.resolve(req.file.path);
+    const pythonScriptPath = path.resolve('../CNN/classify_image.py');
+
+    // Execute the Python script with the image path as an argument
+    execFile('python', [pythonScriptPath, imagePath], (error, stdout, stderr) => {
+        if (error) {
+            console.error('Error executing Python script:', error);
+            return res.status(500).json({ success: false, message: 'Error processing image' });
+        }
+
+        try {
+            const outputLines = stdout.trim().split('\n');
+            const jsonResponse = JSON.parse(outputLines[outputLines.length - 1]); // Parse the last line which is JSON
+
+            console.log('Classification result:', jsonResponse.classification);
+            console.log('Confidence:', jsonResponse.confidence);
+            console.log('Graph URL:', jsonResponse.graphUrl);
+
+            // Check if the graph file exists
+            const graphUrl = jsonResponse.graphUrl + '.png';
+
+            // Ensure the file path is correct before sending the response
+            if (fs.existsSync(graphUrl)) {
+                // Send the classification result and graph URL to the client
+                res.json({
+                    success: true,
+                    result: jsonResponse.classification,
+                    confidence: jsonResponse.confidence,
+                    graphUrl: '/graphs/' + path.basename(graphUrl) // Adjust the path for client access
+                });
+            } else {
+                console.error('Graph file not found:', graphUrl);
+                res.status(500).json({ success: false, message: 'Graph file not found' });
+            }
+        } catch (err) {
+            console.error('Error parsing JSON:', err);
+            res.status(500).json({ success: false, message: 'Error parsing classification result' });
+        }
+    });
+});
+
+// Route to serve the graphs directory
+app.use('/graphs', express.static(path.join(__dirname, 'server', 'graphs')));
+
+
+
 
 
 // Other CRUD endpoints and server setup ...
@@ -1563,7 +1621,7 @@ app.get('/groupDetails', verifyToken, (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 
-    // הרצת סקריפט פייתון לאחר שהשרת מתחיל לפעול
+    /*// הרצת סקריפט פייתון לאחר שהשרת מתחיל לפעול
     exec(`python ${path.join(__dirname, 'insert_images_to_db.py')}`, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error executing script: ${error.message}`);
@@ -1575,4 +1633,17 @@ app.listen(PORT, '0.0.0.0', () => {
         }
         console.log(`Script output: ${stdout}`);
     });
+
+    // הרצת סקריפט פייתון לאחר שהשרת מתחיל לפעול
+    exec(`python ${path.join(__dirname,"..", "analyzer", "rate_images.py")}`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing script: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`Script error: ${stderr}`);
+            return;
+        }
+        console.log(`Script output: ${stdout}`);
+    });*/
 });
