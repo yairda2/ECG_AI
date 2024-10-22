@@ -69,9 +69,22 @@ def classify_image(image_path):
 
     # Save the result as a graph
     graph_path = image_path.replace('uploads', 'graphs').replace('.jpg', '_graph.png')
+    plt.figure(figsize=(10, 8))  # שינוי גודל התמונה
+
+    plt.subplot(1, 2, 1)  # הוספת subplot עבור התמונה עם מפת החום
     plt.imshow(result)
     plt.title(f'{predicted_class} ({confidence_percent:.2f}%)')
     plt.axis('off')
+
+    # הוספת מקרא ויזואלי בצד
+    plt.subplot(1, 2, 2)  # הוספת subplot עבור המקרא
+    plt.imshow(np.linspace(0, 1, 100).reshape(1, 100), cmap='jet', aspect='auto')
+    plt.gca().set_yticks([])
+    plt.gca().set_xticks([0, 50, 100])
+    plt.gca().set_xticklabels(['Low', 'Medium', 'High'])
+    plt.title("Heatmap Legend")
+
+    plt.tight_layout()
     plt.savefig(graph_path)
 
     # Return the classification and graph URL

@@ -42,7 +42,7 @@ body {
     background-color: #ff0202;
 }
 
-#mainpageButton {
+#mainPageButton {
     right: 10px; /* Adjust distance from the right as needed */
 }
 
@@ -215,7 +215,7 @@ h3 {
         padding: 8px 16px;
     }
 
-    #mainpageButton {
+    #mainPageButton {
         top: 60px;
     }
 

@@ -65,7 +65,7 @@ function handlePageAction(url, method, data = {}) {
 
 // Initialize buttons and forms on page load
 document.addEventListener('DOMContentLoaded', () => {
-    const mainpageButton = document.getElementById('mainpageButton');
+    const mainpageButton = document.getElementById('mainPageButton');
     const infoButton = document.getElementById('infoButton');
     const registerButton = document.getElementById('registerButton');
     const loginButton = document.getElementById('loginButton');
