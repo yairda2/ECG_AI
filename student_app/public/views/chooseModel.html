@@ -28,10 +28,117 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Dark background with opacity */
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 1200px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover, .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Flexbox layout for the images */
+        .image-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .image-container img {
+            width: 100%; /* Ensures the image stretches to fit the container */
+            max-height: 400px; /* Set the height to a fixed size */
+            object-fit: contain; /* Ensures the aspect ratio is preserved */
+        }
+
+        .image-container > div {
+            flex: 1 1 45%; /* Flexbox to ensure side-by-side on larger screens */
+            min-width: 300px; /* Ensure images stack on smaller screens */
+        }
+
+        /* Media Query for mobile devices */
+        @media (max-width: 768px) {
+            .image-container {
+                flex-direction: column;
+            }
+
+            .image-container > div {
+                flex-basis: 100%; /* Full width on mobile */
+            }
+        }
+
+        #modelGraph {
+            width: 100%;
+            height: auto;
+            object-fit: cover; /* Ensures the image fills the container without leaving gaps */
+        }
+
+        #compareModal {
+            display: none;
+            position: fixed;
+            z-index: 10001;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 1000px;
+        }
+
+        #compareModal img {
+            width: 100%;
+            max-height: 600px;
+        }
+
+        #compareModal .close-compare {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
-<button id="mainpageButton" class="icon-button">Home</button>
+
+<!-- Add buttons Home and Info -->
+<button id="mainPageButton" class="icon-button">Home</button>
 <button id="infoButton" class="icon-button">Info</button>
 
 <div class="form-container">
@@ -54,19 +161,45 @@
         <button type="button" name="action" value="Test">Test</button>
     </form>
 
-    <!-- הוספת כפתור להעלאת תמונה -->
+    <!-- Add Image Upload Section -->
     <div class="upload-container">
         <h3>Upload an Image to Check</h3>
         <input type="file" id="imageUpload" accept="image/*">
         <button type="button" id="submitImage">Check Image</button>
     </div>
 
-    <!-- אזור לתצוגת תוצאה וגרף -->
-    <div id="resultContainer" style="display: none;">
-        <h3>Classification Result</h3>
-        <p id="classificationResult"></p>
-        <h3>Model Explanation</h3>
-        <img id="modelGraph" src="" alt="Model Decision Graph" style="max-width: 100%;"/>
+    <!-- Modal for result and graph -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span> <!-- Close button -->
+            <h2 id="classificationTitle">Classification Result</h2>
+            <p id="classificationResult"></p>
+
+            <!-- Display the heatmap-->
+            <div id="heatmap">
+                <img id="heatmapImg" src="" alt="Heatmap Legend" style="width:50%; max-height: 80px;" />
+            </div>
+
+            <div class="image-container">
+                <div>
+                    <h3>Model Explanation</h3>
+                    <img id="modelGraph" src="" alt="Model Decision Graph" />
+                </div>
+                <div>
+                    <h3>Original Image</h3>
+                    <img id="originalImage" src="" alt="Original Uploaded Image" />
+                </div>
+            </div>
+
+            <!-- Add Compare button -->
+            <button id="compareButton">Compare Images</button>
+        </div>
+    </div>
+
+    <!-- Modal for image comparison -->
+    <div id="compareModal">
+        <span class="close-compare">&times;</span>
+        <img id="compareImage" src="" alt="Comparison Image">
     </div>
 
     <!-- Spinner -->
@@ -74,7 +207,17 @@
 </div>
 
 <script>
-    // מטפל בבחירה של אימון או מבחן
+    // Handle the Home button click
+    document.getElementById('mainPageButton').addEventListener('click', function() {
+        window.location.href = '/chooseModel'; // Navigate to home page
+    });
+
+    // Handle the Info button click
+    document.getElementById('infoButton').addEventListener('click', function() {
+        window.location.href = '/info'; // Navigate to info page
+    });
+
+    // Handle form action selection (Training or Test)
     document.querySelectorAll('#modelChooseForm button').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -83,8 +226,7 @@
         });
     });
 
-    // מטפל בהעלאת תמונה
-    // Handle image upload
+    // Handle image upload and classification
     document.getElementById('submitImage').addEventListener('click', function () {
         const imageFile = document.getElementById('imageUpload').files[0];
 
@@ -110,9 +252,13 @@
 
                 if (data.success) {
                     // Display the classification result
-                    document.getElementById('classificationResult').innerText = `The image was classified as: ${data.result}`;
+                    document.getElementById('classificationResult').innerText = `The image was classified as: ${data.result} (${data.confidence})`;
                     document.getElementById('modelGraph').src = data.graphUrl; // Display the graph created by the model
-                    document.getElementById('resultContainer').style.display = 'block';
+                    document.getElementById('originalImage').src = URL.createObjectURL(imageFile); // Display the original image
+                    document.getElementById('heatmapImg').src = data.heatmapUrl; // Display the heatmap
+
+                    // Show the modal
+                    document.getElementById('resultModal').style.display = 'block';
                 } else {
                     alert('There was an error processing your image.');
                 }
@@ -124,6 +270,55 @@
                 document.getElementById('spinner').style.display = 'none';
             });
     });
+
+    // Close the modal when clicking on <span> (x) or outside of the modal
+    document.querySelector('.close').onclick = function() {
+        document.getElementById('resultModal').style.display = 'none';
+    }
+
+    // Close modal if clicking outside of the modal content
+    window.onclick = function(event) {
+        const modal = document.getElementById('resultModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Handle image comparison modal
+    document.getElementById('compareButton').addEventListener('click', function() {
+        const originalImageSrc = document.getElementById('originalImage').src;
+        const modelImageSrc = document.getElementById('modelGraph').src;
+
+        const compareImage = document.getElementById('compareImage');
+        compareImage.src = originalImageSrc; // Start with the original image
+
+        const compareModal = document.getElementById('compareModal');
+        compareModal.style.display = 'block';
+
+        // Change to the model's graph when the mouse is held down
+        compareImage.addEventListener('mousedown', function() {
+            compareImage.src = modelImageSrc;
+        });
+
+        // Return to the original image when the mouse is released
+        compareImage.addEventListener('mouseup', function() {
+            compareImage.src = originalImageSrc;
+        });
+
+        // Close the compare modal
+        document.querySelector('.close-compare').onclick = function() {
+            compareModal.style.display = 'none';
+        }
+
+        // Close compare modal if clicking outside of the modal content
+        window.onclick = function(event) {
+            if (event.target === compareModal) {
+                compareModal.style.display = 'none';
+            }
+        }
+    });
+
 </script>
+
 </body>
 </html>

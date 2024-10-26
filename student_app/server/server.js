@@ -1568,44 +1568,53 @@ app.post('/upload-image', upload.single('image'), (req, res) => {
         return res.status(400).json({ success: false, message: 'No image uploaded' });
     }
 
+    const imageExtension = path.extname(req.file.originalname);
     const imagePath = path.resolve(req.file.path);
-    const pythonScriptPath = path.resolve('../CNN/classify_image.py');
-
-    // Execute the Python script with the image path as an argument
-    execFile('python', [pythonScriptPath, imagePath], (error, stdout, stderr) => {
-        if (error) {
-            console.error('Error executing Python script:', error);
+    const imageWithExtension = imagePath + imageExtension;
+    const heatmapPath = ('/heatmap.png');
+    fs.rename(imagePath, imageWithExtension, (err) => {
+        if (err) {
+            console.error('Error renaming file:', err);
             return res.status(500).json({ success: false, message: 'Error processing image' });
         }
 
-        try {
-            const outputLines = stdout.trim().split('\n');
-            const jsonResponse = JSON.parse(outputLines[outputLines.length - 1]); // Parse the last line which is JSON
+        const pythonScriptPath = path.resolve('../CNN/modelRN.py');
 
-            console.log('Classification result:', jsonResponse.classification);
-            console.log('Confidence:', jsonResponse.confidence);
-            console.log('Graph URL:', jsonResponse.graphUrl);
-
-            // Check if the graph file exists
-            const graphUrl = jsonResponse.graphUrl + '.png';
-
-            // Ensure the file path is correct before sending the response
-            if (fs.existsSync(graphUrl)) {
-                // Send the classification result and graph URL to the client
-                res.json({
-                    success: true,
-                    result: jsonResponse.classification,
-                    confidence: jsonResponse.confidence,
-                    graphUrl: '/graphs/' + path.basename(graphUrl) // Adjust the path for client access
-                });
-            } else {
-                console.error('Graph file not found:', graphUrl);
-                res.status(500).json({ success: false, message: 'Graph file not found' });
+        execFile('python', [pythonScriptPath, imageWithExtension], (error, stdout, stderr) => {
+            if (error) {
+                console.error('Error executing Python script:', error);
+                return res.status(500).json({ success: false, message: 'Error processing image' });
             }
-        } catch (err) {
-            console.error('Error parsing JSON:', err);
-            res.status(500).json({ success: false, message: 'Error parsing classification result' });
-        }
+
+            try {
+                const outputLines = stdout.trim().split('\n');
+                const jsonResponse = JSON.parse(outputLines[outputLines.length - 1]);
+
+                console.log('Classification result:', jsonResponse.classification);
+                console.log('Confidence:', jsonResponse.confidence);
+                console.log('Graph URL:', jsonResponse.graphUrl);
+                console.log('Heatmap URL:', heatmapPath);
+
+                const graphUrl = jsonResponse.graphUrl;
+                const heatmapUrl = heatmapPath;
+
+                if (fs.existsSync(graphUrl)) {
+                    res.json({
+                        success: true,
+                        result: jsonResponse.classification,
+                        confidence: jsonResponse.confidence,
+                        graphUrl: '/graphs/' + path.basename(graphUrl),
+                        heatmapUrl: heatmapPath
+                    });
+                } else {
+                    console.error('Graph or heatmap file not found:', graphUrl, heatmapUrl);
+                    res.status(500).json({ success: false, message: 'Graph or heatmap file not found' });
+                }
+            } catch (err) {
+                console.error('Error parsing JSON:', err);
+                res.status(500).json({ success: false, message: 'Error parsing classification result' });
+            }
+        });
     });
 });
 
