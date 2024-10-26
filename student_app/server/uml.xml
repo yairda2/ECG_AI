@@ -1,0 +1,71 @@
+<mxfile>
+  <diagram name="Medical Training System Diagram">
+    <mxGraphModel dx="1162" dy="580" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Server -->
+        <mxCell id="server" value="Server" style="shape=ellipse;fillColor=#FFF2CC;strokeColor=#E67300;shadow=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="420" y="160" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Database -->
+        <mxCell id="database" value="Database" style="shape=cylinder;fillColor=#FFECB3;strokeColor=#FF9800;shadow=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="600" y="160" width="100" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- AI Engine -->
+        <mxCell id="aiEngine" value="AI Engine" style="shape=hexagon;fillColor=#BBDEFB;strokeColor=#2196F3;shadow=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="420" y="280" width="100" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- DApp -->
+        <mxCell id="dapp" value="DApp" style="shape=rectangle;rounded=1;fillColor=#C8E6C9;strokeColor=#388E3C;shadow=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="250" y="160" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Students -->
+        <mxCell id="students" value="Students" style="shape=ellipse;fillColor=#FFCDD2;strokeColor=#E53935;shadow=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="100" y="160" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Supervising Doctor -->
+        <mxCell id="doctor" value="Supervising Doctor" style="shape=ellipse;fillColor=#D1C4E9;strokeColor=#8E24AA;shadow=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="100" y="280" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ECG Expert -->
+        <mxCell id="ecgExpert" value="ECG Expert" style="shape=ellipse;fillColor=#FFE0B2;strokeColor=#FB8C00;shadow=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="250" y="280" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows for Interaction -->
+        <mxCell id="students-dapp" edge="1" source="students" target="dapp" style="edgeStyle=elbowEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;orthogonal=0;strokeColor=#000000;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dapp-server" edge="1" source="dapp" target="server" style="edgeStyle=elbowEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;orthogonal=0;strokeColor=#000000;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="server-database" edge="1" source="server" target="database" style="edgeStyle=elbowEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;orthogonal=0;strokeColor=#000000;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ecgExpert-aiEngine" edge="1" source="ecgExpert" target="aiEngine" style="edgeStyle=elbowEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;orthogonal=0;strokeColor=#000000;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="aiEngine-database" edge="1" source="aiEngine" target="database" style="edgeStyle=elbowEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;orthogonal=0;strokeColor=#000000;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="doctor-server" edge="1" source="doctor" target="server" style="edgeStyle=elbowEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;orthogonal=0;strokeColor=#000000;endArrow=block;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

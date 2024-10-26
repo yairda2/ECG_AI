@@ -73,6 +73,34 @@
         button:hover {
             background-color: #218838;
         }
+
+        /* Popup styling */
+        #userDetailsPopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            z-index: 1000;
+        }
+
+        #closePopup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: #888;
+            font-size: 18px;
+        }
+
+        #closePopup:hover {
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -127,6 +155,21 @@
     </table>
 </div>
 
+<!-- User Details Popup -->
+<div id="userDetailsPopup">
+    <span id="closePopup">&times;</span>
+    <h3>User Details</h3>
+    <p><strong>Email:</strong> <span id="userEmail"></span></p>
+    <p><strong>Age:</strong> <span id="userAge"></span></p>
+    <p><strong>Academic Institution:</strong> <span id="userAcademicInstitution"></span></p>
+    <p><strong>Total Training Time:</strong> <span id="userTotalTrainTime"></span> ms</p>
+    <p><strong>Total Exams:</strong> <span id="userTotalExams"></span></p>
+    <p><strong>Average Exam Time:</strong> <span id="userAvgExamTime"></span> ms</p>
+    <p><strong>Total Answers:</strong> <span id="userTotalAnswers"></span></p>
+    <p><strong>Rank:</strong> <span id="userRank"></span></p>
+    <p><strong>Feedback:</strong> <span id="userFeedback"></span></p>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -137,8 +180,8 @@
             return;
         }
 
-        // Fetch and display the group vs non-group data
-        fetch(`/groupOverallData?groupId=${groupId}`)
+        // Fetch Group vs Non-Group Users
+        fetch(`/api/groupVsNonGroup?groupId=${groupId}`)
             .then(response => response.json())
             .then(data => {
                 new Chart(document.getElementById('groupVsNonGroupChart').getContext('2d'), {
@@ -147,7 +190,7 @@
                         labels: ['Group', 'Non-Group'],
                         datasets: [{
                             label: 'Users',
-                            data: [data.groupData.groupUsers, data.overallData.totalUsers - data.groupData.groupUsers],
+                            data: [data.groupUsers, data.nonGroupUsers],
                             backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)'],
                             borderColor: ['rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
                             borderWidth: 1
@@ -161,33 +204,14 @@
                         }
                     }
                 });
-            })
-            .catch(error => console.error('Error fetching group vs non-group data:', error));
+            });
 
-        // Fetch and display the user list
-        fetch(`/groupDetails?groupId=${groupId}`)
+        // Fetch Total Training Time
+        fetch(`/api/totalTrainingTime?groupId=${groupId}`)
             .then(response => response.json())
             .then(data => {
-                const tableBody = document.getElementById('userListBody');
                 const emails = data.map(user => user.email);
                 const trainingTimes = data.map(user => user.totalTrainingTime || 0);
-                const examCounts = data.map(user => user.examCount);
-                const avgScores = data.map(user => user.avgScore || 0);
-                const avgGroupScore = avgScores.reduce((a, b) => a + b, 0) / avgScores.length;
-
-                data.forEach(user => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${user.email}</td>
-                        <td>${user.totalTrainingTime || 0} ms</td>
-                        <td>${user.examCount}</td>
-                        <td>${user.avgScore ? user.avgScore.toFixed(2) : 'N/A'}</td>
-                        <td><button onclick="showUserDetails('${user.id}')">Details</button></td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-
-                // Total Training Time chart
                 new Chart(document.getElementById('trainingTimeChart').getContext('2d'), {
                     type: 'bar',
                     data: {
@@ -208,8 +232,14 @@
                         }
                     }
                 });
+            });
 
-                // Exam Count chart
+        // Fetch Exam Count
+        fetch(`/api/examCount?groupId=${groupId}`)
+            .then(response => response.json())
+            .then(data => {
+                const emails = data.map(user => user.email);
+                const examCounts = data.map(user => user.examCount);
                 new Chart(document.getElementById('examCountChart').getContext('2d'), {
                     type: 'bar',
                     data: {
@@ -230,8 +260,15 @@
                         }
                     }
                 });
+            });
 
-                // Average Score vs Others chart
+        // Fetch Average Score vs Others
+        fetch(`/api/avgScoreComparison?groupId=${groupId}`)
+            .then(response => response.json())
+            .then(data => {
+                const emails = data.map(user => user.email);
+                const avgScores = data.map(user => user.avgScore || 0);
+                const avgGroupScore = avgScores.reduce((a, b) => a + b, 0) / avgScores.length;
                 new Chart(document.getElementById('avgScoreComparisonChart').getContext('2d'), {
                     type: 'bar',
                     data: {
@@ -258,23 +295,23 @@
                         }
                     }
                 });
+            });
 
-                // Progress Over Time chart (sample data, replace with real data)
+        // Fetch Progress Over Time
+        fetch(`/api/progressOverTime?groupId=${groupId}`)
+            .then(response => response.json())
+            .then(data => {
+                const dates = data.map(entry => entry.date);
+                const activityCounts = data.map(entry => entry.numberOfActivities);
                 new Chart(document.getElementById('progressChart').getContext('2d'), {
                     type: 'line',
                     data: {
-                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],  // Replace with actual time labels
+                        labels: dates,
                         datasets: [{
-                            label: 'User Progress',
-                            data: [10, 15, 25, 35],  // Replace with actual user progress data
+                            label: 'Group Progress',
+                            data: activityCounts,
                             fill: false,
                             borderColor: 'rgba(75, 192, 192, 1)',
-                            tension: 0.1
-                        }, {
-                            label: 'Group Progress',
-                            data: [8, 12, 20, 30],  // Replace with actual group progress data
-                            fill: false,
-                            borderColor: 'rgba(153, 102, 255, 1)',
                             tension: 0.1
                         }]
                     },
@@ -286,14 +323,50 @@
                         }
                     }
                 });
-            })
-            .catch(error => console.error('Error fetching user list:', error));
+            });
 
-        // Show detailed user info in a modal or a separate page
+        // Fetch and display user list in group
+        fetch(`/groupDetails?groupId=${groupId}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('userListBody');
+                data.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${user.email}</td>
+                <td>${user.totalTrainingTime ? user.totalTrainingTime.toFixed(2) : '0.00'} ms</td>
+                <td>${user.examCount || 0}</td>
+                <td>${user.avgScore ? user.avgScore.toFixed(2) : 'N/A'}</td>
+                <td><button onclick="showUserDetails('${user.id}')">Details</button></td>
+            `;
+                    tableBody.appendChild(row);
+                });
+            });
+
+
+        // Show user details in a popup
         window.showUserDetails = function(userId) {
-            // Replace this with the actual logic to show user details
-            window.location.href = `/userDetails?userId=${userId}`;
+            fetch(`/userDetails?userId=${userId}`)
+                .then(response => response.json())
+                .then(user => {
+                    document.getElementById('userEmail').innerText = user.email;
+                    document.getElementById('userAge').innerText = user.age || 'N/A';
+                    document.getElementById('userAcademicInstitution').innerText = user.academicInstitution || 'N/A';
+                    document.getElementById('userTotalTrainTime').innerText = user.totalTrainingTime || '0';
+                    document.getElementById('userTotalExams').innerText = user.examCount || '0';
+                    document.getElementById('userAvgExamTime').innerText = user.avgExamTime || '0';
+                    document.getElementById('userTotalAnswers').innerText = user.totalAnswers || '0';
+                    document.getElementById('userRank').innerText = user.rank || 'N/A';
+                    document.getElementById('userFeedback').innerText = user.feedback || "No feedback";
+
+                    document.getElementById('userDetailsPopup').style.display = 'block';
+                });
         };
+
+        // Close the popup when the "×" button is clicked
+        document.getElementById('closePopup').addEventListener('click', function() {
+            document.getElementById('userDetailsPopup').style.display = 'none';
+        });
     });
 </script>
 </body>

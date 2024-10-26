@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תרשים מערכת</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f9f9f9;
+            direction: rtl;
+        }
+        .diagram-container {
+            position: relative;
+            width: 600px;
+            height: 600px;
+        }
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .outer-circle {
+            width: 100%;
+            height: 100%;
+        }
+        .inner-circle {
+            width: 70%;
+            height: 70%;
+            border-color: #666;
+        }
+        .element {
+            position: absolute;
+            width: 120px;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+        }
+        .outer-title, .inner-title {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .outer-title { top: 10px; }
+        .inner-title { top: 140px; }
+        .icon {
+            display: block;
+            margin: 10px auto;
+            width: 50px;
+            height: 50px;
+        }
+        /* מיקום האלמנטים */
+        .element1 { top: 220px; left: 30px; }
+        .element2 { top: 100px; left: 220px; }
+        .element3 { top: 220px; left: 420px; }
+        .element4 { top: 370px; left: 140px; }
+        .element5 { top: 370px; left: 320px; }
+        .element6 { top: 250px; left: 220px; }
+        .element7 { top: 420px; left: 220px; }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <div class="circle outer-circle"></div>
+        <div class="circle inner-circle"></div>
+
+        <!-- כותרות -->
+        <div class="outer-title">ממשק ניהול</div>
+        <div class="inner-title">ממשק משתמש</div>
+
+        <!-- אלמנטים במעגל החיצוני -->
+        <div class="element element1">
+            <img src="database_icon.png" alt="מאגר נתונים" class="icon">
+            <div>צפייה בתכני האפליקציה</div>
+        </div>
+        <div class="element element4">
+            <img src="exam_icon.png" alt="מבחן" class="icon">
+            <div>מבחן</div>
+        </div>
+        <div class="element element7">
+            <img src="monitoring_icon.png" alt="סיווג תמונות חדשות" class="icon">
+            <div>סיווג תמונות חדשות</div>
+        </div>
+
+        <!-- אלמנטים במעגל הפנימי -->
+        <div class="element element2">
+            <img src="upload_icon.png" alt="העלאת סריקת אקג" class="icon">
+            <div>העלאת סריקת אקג</div>
+        </div>
+        <div class="element element3">
+            <img src="check_icon.png" alt="איכון" class="icon">
+            <div>איכון</div>
+        </div>
+        <div class="element element5">
+            <img src="group_icon.png" alt="יצירת קבוצות מעקב" class="icon">
+            <div>יצירת קבוצות מעקב</div>
+        </div>
+        <div class="element element6">
+            <img src="train_icon.png" alt="צפייה בתכני אימון" class="icon">
+            <div>צפייה בתכני אימון ומבחנים</div>
+        </div>
+    </div>
+</body>
+</html>

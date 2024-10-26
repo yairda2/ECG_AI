@@ -81,7 +81,7 @@ function createTables() {
             totalExams INTEGER DEFAULT 0,
             avgExamTime INTEGER DEFAULT 0,
             totalAnswers INTEGER DEFAULT 0,
-            totalTrainTime INTEGER DEFAULT 0,
+            totalTrainTime REAL DEFAULT 0,
             userRate INTEGER DEFAULT 0,
             rank TEXT,  -- Rank of the user ban-choler or master)
             source TEXT,  -- How the user heard about the app
@@ -492,15 +492,23 @@ app.get('/trainingSessions', verifyToken, (req, res) => {
 app.get('/getTrainingSessions', verifyToken, (req, res) => {
     const userId = req.user.id;
     const sql = `
-        SELECT answerId AS id, 
-               date(datetime(date, 'localtime')) as date, 
+                SELECT answerId AS id, 
+               date(datetime(date, 'localtime')) AS date, 
                answerSubmitTime AS timeSpent, 
                COUNT(*) AS numberOfTasks,
-               photoName AS imageUrl
+               photoName AS imageUrl,
+               CASE 
+                   WHEN classificationSetSrc = classificationSetDes 
+                        AND (classificationSubSetSrc = classificationSubSetDes OR 
+                             (classificationSubSetSrc IS NULL AND classificationSubSetDes IS NULL))
+                   THEN 1
+                   ELSE 0
+               END AS correct
         FROM answers
         WHERE userId = ?
         GROUP BY date, answerId
-        ORDER BY date DESC`;
+        ORDER BY date DESC;
+        `;
 
     db.all(sql, [userId], (err, rows) => {
         if (err) {
@@ -1218,7 +1226,7 @@ app.get('/groups', verifyToken, (req, res) => {
 });
 
 // Endpoint to get group details (users in the group)
-app.get('/groupDetails', verifyToken, (req, res) => {
+/*app.get('/groupDetails', verifyToken, (req, res) => {
     const groupId = req.query.groupId;
 
     const sql = `
@@ -1236,7 +1244,7 @@ app.get('/groupDetails', verifyToken, (req, res) => {
         }
         res.status(200).json(rows);
     });
-});
+});*/
 
 // Endpoint to add a user to a group
 app.post('/addUserToGroup', verifyToken, (req, res) => {
@@ -1454,44 +1462,6 @@ app.delete('/removeUserFromGroup', verifyToken, (req, res) => {
 });
 
 
-app.get('/groupOverallData', verifyToken, (req, res) => {
-    const userId = req.user.id;
-    const groupId = req.query.groupId;
-
-    const overallDataQuery = `
-        SELECT 
-            (SELECT COUNT(*) FROM users) AS totalUsers,
-            (SELECT COUNT(*) FROM answers) AS totalTrainingSessions,
-            (SELECT COUNT(*) FROM exam) AS totalExams
-    `;
-
-    const groupDataQuery = `
-        SELECT 
-            (SELECT COUNT(*) FROM userGroups WHERE groupId = ?) AS groupUsers,
-            (SELECT COUNT(*) FROM answers WHERE userId IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS groupTrainingSessions,
-            (SELECT COUNT(*) FROM exam WHERE userId IN (SELECT userId FROM userGroups WHERE groupId = ?)) AS groupExams
-    `;
-
-    db.get(overallDataQuery, [], (err, overallData) => {
-        if (err) {
-            console.error('Error fetching overall data:', err.message);
-            return res.status(500).json({ message: 'Error fetching overall data' });
-        }
-
-        db.get(groupDataQuery, [groupId, groupId, groupId], (err, groupData) => {
-            if (err) {
-                console.error('Error fetching group data:', err.message);
-                return res.status(500).json({ message: 'Error fetching group data' });
-            }
-
-            res.json({
-                overallData,
-                groupData
-            });
-        });
-    });
-});
-
 
 // Endpoint to get overall group data (group vs non-group)
 app.get('/groupOverallData', verifyToken, (req, res) => {
@@ -1540,8 +1510,8 @@ app.get('/groupDetails', verifyToken, (req, res) => {
         users.id,
         authentication.email,
         users.totalTrainTime AS totalTrainingTime,
-        (SELECT COUNT(*) FROM exam WHERE exam.userId = users.id) AS examCount,
-        (SELECT AVG(score) FROM exam WHERE exam.userId = users.id) AS avgScore
+        COALESCE((SELECT COUNT(*) FROM exam WHERE exam.userId = users.id), 0) AS examCount,
+        COALESCE((SELECT AVG(score) FROM exam WHERE exam.userId = users.id), 0) AS avgScore
     FROM userGroups
     JOIN users ON userGroups.userId = users.id
     JOIN authentication ON users.id = authentication.userId
@@ -1553,10 +1523,163 @@ app.get('/groupDetails', verifyToken, (req, res) => {
             console.error('Error fetching group details:', err.message);
             return res.status(500).json({ message: 'Error fetching group details' });
         }
-        console.log(rows); // בדיקה אם הנתונים מתקבלים
         res.status(200).json(rows);
     });
 });
+
+
+// Endpoint to get specific user details
+app.get('/userDetails', verifyToken, (req, res) => {
+    const userId = req.query.userId;
+
+    const sql = `
+        SELECT 
+            authentication.email,
+            users.age,
+            users.academicInstitution,
+            users.totalTrainTime,
+            users.totalExams,
+            users.avgExamTime,
+            users.totalAnswers,
+            users.rank,
+            users.feedback
+        FROM users
+        JOIN authentication ON users.id = authentication.userId
+        WHERE users.id = ?
+    `;
+
+    db.get(sql, [userId], (err, user) => {
+        if (err) {
+            console.error('Error fetching user details:', err.message);
+            return res.status(500).json({ message: 'Error fetching user details' });
+        }
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json(user);
+    });
+});
+
+
+app.get('/api/groupVsNonGroup', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const queryTotalUsers = `SELECT COUNT(*) AS totalUsers FROM users`;
+    const queryGroupUsers = `SELECT COUNT(*) AS groupUsers FROM userGroups WHERE groupId = ?`;
+
+    db.get(queryTotalUsers, [], (err, overallData) => {
+        if (err) {
+            console.error('Error fetching total users:', err.message);
+            return res.status(500).json({ message: 'Error fetching total users' });
+        }
+
+        db.get(queryGroupUsers, [groupId], (err, groupData) => {
+            if (err) {
+                console.error('Error fetching group users:', err.message);
+                return res.status(500).json({ message: 'Error fetching group users' });
+            }
+
+            res.json({
+                groupUsers: groupData.groupUsers,
+                nonGroupUsers: overallData.totalUsers - groupData.groupUsers
+            });
+        });
+    });
+});
+
+
+app.get('/api/totalTrainingTime', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const query = `
+        SELECT users.id, authentication.email, users.totalTrainTime AS totalTrainingTime
+        FROM userGroups
+        JOIN users ON userGroups.userId = users.id
+        JOIN authentication ON users.id = authentication.userId
+        WHERE userGroups.groupId = ?
+    `;
+
+    db.all(query, [groupId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching total training time:', err.message);
+            return res.status(500).json({ message: 'Error fetching total training time' });
+        }
+
+        res.json(rows);
+    });
+});
+
+
+app.get('/api/examCount', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const query = `
+        SELECT users.id, authentication.email, COUNT(exam.examId) AS examCount
+        FROM userGroups
+        JOIN users ON userGroups.userId = users.id
+        JOIN authentication ON users.id = authentication.userId
+        LEFT JOIN exam ON users.id = exam.userId
+        WHERE userGroups.groupId = ?
+        GROUP BY users.id
+    `;
+
+    db.all(query, [groupId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching exam count:', err.message);
+            return res.status(500).json({ message: 'Error fetching exam count' });
+        }
+
+        res.json(rows);
+    });
+});
+
+
+app.get('/api/avgScoreComparison', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const query = `
+        SELECT users.id, authentication.email, AVG(exam.score) AS avgScore
+        FROM userGroups
+        JOIN users ON userGroups.userId = users.id
+        JOIN authentication ON users.id = authentication.userId
+        LEFT JOIN exam ON users.id = exam.userId
+        WHERE userGroups.groupId = ?
+        GROUP BY users.id
+    `;
+
+    db.all(query, [groupId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching average score:', err.message);
+            return res.status(500).json({ message: 'Error fetching average score' });
+        }
+
+        res.json(rows);
+    });
+});
+
+
+app.get('/api/progressOverTime', verifyToken, (req, res) => {
+    const groupId = req.query.groupId;
+
+    const query = `
+        SELECT date, COUNT(*) AS numberOfActivities
+        FROM answers
+        JOIN userGroups ON answers.userId = userGroups.userId
+        WHERE userGroups.groupId = ?
+        GROUP BY date
+        ORDER BY date
+    `;
+
+    db.all(query, [groupId], (err, rows) => {
+        if (err) {
+            console.error('Error fetching progress over time:', err.message);
+            return res.status(500).json({ message: 'Error fetching progress over time' });
+        }
+
+        res.json(rows);
+    });
+});
+
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
