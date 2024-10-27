@@ -1,5 +1,3 @@
-# CNN/modelRN.py
-
 import os
 import torch
 import torch.nn as nn
@@ -11,239 +9,234 @@ import matplotlib.pyplot as plt
 from torchcam.methods import SmoothGradCAMpp
 from torchcam.utils import overlay_mask
 import numpy as np
+import json
+import sys
 
-def main():
-    # בדיקה אם יש GPU זמין
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'Device in use: {device}')
+# Path defined
+data_dir = 'callsifi_images'  # path to classified images
+unlabeled_dir = 'unlabeled_images'  # path to unclassified images
+model_save_path = 'ecg_classifier_model.pth'  # path to trained model
+class_names = ['Avrste', 'DeWinters', 'Hyperacute', 'LossOfBalance', 'TInversion', 'Wellens', 'LOW RISK', 'Anterior',
+               'Inferior', 'Lateral', 'Septal']
 
-    # הגדרת נתיבים
-    data_dir = 'callsifi_images'  # נתיב לתמונות המסווגות
-    unlabeled_dir = 'unlabeled_images'  # נתיב לתמונות הלא מסווגות
-    model_save_path = 'ecg_classifier_model.pth'  # נתיב לשמירת המודל המאומן
+# check for GPU available
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f'Device in use: {device}')
 
-    # רשימת שמות הקטגוריות
-    class_names = ['Avrste', 'DeWinters', 'Hyperacute', 'LossOfBalance',
-                   'TInversion', 'Wellens', 'LOW RISK', 'Anterior', 'Inferior', 'Lateral', 'Septal']
+# transformation on details
+data_transforms = {
+    'train': transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(15),
+        transforms.ColorJitter(brightness=0.3, contrast=0.3,
+                               saturation=0.3, hue=0.2),
+        transforms.RandomAffine(degrees=0, shear=10, scale=(0.8, 1.2)),
+        transforms.RandomPerspective(distortion_scale=0.2, p=0.5),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ]),
+    'val': transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ]),
+}
 
-    # טרנספורמציות על הנתונים
-    data_transforms = {
-        'train': transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(15),
-            transforms.ColorJitter(brightness=0.3, contrast=0.3,
-                                   saturation=0.3, hue=0.2),
-            transforms.RandomAffine(degrees=0, shear=10, scale=(0.8, 1.2)),
-            transforms.RandomPerspective(distortion_scale=0.2, p=0.5),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ]),
-        'val': transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ]),
-    }
 
-    # מחלקה מותאמת לטעינת תמונות מתיקיות ותיקיות משנה
-    class CustomImageFolder(datasets.ImageFolder):
-        def __init__(self, root, transform=None):
-            super(CustomImageFolder, self).__init__(root, transform)
-            self.samples = self.make_dataset(
-                self.root,
-                self.class_to_idx,
-                extensions=self.extensions,
-                is_valid_file=self.is_valid_file,
-                allow_empty=False
-            )
-            self.imgs = self.samples  # תאימות לאחור
+# custom class to load images
+class CustomImageFolder(datasets.ImageFolder):
+    def __init__(self, root, transform=None):
+        super(CustomImageFolder, self).__init__(root, transform)
 
-        def make_dataset(self, directory, class_to_idx, extensions=None, is_valid_file=None, allow_empty=False):
-            images = []
-            directory = os.path.expanduser(directory)
+    def is_valid_file(self, path):
+        return path.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp'))
 
-            for target in sorted(os.listdir(directory)):
-                d = os.path.join(directory, target)
-                if not os.path.isdir(d):
-                    continue
 
-                for root_, _, fnames in sorted(os.walk(d)):
-                    for fname in sorted(fnames):
-                        path = os.path.join(root_, fname)
-                        if is_valid_file is not None:
-                            if not is_valid_file(path):
-                                continue
-                        else:
-                            if not datasets.folder.has_file_allowed_extension(path, extensions):
-                                continue
+# train model func
+def train_model(model, criterion, optimizer, num_epochs=10):
+    best_acc = 0.0
+    best_model_wts = model.state_dict()
 
-                        item = (path, class_to_idx[target])
-                        images.append(item)
+    for epoch in range(num_epochs):
+        print(f'Epoch {epoch + 1}/{num_epochs}')
+        print('-' * 10)
 
-            if len(images) == 0 and not allow_empty:
-                msg = f"Found 0 files in subfolders of: {directory}\n"
-                if extensions is not None:
-                    msg += f"Supported extensions are: {','.join(extensions)}"
-                raise RuntimeError(msg)
+        # train step
+        model.train()
+        running_loss = 0.0
+        running_corrects = 0
 
-            return images
+        for inputs, labels in train_loader:
+            inputs = inputs.to(device)
+            labels = labels.to(device)
 
-        def is_valid_file(self, path):
-            return path.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp'))
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            _, preds = torch.max(outputs, 1)
+            loss = criterion(outputs, labels)
 
-    # טעינת הנתונים עם המחלקה המותאמת
-    full_dataset = CustomImageFolder(root=data_dir, transform=data_transforms['train'])
+            loss.backward()
+            optimizer.step()
 
-    # חלוקה לסט אימון, ולידציה ומבחן
-    total_size = len(full_dataset)
-    train_size = int(0.7 * total_size)
-    val_size = int(0.15 * total_size)
-    test_size = total_size - train_size - val_size
-    train_dataset, val_dataset, test_dataset = random_split(full_dataset, [train_size, val_size, test_size])
+            running_loss += loss.item() * inputs.size(0)
+            running_corrects += torch.sum(preds == labels.data)
 
-    # עדכון הטרנספורמציה לסט הולידציה וסט מבחן
-    val_dataset.dataset.transform = data_transforms['val']
-    test_dataset.dataset.transform = data_transforms['val']
+        epoch_loss = running_loss / len(train_dataset)
+        epoch_acc = running_corrects.double() / len(train_dataset)
 
-    # יצירת DataLoader
-    batch_size = 16
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+        print(f'Train Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
-    # טעינת מודל ResNet18 עם Dropout ו-L2 Regularization
-    from torchvision.models import resnet18, ResNet18_Weights
-    model = resnet18(weights=ResNet18_Weights.DEFAULT)
+        # validation step
+        model.eval()
+        running_loss = 0.0
+        running_corrects = 0
 
-    # התאמת השכבה הסופית והוספת Dropout
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Sequential(
-        nn.Dropout(0.5),  # Dropout של 50%
-        nn.Linear(num_ftrs, len(class_names))
-    )
-
-    model = model.to(device)
-
-    # פונקציית הפסד עם רגולריזציה (L2 Regularization)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)  # weight_decay = L2 Regularization
-
-    # אימון המודל
-    num_epochs = 20
-
-    # רשימות לאיסוף נתונים לגרפים
-    train_losses = []
-    val_losses = []
-    train_accuracies = []
-    val_accuracies = []
-
-    def train_model(model, criterion, optimizer, num_epochs=10):
-        best_acc = 0.0
-        best_model_wts = model.state_dict()
-
-        for epoch in range(num_epochs):
-            print(f'Epoch {epoch+1}/{num_epochs}')
-            print('-' * 10)
-
-            # שלב אימון
-            model.train()
-            running_loss = 0.0
-            running_corrects = 0
-
-            for inputs, labels in train_loader:
+        with torch.no_grad():
+            for inputs, labels in val_loader:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
-
-                optimizer.zero_grad()
 
                 outputs = model(inputs)
                 _, preds = torch.max(outputs, 1)
                 loss = criterion(outputs, labels)
 
-                loss.backward()
-                optimizer.step()
-
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
-            epoch_loss = running_loss / len(train_dataset)
-            epoch_acc = running_corrects.double() / len(train_dataset)
+        epoch_loss = running_loss / len(val_dataset)
+        epoch_acc = running_corrects.double() / len(val_dataset)
 
-            train_losses.append(epoch_loss)
-            train_accuracies.append(epoch_acc.item())
+        print(f'Val Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
-            print(f'Train Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
+        # save the best model option
+        if epoch_acc > best_acc:
+            best_acc = epoch_acc
+            best_model_wts = model.state_dict().copy()
 
-            # שלב ולידציה
-            model.eval()
-            running_loss = 0.0
-            running_corrects = 0
+    print(f'Best Validation Accuracy: {best_acc:.4f}')
 
-            with torch.no_grad():
-                for inputs, labels in val_loader:
-                    inputs = inputs.to(device)
-                    labels = labels.to(device)
+    # load the weights
+    model.load_state_dict(best_model_wts)
 
-                    outputs = model(inputs)
-                    _, preds = torch.max(outputs, 1)
-                    loss = criterion(outputs, labels)
+    return model
 
-                    running_loss += loss.item() * inputs.size(0)
-                    running_corrects += torch.sum(preds == labels.data)
 
-            epoch_loss = running_loss / len(val_dataset)
-            epoch_acc = running_corrects.double() / len(val_dataset)
+# step 2 learn
+def train_on_unlabeled_ecg(model, unlabeled_loader, optimizer, criterion, num_epochs=5):
+    model.train()
+    for epoch in range(num_epochs):
+        running_loss = 0.0
+        for inputs, _ in unlabeled_loader:
+            inputs = inputs.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
 
-            val_losses.append(epoch_loss)
-            val_accuracies.append(epoch_acc.item())
+            loss = criterion(outputs, torch.ones(outputs.size(0)).long().to(device))
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item() * inputs.size(0)
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Unlabeled Loss: {running_loss / len(unlabeled_loader.dataset):.4f}')
+    return model
 
-            print(f'Val Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
-            # שמירת המודל הטוב ביותר
-            if epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model_wts = model.state_dict().copy()
+def load_model():
+    model = models.resnet18(pretrained=False)
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Sequential(
+        nn.Dropout(0.5),
+        nn.Linear(num_ftrs, len(class_names))
+    )
+    if os.path.exists(model_save_path):
+        model.load_state_dict(torch.load(model_save_path, map_location=device))
+        print("Model loaded from saved state.")
+    model = model.to(device)
+    return model
 
-        print(f'Best Validation Accuracy: {best_acc:.4f}')
 
-        # טעינת משקלי המודל הטוב ביותר
-        model.load_state_dict(best_model_wts)
+# API func
+def classify_image(image_path):
+    model = load_model()
 
-        return model
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
 
-    # אימון המודל
-    model = train_model(model, criterion, optimizer, num_epochs=num_epochs)
+    image = Image.open(image_path).convert('RGB')
+    input_tensor = transform(image).unsqueeze(0).to(device)
 
-    # שמירת המודל
-    torch.save(model.state_dict(), model_save_path)
-    print(f'Model saved at {model_save_path}')
+    model.eval()
+    with torch.no_grad():
+        outputs = model(input_tensor)
+        probabilities = nn.functional.softmax(outputs, dim=1)
+        confidence, preds = torch.max(probabilities, 1)
+        predicted_class = class_names[preds[0].item()]
+        confidence_percent = confidence[0].item() * 100
 
-    # יצירת גרפים של הפסד ודיוק
-    epochs = range(1, num_epochs + 1)
+    # Creating Grad-CAM
+    cam_extractor = SmoothGradCAMpp(model, target_layer='layer4')
+    _ = model(input_tensor)
+    cams = cam_extractor(class_idx=preds[0].item(), scores=outputs)
+    activation_map = cams[0].cpu().numpy()
 
-    plt.figure(figsize=(12, 5))
+    if len(activation_map.shape) == 3:
+        activation_map = np.mean(activation_map, axis=0)
 
-    # גרף הפסד
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs, train_losses, label='Train Loss')
-    plt.plot(epochs, val_losses, label='Validation Loss')
-    plt.title('Loss over Epochs')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
+    activation_map = (activation_map - activation_map.min()) / (activation_map.max() - activation_map.min())
+    result = overlay_mask(image, Image.fromarray(np.uint8(activation_map * 255), mode='L'), alpha=0.5)
 
-    # גרף דיוק
-    plt.subplot(1, 2, 2)
-    plt.plot(epochs, train_accuracies, label='Train Accuracy')
-    plt.plot(epochs, val_accuracies, label='Validation Accuracy')
-    plt.title('Accuracy over Epochs')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.legend()
+    # Save the Grad-CAM and the color bar separately
+    graph_path = image_path.replace('uploads', 'graphs').replace('.jpg', '_graph.png')
+    heatmap_path = image_path.replace('uploads', 'graphs').replace('.jpg', '_heatmap.png')
 
-    plt.tight_layout()
-    plt.show()
+    # Create and save the Grad-CAM image (increase figure size to make it larger)
+    plt.figure(figsize=(16, 12))  # Adjust the size here (increased for larger output)
+    plt.imshow(result)
+    plt.axis('off')  # No labels or title on the image
+    plt.savefig(graph_path)
+
+    # Save the color bar (legend) separately (increase the size of the legend if needed)
+    plt.figure(figsize=(6, 1))
+    plt.imshow(np.linspace(0, 1, 256).reshape(1, 256), cmap='jet', aspect='auto')
+    plt.gca().set_yticks([])  # Remove y-axis ticks
+    plt.gca().set_xticks([0, 128, 255])  # Only three points: Low, Medium, High
+    plt.gca().set_xticklabels(['Low', 'Medium', 'High'])
+    plt.title("Heatmap Legend", fontsize=8)
+    plt.savefig(heatmap_path)
+
+    # Return classification details and paths to the images
+    return {
+        'classification': predicted_class,
+        'confidence': f'{confidence_percent:.2f}%',
+        'graphUrl': graph_path
+    }
+
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) >= 2:
+        image_path = sys.argv[1]
+        result = classify_image(image_path)
+        print(json.dumps(result))
+    else:
+        print("No image provided. Starting model training...")
+
+        if not os.path.exists(data_dir):
+            raise FileNotFoundError(f"The directory {data_dir} does not exist.")
+
+        # model train steps
+        full_dataset = CustomImageFolder(root=data_dir, transform=data_transforms['train'])
+        total_size = len(full_dataset)
+        train_size = int(0.7 * total_size)
+        val_size = int(0.15 * total_size)
+        test_size = total_size - train_size - val_size
+        train_dataset, val_dataset, test_dataset = random_split(full_dataset, [train_size, val_size, test_size])
+
+        train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+
+        model = train_model(model, criterion, optimizer, num_epochs=20)
+
+        torch.save(model.state_dict(), model_save_path)
+        print(f'Model saved at {model_save_path}')
