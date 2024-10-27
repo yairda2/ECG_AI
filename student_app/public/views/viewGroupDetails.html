@@ -301,7 +301,7 @@
         fetch(`/api/progressOverTime?groupId=${groupId}`)
             .then(response => response.json())
             .then(data => {
-                const dates = data.map(entry => entry.date);
+                const dates = data.map(entry => entry.day); // עדכון לשימוש בשדה 'day' במקום 'date'
                 const activityCounts = data.map(entry => entry.numberOfActivities);
                 new Chart(document.getElementById('progressChart').getContext('2d'), {
                     type: 'line',
@@ -324,6 +324,7 @@
                     }
                 });
             });
+
 
         // Fetch and display user list in group
         fetch(`/groupDetails?groupId=${groupId}`)

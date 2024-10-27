@@ -1660,15 +1660,15 @@ app.get('/api/avgScoreComparison', verifyToken, (req, res) => {
 
 app.get('/api/progressOverTime', verifyToken, (req, res) => {
     const groupId = req.query.groupId;
-
-    const query = `
-        SELECT date, COUNT(*) AS numberOfActivities
+        const query = `
+        SELECT DATE(date) AS day, COUNT(*) AS numberOfActivities
         FROM answers
         JOIN userGroups ON answers.userId = userGroups.userId
         WHERE userGroups.groupId = ?
-        GROUP BY date
-        ORDER BY date
+        GROUP BY day
+        ORDER BY day
     `;
+
 
     db.all(query, [groupId], (err, rows) => {
         if (err) {
