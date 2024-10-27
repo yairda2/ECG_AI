@@ -12,18 +12,18 @@ import numpy as np
 import json
 import sys
 
-# הגדרת נתיבים
-data_dir = 'callsifi_images'  # נתיב לתמונות המסווגות
-unlabeled_dir = 'unlabeled_images'  # נתיב לתמונות הלא מסווגות
-model_save_path = 'ecg_classifier_model.pth'  # נתיב לשמירת המודל המאומן
+# Path defined
+data_dir = 'callsifi_images'  # path to classified images
+unlabeled_dir = 'unlabeled_images'  # path to unclassified images
+model_save_path = 'ecg_classifier_model.pth'  # path to trained model
 class_names = ['Avrste', 'DeWinters', 'Hyperacute', 'LossOfBalance', 'TInversion', 'Wellens', 'LOW RISK', 'Anterior',
                'Inferior', 'Lateral', 'Septal']
 
-# בדיקה אם יש GPU זמין
+# check for GPU available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Device in use: {device}')
 
-# טרנספורמציות על הנתונים
+# transformation on details
 data_transforms = {
     'train': transforms.Compose([
         transforms.Resize((224, 224)),
@@ -44,7 +44,7 @@ data_transforms = {
 }
 
 
-# מחלקה מותאמת לטעינת תמונות מתיקיות ותיקיות משנה
+# custom class to load images
 class CustomImageFolder(datasets.ImageFolder):
     def __init__(self, root, transform=None):
         super(CustomImageFolder, self).__init__(root, transform)
@@ -53,7 +53,7 @@ class CustomImageFolder(datasets.ImageFolder):
         return path.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp'))
 
 
-# פונקציה לאימון המודל
+# train model func
 def train_model(model, criterion, optimizer, num_epochs=10):
     best_acc = 0.0
     best_model_wts = model.state_dict()
@@ -62,7 +62,7 @@ def train_model(model, criterion, optimizer, num_epochs=10):
         print(f'Epoch {epoch + 1}/{num_epochs}')
         print('-' * 10)
 
-        # שלב אימון
+        # train step
         model.train()
         running_loss = 0.0
         running_corrects = 0
@@ -87,7 +87,7 @@ def train_model(model, criterion, optimizer, num_epochs=10):
 
         print(f'Train Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
-        # שלב ולידציה
+        # validation step
         model.eval()
         running_loss = 0.0
         running_corrects = 0
@@ -109,29 +109,29 @@ def train_model(model, criterion, optimizer, num_epochs=10):
 
         print(f'Val Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
 
-        # שמירת המודל הטוב ביותר
+        # save the best model option
         if epoch_acc > best_acc:
             best_acc = epoch_acc
             best_model_wts = model.state_dict().copy()
 
     print(f'Best Validation Accuracy: {best_acc:.4f}')
 
-    # טעינת משקלי המודל הטוב ביותר
+    # load the weights
     model.load_state_dict(best_model_wts)
 
     return model
 
 
-# שלב נוסף לאימון על תמונות הלא מסווגות (ללמוד לזהות סריקות אק"ג)
+# step 2 learn
 def train_on_unlabeled_ecg(model, unlabeled_loader, optimizer, criterion, num_epochs=5):
     model.train()
     for epoch in range(num_epochs):
         running_loss = 0.0
-        for inputs, _ in unlabeled_loader:  # אין תוויות בשלב זה
+        for inputs, _ in unlabeled_loader:
             inputs = inputs.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
-            # שימוש במטרה דמיונית (הנחה שכל התמונות הן אק"ג)
+
             loss = criterion(outputs, torch.ones(outputs.size(0)).long().to(device))
             loss.backward()
             optimizer.step()
@@ -140,7 +140,6 @@ def train_on_unlabeled_ecg(model, unlabeled_loader, optimizer, criterion, num_ep
     return model
 
 
-# טעינת מודל לאימון או סיווג
 def load_model():
     model = models.resnet18(pretrained=False)
     num_ftrs = model.fc.in_features
@@ -155,7 +154,7 @@ def load_model():
     return model
 
 
-# פונקציה לסיווג תמונה
+# API func
 def classify_image(image_path):
     model = load_model()
 
@@ -215,22 +214,18 @@ def classify_image(image_path):
     }
 
 
-# פונקציית הרצה ראשית
 if __name__ == '__main__':
     if len(sys.argv) >= 2:
-        # אם סופקה תמונה, נסווג אותה
         image_path = sys.argv[1]
         result = classify_image(image_path)
         print(json.dumps(result))
     else:
-        # אם לא סופקה תמונה, נאמן את המודל
         print("No image provided. Starting model training...")
 
-        # בדיקה אם התיקייה callsifi_images קיימת
         if not os.path.exists(data_dir):
             raise FileNotFoundError(f"The directory {data_dir} does not exist.")
 
-        # אימון המודל
+        # model train steps
         full_dataset = CustomImageFolder(root=data_dir, transform=data_transforms['train'])
         total_size = len(full_dataset)
         train_size = int(0.7 * total_size)
@@ -243,6 +238,5 @@ if __name__ == '__main__':
 
         model = train_model(model, criterion, optimizer, num_epochs=20)
 
-        # שמירת המודל לאחר האימון
         torch.save(model.state_dict(), model_save_path)
         print(f'Model saved at {model_save_path}')
