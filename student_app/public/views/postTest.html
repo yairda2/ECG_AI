@@ -73,7 +73,7 @@
                 document.getElementById('totalQuestions').textContent = data.totalQuestions;
                 document.getElementById('correctAnswers').textContent = data.correctAnswers;
                 document.getElementById('incorrectAnswers').textContent = data.totalQuestions - data.correctAnswers;
-                document.getElementById('totalTime').textContent = data.totalTime;
+                document.getElementById('totalTime').textContent = data.totalTime.toFixed(2);
                 document.getElementById('avgTimePerQuestion').textContent = (data.totalTime / data.totalQuestions).toFixed(2);
                 document.getElementById('grade').textContent = data.grade;
             })
