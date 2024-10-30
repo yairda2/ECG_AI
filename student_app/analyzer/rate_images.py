@@ -116,12 +116,12 @@ def train_or_update_model():
         # Encode categorical features into numerical values
         label_encoder = LabelEncoder()
         encoded_features = [label_encoder.fit_transform(feature) for feature in zip(*features)]
-        X = np.array(encoded_features).T
+        x = np.array(encoded_features).T
         y = np.array(labels)
 
         # Train the random forest model
         model, previous_feature_importances = load_model()
-        model.fit(X, y)
+        model.fit(x, y)
         save_model(model, model.feature_importances_)
 
         # Log feature importances (weights) and plot them
